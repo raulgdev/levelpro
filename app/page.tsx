@@ -575,7 +575,6 @@ export default function LevelProPage() {
         .mat-icon-wrap{width:40px;height:40px;border-radius:8px;background:rgba(2,10,37,0.07);display:flex;align-items:center;justify-content:center;color:rgba(2,10,37,0.5);}
         .mat-card-title{font-family:'Titillium Web',sans-serif;font-weight:400;font-size:clamp(1rem,1.3vw,1.2rem);color:${NAVY};margin:0 0 clamp(8px,1.2vh,12px) 0;line-height:1.3;}
         .mat-card-desc{font-family:'Inter',sans-serif;font-size:clamp(0.68rem,0.82vw,0.75rem);line-height:1.65;color:rgba(2,10,37,0.5);margin:0;}
-        .mat-split{display:grid;grid-template-columns:55fr 45fr;}
         /* Projects */
         .proj-arrow-btn:hover:not(:disabled){background:${NAVY}!important;border-color:${NAVY}!important;color:#ffffff!important;}
         .proj-inner{display:flex;}
@@ -592,7 +591,6 @@ export default function LevelProPage() {
           .stat-block:first-child{border-top:none!important;padding-top:0!important;}
           .stats-row{flex-direction:column!important;}
           .mat-grid{grid-template-columns:1fr!important;}
-          .mat-split{grid-template-columns:1fr!important;}
           .proj-inner{flex-direction:column!important;}
           .proj-map-panel{width:100%!important;height:45vh!important;}
           .hero-bottom-strip{flex-direction:column!important;gap:16px!important;}
@@ -691,12 +689,9 @@ export default function LevelProPage() {
         </section>
         <div ref={aboutRef} style={{ position:"absolute", top:"100vh", left:0, right:0, height:"65vh", zIndex:2 }}>
           <div style={{ height:"22vh", background:`linear-gradient(to bottom,transparent,${NAVY})`, pointerEvents:"none" }} />
-          <div style={{ height:"43vh", backgroundColor:NAVY, display:"flex", flexDirection:"column", justifyContent:"center", padding:"clamp(30px,5vh,60px) clamp(24px,5vw,72px)", position:"relative" }}>
-            <div style={{ width:"3px", height:"clamp(28px,4vh,44px)", background:ACCENT, position:"absolute", left:"clamp(24px,5vw,72px)", top:"50%", transform:"translateY(-50%) translateY(-clamp(14px,2vh,22px))" }} />
-            <div style={{ borderLeft:`3px solid ${ACCENT}`, paddingLeft:"clamp(16px,2.2vw,26px)" }}>
-              <RevealText text={t.about.label} style={{ fontFamily:"'Inter',sans-serif", fontWeight:400, fontSize:"clamp(0.6rem,0.8vw,0.7rem)", letterSpacing:"0.2em", textTransform:"uppercase", color:"rgba(255,255,255,0.35)", margin:"0 0 clamp(16px,2.5vh,28px) 0" }} />
-              <RevealText text={t.about.body} delayOffset={3} style={{ fontFamily:"'Titillium Web',sans-serif", fontWeight:200, fontSize:"clamp(1.5rem,3.2vw,3rem)", lineHeight:1.12, color:"rgba(255,255,255,0.9)", margin:0, maxWidth:"clamp(320px,72vw,900px)", letterSpacing:"-0.02em" }} />
-            </div>
+          <div style={{ height:"43vh", backgroundColor:NAVY, display:"flex", flexDirection:"column", justifyContent:"center", padding:"clamp(30px,5vh,60px) clamp(24px,5vw,72px)" }}>
+            <RevealText text={t.about.label} style={{ fontFamily:"'Inter',sans-serif", fontWeight:400, fontSize:"clamp(0.6rem,0.8vw,0.7rem)", letterSpacing:"0.2em", textTransform:"uppercase", color:"rgba(255,255,255,0.35)", margin:"0 0 clamp(16px,2.5vh,28px) 0" }} />
+            <RevealText text={t.about.body} delayOffset={3} style={{ fontFamily:"'Titillium Web',sans-serif", fontWeight:200, fontSize:"clamp(1.5rem,3.2vw,3rem)", lineHeight:1.12, color:"rgba(255,255,255,0.9)", margin:0, maxWidth:"clamp(320px,72vw,900px)", letterSpacing:"-0.02em" }} />
           </div>
         </div>
       </div>
@@ -705,7 +700,6 @@ export default function LevelProPage() {
       <section style={{ background:"#ffffff", padding:"clamp(64px,8vh,96px) clamp(24px,5vw,72px) clamp(40px,5vh,56px)", borderTop:"1px solid rgba(2,10,37,0.05)" }}>
         {/* Heading */}
         <div style={{ marginBottom:"clamp(24px,3.2vh,38px)" }}>
-          <div style={{ width:"2px", height:"clamp(20px,2.8vh,28px)", background:ACCENT, marginBottom:"clamp(16px,2.2vh,22px)" }} />
           <p style={{ fontFamily:"'Inter',sans-serif", fontWeight:500, fontSize:"clamp(0.55rem,0.7vw,0.63rem)", letterSpacing:"0.2em", textTransform:"uppercase", color:"rgba(2,10,37,0.35)", margin:"0 0 clamp(12px,1.8vh,18px) 0" }}>{t.services.label}</p>
           <h2 style={{ fontFamily:"'Titillium Web',sans-serif", fontWeight:200, fontSize:"clamp(2.2rem,5vw,5rem)", lineHeight:0.95, color:NAVY, margin:0, letterSpacing:"-0.03em" }}>
             {t.services.headingLine1}<br />{t.services.headingLine2}<br />{t.services.headingLine3}
@@ -742,11 +736,9 @@ export default function LevelProPage() {
       </section>
 
       {/* ── Stats ── */}
-      <section style={{ backgroundColor:"#ffffff", padding:"clamp(64px,10vh,120px) clamp(24px,5vw,72px)", borderTop:"1px solid rgba(2,10,37,0.05)", position:"relative", overflow:"hidden" }}>
-        <div style={{ position:"absolute", right:"-1%", top:"50%", transform:"translateY(-50%)", fontFamily:"'Titillium Web',sans-serif", fontWeight:200, fontSize:"clamp(16rem,26vw,34rem)", lineHeight:1, color:"rgba(2,10,37,0.022)", letterSpacing:"-0.06em", userSelect:"none", pointerEvents:"none", zIndex:0 }}>200</div>
-        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:"clamp(24px,4vw,48px)", flexWrap:"wrap", marginBottom:"clamp(40px,6vh,72px)", position:"relative", zIndex:1 }}>
+      <section style={{ backgroundColor:"#ffffff", padding:"clamp(64px,10vh,120px) clamp(24px,5vw,72px)", borderTop:"1px solid rgba(2,10,37,0.05)" }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:"clamp(24px,4vw,48px)", flexWrap:"wrap", marginBottom:"clamp(40px,6vh,72px)" }}>
           <div style={{ flex:"0 0 auto" }}>
-            <div style={{ width:"2px", height:"clamp(20px,2.8vh,28px)", background:ACCENT, marginBottom:"clamp(16px,2.2vh,22px)" }} />
             <p style={{ fontFamily:"'Inter',sans-serif", fontWeight:500, fontSize:"clamp(0.55rem,0.7vw,0.63rem)", letterSpacing:"0.2em", textTransform:"uppercase", color:"rgba(2,10,37,0.35)", margin:"0 0 clamp(12px,1.8vh,18px) 0" }}>{t.stats.label}</p>
             <RevealText as="h2" text={t.stats.heading} style={{ fontFamily:"'Titillium Web',sans-serif", fontWeight:300, fontSize:"clamp(1.8rem,3.5vw,3.4rem)", lineHeight:1.08, color:NAVY, letterSpacing:"-0.025em", maxWidth:"clamp(300px,48vw,600px)", margin:0 }} />
           </div>
@@ -756,7 +748,7 @@ export default function LevelProPage() {
             </button>
           </div>
         </div>
-        <div className="stats-row" style={{ display:"flex", borderTop:"1px solid rgba(2,10,37,0.08)", position:"relative", zIndex:1 }}>
+        <div className="stats-row" style={{ display:"flex", borderTop:"1px solid rgba(2,10,37,0.08)" }}>
           {[{val:40,suffix:"–70",unit:"m³/h"},{val:200,suffix:"+",unit:""},{val:24,suffix:"h",unit:""},{val:9,suffix:"+",unit:""}].map((s,i)=>(
             <div key={i} className="stat-block">
               <div className="stat-rule" />
@@ -768,38 +760,16 @@ export default function LevelProPage() {
       </section>
 
       {/* ── Materials ── */}
-      <section style={{ backgroundColor:"#ffffff", paddingTop:"clamp(64px,10vh,120px)", borderTop:"1px solid rgba(2,10,37,0.05)", overflow:"hidden" }}>
-        {/* Editorial header */}
-        <div style={{ padding:"0 clamp(24px,5vw,72px)", marginBottom:"clamp(40px,5.5vh,56px)" }}>
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", flexWrap:"wrap", gap:"clamp(16px,2.5vw,28px)" }}>
-            <RevealText as="h2" text={t.materials.heading} style={{ fontFamily:"'Titillium Web',sans-serif", fontWeight:300, fontSize:"clamp(1.8rem,3.2vw,3rem)", lineHeight:1.1, color:NAVY, letterSpacing:"-0.025em", maxWidth:"clamp(300px,52vw,620px)", margin:0 }} />
-            <p style={{ fontFamily:"'Inter',sans-serif", fontWeight:300, fontSize:"clamp(0.72rem,0.9vw,0.82rem)", lineHeight:1.7, color:"rgba(2,10,37,0.5)", maxWidth:"320px", alignSelf:"flex-end", margin:0 }}>{t.materials.tagline}</p>
-          </div>
+      <section style={{ backgroundColor:"#ffffff", padding:"clamp(64px,10vh,120px) clamp(24px,5vw,72px)", borderTop:"1px solid rgba(2,10,37,0.05)" }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", flexWrap:"wrap", gap:"clamp(16px,2.5vw,28px)" }}>
+          <RevealText as="h2" text={t.materials.heading} style={{ fontFamily:"'Titillium Web',sans-serif", fontWeight:300, fontSize:"clamp(1.8rem,3.2vw,3rem)", lineHeight:1.1, color:NAVY, letterSpacing:"-0.025em", maxWidth:"clamp(300px,52vw,620px)", margin:0 }} />
+          <p style={{ fontFamily:"'Inter',sans-serif", fontWeight:300, fontSize:"clamp(0.72rem,0.9vw,0.82rem)", lineHeight:1.7, color:"rgba(2,10,37,0.5)", maxWidth:"320px", alignSelf:"flex-end", margin:0 }}>{t.materials.tagline}</p>
         </div>
-        {/* Color-blocked editorial panels */}
-        <div className="mat-split">
+        <div className="mat-grid">
           {t.materials.cards.map(({title,desc},i)=>(
-            <div key={i} style={{
-              background: i===0 ? NAVY : ACCENT,
-              padding:"clamp(44px,6.5vh,76px) clamp(24px,5vw,72px) clamp(52px,7.5vh,88px)",
-              position:"relative",
-              overflow:"hidden",
-              display:"flex",
-              flexDirection:"column",
-              justifyContent:"space-between",
-              minHeight:"clamp(300px,40vh,460px)",
-            }}>
-              {/* Ghost number watermark */}
-              <div style={{ position:"absolute", right:"-3%", top:"-10%", fontFamily:"'Titillium Web',sans-serif", fontWeight:200, fontSize:"clamp(9rem,17vw,20rem)", lineHeight:1, letterSpacing:"-0.05em", color: i===0?"rgba(255,255,255,0.035)":"rgba(255,255,255,0.06)", userSelect:"none", pointerEvents:"none" }}>0{i+1}</div>
-              {/* Icon */}
-              <div style={{ width:"46px", height:"46px", borderRadius:"10px", border:`1px solid ${i===0?"rgba(255,255,255,0.1)":"rgba(255,255,255,0.22)"}`, display:"flex", alignItems:"center", justifyContent:"center", color: i===0?"rgba(255,255,255,0.5)":"rgba(255,255,255,0.9)", flexShrink:0 }}>
-                {MAT_ICONS[i]}
-              </div>
-              <div>
-                <p style={{ fontFamily:"'Inter',sans-serif", fontSize:"clamp(0.52rem,0.64vw,0.58rem)", fontWeight:600, letterSpacing:"0.2em", textTransform:"uppercase" as const, color: i===0?"rgba(255,255,255,0.22)":"rgba(255,255,255,0.55)", margin:"0 0 clamp(10px,1.5vh,14px) 0" }}>0{i+1}</p>
-                <h3 style={{ fontFamily:"'Titillium Web',sans-serif", fontWeight:300, fontSize:"clamp(1.1rem,1.7vw,1.6rem)", color:"#ffffff", margin:"0 0 clamp(14px,2vh,20px) 0", lineHeight:1.2, letterSpacing:"-0.02em", maxWidth:"380px" }}>{title}</h3>
-                <p style={{ fontFamily:"'Inter',sans-serif", fontWeight:300, fontSize:"clamp(0.68rem,0.85vw,0.78rem)", lineHeight:1.72, color: i===0?"rgba(255,255,255,0.45)":"rgba(255,255,255,0.78)", margin:0, maxWidth:"420px" }}>{desc}</p>
-              </div>
+            <div key={i} className="mat-card">
+              <div className="mat-icon-wrap">{MAT_ICONS[i]}</div>
+              <div><h3 className="mat-card-title">{title}</h3><p className="mat-card-desc">{desc}</p></div>
             </div>
           ))}
         </div>
@@ -829,7 +799,6 @@ export default function LevelProPage() {
 
             {/* Header */}
             <div style={{ marginBottom: "clamp(16px,2.2vh,24px)", flexShrink: 0 }}>
-              <div style={{ width:"2px", height:"clamp(20px,2.8vh,28px)", background:ACCENT, marginBottom:"clamp(14px,2vh,18px)" }} />
               <p style={{ fontFamily:"'Inter',sans-serif", fontWeight:500, fontSize:"clamp(0.55rem,0.7vw,0.63rem)", letterSpacing:"0.2em", textTransform:"uppercase", color:"rgba(2,10,37,0.35)", margin:"0 0 clamp(8px,1.2vh,12px) 0" }}>{t.projects.label}</p>
               <div style={{ display:"flex", alignItems:"flex-end", justifyContent:"space-between", gap:"16px", flexWrap:"wrap" }}>
                 <h2 style={{ fontFamily:"'Titillium Web',sans-serif", fontWeight:300, fontSize:"clamp(1.4rem,2.4vw,2.4rem)", lineHeight:1.05, color:NAVY, letterSpacing:"-0.025em", margin:0 }}>{t.projects.heading}</h2>

@@ -153,12 +153,12 @@ export default function AboutPage() {
       <section style={{ backgroundColor: "#ffffff" }}>
         <div className="stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)" }}>
           {STATS_DATA.map((s, i) => (
-            <div key={i} style={{ padding: "clamp(28px,4.5vh,52px) clamp(20px,3.2vw,44px)", borderTop: `2px solid ${i === 0 ? ACCENT : "rgba(2,10,37,0.07)"}`, borderLeft: i > 0 ? "1px solid rgba(2,10,37,0.07)" : "none", background: i === 0 ? NAVY : "#ffffff" }}>
+            <div key={i} style={{ padding: "clamp(28px,4.5vh,52px) clamp(20px,3.2vw,44px)", borderTop: `2px solid ${i === 0 ? ACCENT : "rgba(2,10,37,0.07)"}`, borderLeft: i > 0 ? "1px solid rgba(2,10,37,0.07)" : "none" }}>
               <div style={{ display: "flex", alignItems: "baseline", gap: "5px", marginBottom: "clamp(8px,1.2vh,12px)" }}>
-                <span style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 200, fontSize: "clamp(2.8rem,5.5vw,6rem)", color: i === 0 ? "#ffffff" : NAVY, letterSpacing: "-0.04em", lineHeight: 1 }}>{s.val}</span>
-                {s.unit && <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.65rem,0.9vw,0.82rem)", color: i === 0 ? "rgba(255,255,255,0.4)" : "rgba(2,10,37,0.3)", letterSpacing: "0.04em" }}>{s.unit}</span>}
+                <span style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 200, fontSize: "clamp(2.8rem,5.5vw,6rem)", color: NAVY, letterSpacing: "-0.04em", lineHeight: 1 }}>{s.val}</span>
+                {s.unit && <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.65rem,0.9vw,0.82rem)", color: "rgba(2,10,37,0.3)", letterSpacing: "0.04em" }}>{s.unit}</span>}
               </div>
-              <p style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.6rem,0.76vw,0.68rem)", fontWeight: 400, color: i === 0 ? "rgba(255,255,255,0.45)" : "rgba(2,10,37,0.42)", letterSpacing: "0.03em", margin: 0, lineHeight: 1.5 }}>
+              <p style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.6rem,0.76vw,0.68rem)", fontWeight: 400, color: "rgba(2,10,37,0.42)", letterSpacing: "0.03em", margin: 0, lineHeight: 1.5 }}>
                 {t.stats.items[s.itemIdx].label}
               </p>
             </div>
@@ -171,27 +171,11 @@ export default function AboutPage() {
         {/* Full-bleed image — no horizontal padding */}
         <div style={{ height: "clamp(260px,42vh,560px)", overflow: "hidden", position: "relative" }}>
           <img src={STORY_IMG} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 30%", display: "block" }} />
-          <div style={{ position: "absolute", inset: 0, background: `linear-gradient(to bottom, rgba(2,10,37,0.08) 0%, rgba(2,10,37,0.78) 100%)` }} />
-          {/* Editorial stats overlay */}
-          <div style={{ position: "absolute", bottom: "clamp(20px,3vh,32px)", left: "clamp(24px,5vw,72px)", right: "clamp(24px,5vw,72px)", display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: "12px" }}>
-            <div>
-              <span style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 200, fontSize: "clamp(2.4rem,4.5vw,5rem)", color: "#ffffff", letterSpacing: "-0.04em", lineHeight: 1, display: "block" }}>2016</span>
-              <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.5rem,0.62vw,0.58rem)", fontWeight: 500, letterSpacing: "0.16em", textTransform: "uppercase" as const, color: "rgba(255,255,255,0.4)" }}>{ap.hero.factLabels[1]}</span>
-            </div>
-            <div style={{ display: "flex", gap: "clamp(20px,3.5vw,44px)" }}>
-              {STATS_DATA.slice(0, 2).map((s, idx) => (
-                <div key={idx} style={{ textAlign: "right" as const }}>
-                  <span style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 200, fontSize: "clamp(1.6rem,3vw,3.2rem)", color: "#ffffff", letterSpacing: "-0.03em", lineHeight: 1, display: "block" }}>{s.val}{s.unit}</span>
-                  <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.5rem,0.62vw,0.58rem)", fontWeight: 500, letterSpacing: "0.14em", textTransform: "uppercase" as const, color: "rgba(255,255,255,0.4)" }}>{t.stats.items[s.itemIdx].label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+          <div style={{ position: "absolute", inset: 0, background: `linear-gradient(to bottom, rgba(2,10,37,0.08) 0%, rgba(2,10,37,0.72) 100%)` }} />
         </div>
         {/* Text below the image */}
         <div className="story-cols" style={{ display: "grid", gridTemplateColumns: "1fr 1.7fr", gap: "clamp(32px,5vw,80px)", padding: "clamp(48px,7vh,80px) clamp(24px,5vw,72px)" }}>
           <div>
-            <div style={{ width: "2px", height: "clamp(18px,2.5vh,24px)", background: ACCENT, marginBottom: "clamp(14px,2vh,20px)" }} />
             <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 500, fontSize: "clamp(0.55rem,0.7vw,0.63rem)", letterSpacing: "0.22em", textTransform: "uppercase", color: "rgba(255,255,255,0.22)", margin: "0 0 clamp(16px,2.2vh,22px) 0" }}>
               {ap.mission.label}
             </p>
@@ -212,7 +196,6 @@ export default function AboutPage() {
 
       {/* ─── VALUES: horizontal editorial list (not cards) ───────────────── */}
       <section style={{ backgroundColor: "#faf9f7", padding: "clamp(64px,10vh,112px) clamp(24px,5vw,72px)" }}>
-        <div style={{ width: "2px", height: "clamp(20px,2.8vh,28px)", background: ACCENT, marginBottom: "clamp(16px,2.2vh,22px)" }} />
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "clamp(28px,4.5vh,44px)", flexWrap: "wrap", gap: "12px" }}>
           <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 500, fontSize: "clamp(0.55rem,0.7vw,0.63rem)", letterSpacing: "0.22em", textTransform: "uppercase", color: "rgba(2,10,37,0.3)", margin: 0 }}>
             {ap.values.label}
@@ -248,9 +231,8 @@ export default function AboutPage() {
         <div>
           {ap.milestones.items.map((item, i) => (
             <div key={i} className="milestone-row" style={{ display: "grid", gridTemplateColumns: "clamp(72px,10vw,120px) 1fr", gap: "clamp(24px,4vw,64px)", padding: "clamp(28px,4.5vh,52px) 0", borderTop: "1px solid rgba(2,10,37,0.08)", alignItems: "start" }}>
-              <div style={{ paddingTop: "4px", position: "relative", borderLeft: `2px solid ${i === 0 ? ACCENT : "rgba(2,10,37,0.12)"}`, paddingLeft: "clamp(10px,1.4vw,16px)", transition: "border-color 0.4s ease" }}>
-                <div style={{ position: "absolute", left: "-5px", top: "10px", width: "8px", height: "8px", borderRadius: "50%", background: i === 0 ? ACCENT : "#ffffff", border: `2px solid ${i === 0 ? ACCENT : "rgba(2,10,37,0.2)"}` }} />
-                <span style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 200, fontSize: "clamp(1.8rem,3.2vw,3.4rem)", color: ACCENT, letterSpacing: "-0.04em", display: "block", lineHeight: 1 }}>{item.year}</span>
+              <div style={{ paddingTop: "6px" }}>
+                <span style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 300, fontSize: "clamp(0.9rem,1.4vw,1.2rem)", color: ACCENT, letterSpacing: "-0.01em", display: "block", lineHeight: 1 }}>{item.year}</span>
               </div>
               <div>
                 <h3 style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 300, fontSize: "clamp(1.5rem,3vw,3rem)", color: NAVY, margin: "0 0 clamp(12px,1.8vh,18px) 0", letterSpacing: "-0.025em", lineHeight: 1.0 }}>{item.title}</h3>

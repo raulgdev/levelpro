@@ -222,7 +222,6 @@ export default function ServicesPage() {
       <section style={{ backgroundColor: "#faf9f7", padding: "clamp(56px,9vh,104px) clamp(24px,5vw,72px)" }}>
         <div style={{ marginBottom: "clamp(40px,6.5vh,72px)" }}>
           {/* Thin header bar: label | tagline */}
-          <div style={{ width: "2px", height: "clamp(20px,2.8vh,28px)", background: ACCENT, marginBottom: "clamp(16px,2.2vh,22px)" }} />
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", paddingBottom: "clamp(14px,2vh,20px)", borderBottom: "1px solid rgba(2,10,37,0.1)", marginBottom: "clamp(20px,3vh,32px)", flexWrap: "wrap", gap: "12px" }}>
             <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 500, fontSize: "clamp(0.55rem,0.7vw,0.63rem)", letterSpacing: "0.22em", textTransform: "uppercase", color: "rgba(2,10,37,0.32)", margin: 0 }}>
               {t.services.label}
@@ -256,7 +255,6 @@ export default function ServicesPage() {
       <section style={{ backgroundColor: NAVY, padding: "clamp(64px,10vh,120px) clamp(24px,5vw,72px)" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: "clamp(16px,2.5vw,28px)", marginBottom: "clamp(40px,6.5vh,72px)" }}>
           <div>
-            <div style={{ width: "2px", height: "clamp(18px,2.5vh,24px)", background: ACCENT, marginBottom: "clamp(14px,2vh,20px)" }} />
             <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 500, fontSize: "clamp(0.55rem,0.7vw,0.63rem)", letterSpacing: "0.22em", textTransform: "uppercase", color: "rgba(255,255,255,0.28)", margin: "0 0 clamp(10px,1.6vh,16px) 0" }}>
               {sp.sectors.label}
             </p>
@@ -269,14 +267,14 @@ export default function ServicesPage() {
 
         <div className="sectors-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "clamp(8px,1.2vw,16px)" }}>
           {sp.sectors.items.map((sector, i) => (
-            <div key={i} style={{ background: i === 0 ? ACCENT : "rgba(255,255,255,0.04)", border: `1px solid ${i === 0 ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.07)"}`, borderRadius: "12px", padding: "clamp(24px,3.2vw,40px) clamp(20px,2.5vw,32px)", display: "flex", flexDirection: "column", gap: "clamp(16px,2.5vh,24px)", transition: "background 0.3s ease, border-color 0.3s ease" }}
-              onMouseEnter={e => { if (i > 0) { (e.currentTarget as HTMLDivElement).style.background = "rgba(255,255,255,0.07)"; (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(255,255,255,0.12)"; } }}
-              onMouseLeave={e => { if (i > 0) { (e.currentTarget as HTMLDivElement).style.background = "rgba(255,255,255,0.04)"; (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(255,255,255,0.07)"; } }}
+            <div key={i} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "12px", padding: "clamp(24px,3.2vw,40px) clamp(20px,2.5vw,32px)", display: "flex", flexDirection: "column", gap: "clamp(16px,2.5vh,24px)", transition: "background 0.3s ease, border-color 0.3s ease" }}
+              onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.background = "rgba(255,255,255,0.07)"; (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(255,255,255,0.12)"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.background = "rgba(255,255,255,0.04)"; (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(255,255,255,0.07)"; }}
             >
-              <div style={{ color: i === 0 ? "#ffffff" : ACCENT, opacity: 1 }}>{SECTOR_ICONS[i]}</div>
+              <div style={{ color: ACCENT, opacity: 0.85 }}>{SECTOR_ICONS[i]}</div>
               <div>
                 <h3 style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 400, fontSize: "clamp(1rem,1.4vw,1.3rem)", color: "#ffffff", margin: "0 0 clamp(8px,1.2vh,12px) 0", letterSpacing: "-0.01em" }}>{sector.title}</h3>
-                <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 300, fontSize: "clamp(0.68rem,0.85vw,0.78rem)", lineHeight: 1.65, color: i === 0 ? "rgba(255,255,255,0.75)" : "rgba(255,255,255,0.42)", margin: 0 }}>{sector.desc}</p>
+                <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 300, fontSize: "clamp(0.68rem,0.85vw,0.78rem)", lineHeight: 1.65, color: "rgba(255,255,255,0.42)", margin: 0 }}>{sector.desc}</p>
               </div>
             </div>
           ))}
@@ -297,9 +295,9 @@ export default function ServicesPage() {
         <div className="process-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "clamp(1px,0.15vw,2px)" }}>
           {sp.process.steps.map((step, i) => (
             <div key={i} style={{ borderLeft: i === 0 ? "none" : "1px solid rgba(2,10,37,0.08)", padding: `0 clamp(24px,3vw,44px) clamp(24px,3.5vh,36px) ${i === 0 ? "0" : "clamp(24px,3vw,44px)"}`, position: "relative" }}>
-              <div style={{ position: "absolute", top: 0, left: i === 0 ? 0 : "clamp(24px,3vw,44px)", right: 0, height: "2px", background: `linear-gradient(to right,${ACCENT},transparent)`, opacity: i === 0 ? 1 : 0, transition: "opacity 0.4s ease" }}
+              <div style={{ position: "absolute", top: 0, left: i === 0 ? 0 : "clamp(24px,3vw,44px)", right: 0, height: "2px", background: `linear-gradient(to right,${ACCENT},transparent)`, opacity: 0, transition: "opacity 0.4s ease" }}
                 onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.opacity = "1"; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.opacity = i === 0 ? "1" : "0"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.opacity = "0"; }}
               />
               <div style={{ paddingTop: "clamp(24px,3.5vh,36px)" }}>
                 <span style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 200, fontSize: "clamp(2.5rem,4.5vw,4.5rem)", color: "rgba(2,10,37,0.07)", letterSpacing: "-0.04em", display: "block", lineHeight: 1, marginBottom: "clamp(12px,2vh,20px)" }}>{step.num}</span>
@@ -312,27 +310,21 @@ export default function ServicesPage() {
       </section>
 
       {/* ── Stats strip ── */}
-      <section style={{ backgroundColor: NAVY, padding: "0", borderTop: "none", position: "relative", overflow: "hidden" }}>
-        {/* Accent top line */}
-        <div style={{ height: "2px", background: `linear-gradient(to right, ${ACCENT}, rgba(24,71,242,0.3) 60%, transparent)` }} />
-        {/* Ghost watermark */}
-        <div style={{ position: "absolute", left: "-1%", top: "50%", transform: "translateY(-50%)", fontFamily: "'Titillium Web',sans-serif", fontWeight: 200, fontSize: "clamp(18rem,30vw,40rem)", lineHeight: 1, color: "rgba(255,255,255,0.014)", letterSpacing: "-0.06em", userSelect: "none", pointerEvents: "none", zIndex: 0 }}>+</div>
-        <div style={{ padding: "clamp(48px,7.5vh,88px) clamp(24px,5vw,72px)", borderTop: "1px solid rgba(255,255,255,0.05)", position: "relative", zIndex: 1 }}>
-          <div style={{ display: "flex", gap: 0, borderTop: "1px solid rgba(255,255,255,0.08)", flexWrap: "wrap" }}>
-            {[
-              { val: "40–70", unit: "m³/h", label: t.stats.items[0].label },
-              { val: "200+", unit: "", label: t.stats.items[1].label },
-              { val: "24h", unit: "", label: t.stats.items[2].label },
-              { val: "9+", unit: "", label: t.stats.items[3].label },
-            ].map((s, i) => (
-              <div key={i} style={{ flex: "1 1 0", minWidth: "120px", padding: "clamp(28px,4vh,48px) clamp(20px,3vw,44px)", borderLeft: i === 0 ? "none" : "1px solid rgba(255,255,255,0.08)" }}>
-                <div style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 200, fontSize: "clamp(2.2rem,4.5vw,4rem)", color: "#ffffff", letterSpacing: "-0.03em", lineHeight: 1, marginBottom: "clamp(8px,1.2vh,12px)", whiteSpace: "nowrap" }}>
-                  {s.val}{s.unit && <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.6rem,0.8vw,0.72rem)", color: "rgba(255,255,255,0.3)", marginLeft: "5px" }}>{s.unit}</span>}
-                </div>
-                <p style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.62rem,0.78vw,0.7rem)", color: "rgba(255,255,255,0.35)", letterSpacing: "0.02em", margin: 0 }}>{s.label}</p>
+      <section style={{ backgroundColor: NAVY, padding: "clamp(48px,7.5vh,88px) clamp(24px,5vw,72px)", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+        <div style={{ display: "flex", gap: 0, borderTop: "1px solid rgba(255,255,255,0.08)", flexWrap: "wrap" }}>
+          {[
+            { val: "40–70", unit: "m³/h", label: t.stats.items[0].label },
+            { val: "200+", unit: "", label: t.stats.items[1].label },
+            { val: "24h", unit: "", label: t.stats.items[2].label },
+            { val: "9+", unit: "", label: t.stats.items[3].label },
+          ].map((s, i) => (
+            <div key={i} style={{ flex: "1 1 0", minWidth: "120px", padding: "clamp(28px,4vh,48px) clamp(20px,3vw,44px)", borderLeft: i === 0 ? "none" : "1px solid rgba(255,255,255,0.08)" }}>
+              <div style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 200, fontSize: "clamp(2.2rem,4.5vw,4rem)", color: "#ffffff", letterSpacing: "-0.03em", lineHeight: 1, marginBottom: "clamp(8px,1.2vh,12px)", whiteSpace: "nowrap" }}>
+                {s.val}{s.unit && <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.6rem,0.8vw,0.72rem)", color: "rgba(255,255,255,0.3)", marginLeft: "5px" }}>{s.unit}</span>}
               </div>
-            ))}
-          </div>
+              <p style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.62rem,0.78vw,0.7rem)", color: "rgba(255,255,255,0.35)", letterSpacing: "0.02em", margin: 0 }}>{s.label}</p>
+            </div>
+          ))}
         </div>
       </section>
 
