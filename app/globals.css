@@ -4,6 +4,14 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* LevelPro typography scale — edit here to update site-wide */
+  --lp-title-fs: clamp(2rem, 3.8vw, 3.8rem);
+  --lp-title-ls: -0.03em;
+  --lp-label-fs: clamp(0.55rem, 0.7vw, 0.63rem);
+  --lp-label-ls: 0.22em;
+  --lp-body-fs: clamp(0.72rem, 0.88vw, 0.82rem);
+  --lp-body-lh: 1.72;
 }
 
 @theme inline {

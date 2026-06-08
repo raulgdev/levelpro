@@ -9,6 +9,7 @@ const NAV_ROUTES = ["/services", "/projects", "/equipment", "/about", "/contact"
 
 const NAVY = "#020A25";
 const ACCENT = "#1847F2";
+const SECTION_BG = "#f0eeea";
 const VIDEO_SRC =
   "https://levelpro.venacydigital.com/wp-content/uploads/2026/04/333333benidorm-poniente-beach-aerial-flyover-mediterra-2026-02-24-23-51-33-utc.mp4";
 
@@ -31,9 +32,9 @@ const SERVICE_IMGS = [
 
 const PROJ_IMG = "https://levelpro.es/wp-content/uploads/2026/05/1-copy.avif";
 const PROJECTS_STATIC = [
-  { id: 1, name: "Hotel Rosamar",            location: "Benidorm", year: "2020", budget: "€3M"   as string|undefined, img: PROJ_IMG, pin: { lat: 38.5411, lng: -0.1225 } },
-  { id: 2, name: "Nomad Hotel Cala Finestrat 1", location: "Benidorm", year: "2020", budget: undefined as string|undefined, img: PROJ_IMG, pin: { lat: 38.5345, lng: -0.1305 } },
-  { id: 3, name: "Residential Complex Altea", location: "Altea",    year: "2021", budget: "€1.8M" as string|undefined, img: PROJ_IMG, pin: { lat: 38.5980, lng: -0.0572 } },
+  { id: 1, name: "Hotel Rosamar",            location: "Benidorm", year: "2020", budget: "€3M"   as string|undefined, img: PROJ_IMG, pin: { lat: 38.5411, lng: -0.1225 }, mapsUrl: "https://maps.google.com/?q=38.5411,-0.1225" },
+  { id: 2, name: "Nomad Hotel Cala Finestrat 1", location: "Benidorm", year: "2020", budget: undefined as string|undefined, img: PROJ_IMG, pin: { lat: 38.5345, lng: -0.1305 }, mapsUrl: "https://maps.google.com/?q=38.5345,-0.1305" },
+  { id: 3, name: "Residential Complex Altea", location: "Altea",    year: "2021", budget: "€1.8M" as string|undefined, img: PROJ_IMG, pin: { lat: 38.5980, lng: -0.0572 }, mapsUrl: "https://maps.google.com/?q=38.5980,-0.0572" },
 ];
 
 const SERVICES_ICONS = [
@@ -165,87 +166,57 @@ function StatNum({ value, suffix="", delay=0 }:{ value:number; suffix?:string; d
   return <span ref={ref} style={{ fontVariantNumeric:"tabular-nums" }}>{count}{suffix}</span>;
 }
 
-// ─── Project card (tall) ──────────────────────────────────────────────────────
-function ProjectCard({ proj, learnMore }: { proj: ProjectData; learnMore: string }) {
+// ─── Meta chip ────────────────────────────────────────────────────────────────
+function MetaChip({ label, value }: { label: string; value: string }) {
   return (
-    <div
-      style={{
-        height: "100%",
-        borderRadius: "14px",
-        background: "#ffffff",
-        overflow: "hidden",
-        display: "flex",
-        flexDirection: "column",
-        boxShadow: "0 12px 48px rgba(2,10,37,0.09)",
-      }}
-    >
-      {/* Text area */}
-      <div style={{ padding: "clamp(24px,3vw,40px) clamp(28px,3.5vw,44px) clamp(12px,1.6vh,18px)", flexShrink: 0 }}>
-        {/* Meta row */}
-        <div style={{ display: "flex", alignItems: "center", gap: "clamp(10px,1.2vw,16px)", marginBottom: "clamp(14px,2vh,20px)", flexWrap: "wrap" }}>
-          <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.5rem,0.6vw,0.56rem)", fontWeight: 600, letterSpacing: "0.16em", textTransform: "uppercase", color: ACCENT }}>{proj.type}</span>
-          <span style={{ width: "1px", height: "10px", background: "rgba(2,10,37,0.15)", flexShrink: 0 }} />
-          <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.5rem,0.6vw,0.56rem)", fontWeight: 500, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(2,10,37,0.38)" }}>{proj.location}</span>
-          <span style={{ width: "1px", height: "10px", background: "rgba(2,10,37,0.15)", flexShrink: 0 }} />
-          <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.5rem,0.6vw,0.56rem)", fontWeight: 500, letterSpacing: "0.12em", textTransform: "uppercase", color: "rgba(2,10,37,0.38)" }}>{proj.year}</span>
-          {proj.budget && (
-            <span style={{ marginLeft: "auto", fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.52rem,0.62vw,0.58rem)", fontWeight: 700, color: "#ffffff", background: ACCENT, borderRadius: "3px", padding: "3px 10px", letterSpacing: "0.04em" }}>{proj.budget}</span>
-          )}
-        </div>
-        {/* Title */}
-        <h3 style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 200, fontSize: "clamp(1.9rem,3.2vw,3.2rem)", lineHeight: 1.02, color: NAVY, margin: "0 0 clamp(8px,1.2vh,12px) 0", letterSpacing: "-0.03em" }}>{proj.name}</h3>
-        {/* Short desc */}
-        <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 300, fontSize: "clamp(0.64rem,0.78vw,0.7rem)", lineHeight: 1.65, color: "rgba(2,10,37,0.42)", margin: 0, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{proj.shortDesc}</p>
-      </div>
-
-      {/* Image — fills remaining height */}
-      <div style={{ flex: 1, overflow: "hidden", margin: "0 clamp(28px,3.5vw,44px)", borderRadius: "10px", minHeight: 0 }}>
-        <img
-          src={proj.img}
-          alt={proj.name}
-          style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", display: "block" }}
-        />
-      </div>
-
-      {/* Bottom row */}
-      <div style={{ padding: "clamp(16px,2vh,22px) clamp(28px,3.5vw,44px)", display: "flex", alignItems: "center", justifyContent: "flex-end", flexShrink: 0 }}>
-        <button
-          style={{
-            fontFamily: "'Inter',sans-serif",
-            fontSize: "clamp(0.58rem,0.7vw,0.64rem)",
-            fontWeight: 500,
-            letterSpacing: "0.05em",
-            color: "#ffffff",
-            background: ACCENT,
-            border: "none",
-            borderRadius: "4px",
-            padding: "9px 18px",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            gap: "6px",
-          }}
-        >
-          {learnMore}
-          <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
-            <path d="M1.5 7.5L7.5 1.5M7.5 1.5H3M7.5 1.5V6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </button>
-      </div>
+    <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
+      <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.42rem,0.5vw,0.46rem)", fontWeight: 600, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(2,10,37,0.3)" }}>{label}</span>
+      <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.6rem,0.72vw,0.66rem)", fontWeight: 500, color: NAVY }}>{value}</span>
     </div>
   );
 }
 
-// ─── Arrow button ─────────────────────────────────────────────────────────────
-function ArrowBtn({ dir, onClick, disabled }: { dir:"prev"|"next"; onClick:()=>void; disabled:boolean }) {
+// ─── Project card ─────────────────────────────────────────────────────────────
+function ProjectCard({ proj, metaKeys, index }: { proj: ProjectData; metaKeys: { year: string; type: string; budget: string; location: string }; index: number }) {
   return (
-    <button onClick={onClick} disabled={disabled} className="proj-arrow-btn" style={{ width:"46px", height:"46px", display:"flex", alignItems:"center", justifyContent:"center", background:disabled?"transparent":"rgba(2,10,37,0.06)", border:`1.5px solid ${disabled?"rgba(2,10,37,0.1)":"rgba(2,10,37,0.22)"}`, borderRadius:"50%", cursor:disabled?"default":"pointer", color:disabled?"rgba(2,10,37,0.2)":NAVY, transition:"all 0.3s ease", flexShrink:0, opacity:disabled?0.35:1 }}>
-      <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-        {dir==="prev"
-          ? <path d="M8.5 2L4 6.5l4.5 4.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-          : <path d="M4.5 2l4.5 4.5-4.5 4.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>}
-      </svg>
-    </button>
+    <div style={{ background: "#ffffff", borderRadius: "12px", overflow: "hidden", border: "1px solid rgba(2,10,37,0.06)", boxShadow: "0 2px 16px rgba(2,10,37,0.07)" }}>
+      {/* Thumbnail — portrait / taller aspect ratio */}
+      <div style={{ position: "relative", height: "clamp(280px,44vh,480px)", overflow: "hidden" }}>
+        <img
+          src={proj.img}
+          alt={proj.name}
+          style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 30%", display: "block" }}
+        />
+        <div style={{ position: "absolute", top: "clamp(12px,1.6vw,16px)", left: "clamp(14px,1.8vw,18px)", background: "rgba(2,10,37,0.68)", backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)", borderRadius: "3px", padding: "4px 10px" }}>
+          <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.44rem,0.52vw,0.48rem)", fontWeight: 600, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.92)" }}>{String(index + 1).padStart(2, "0")}</span>
+        </div>
+      </div>
+      {/* Title */}
+      <div style={{ padding: "clamp(18px,2.4vw,26px) clamp(20px,2.6vw,28px) clamp(6px,0.9vw,8px)" }}>
+        <h3 style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 200, fontSize: "clamp(1.35rem,2.3vw,2.1rem)", lineHeight: 1.05, color: NAVY, margin: 0, letterSpacing: "-0.02em" }}>{proj.name}</h3>
+      </div>
+      {/* Full description — 3-4 rows */}
+      <div style={{ padding: "0 clamp(20px,2.6vw,28px) clamp(14px,1.8vw,18px)" }}>
+        <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 300, fontSize: "clamp(0.65rem,0.8vw,0.72rem)", lineHeight: 1.74, color: "rgba(2,10,37,0.5)", margin: 0 }}>{proj.fullDesc}</p>
+      </div>
+      {/* Service tags — dedicated layout with divider */}
+      <div style={{ padding: "0 clamp(20px,2.6vw,28px) clamp(16px,2.1vw,20px)" }}>
+        <div style={{ height: "1px", background: "rgba(2,10,37,0.06)", marginBottom: "clamp(10px,1.4vw,14px)" }} />
+        <p style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.42rem,0.5vw,0.46rem)", fontWeight: 600, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(2,10,37,0.25)", margin: "0 0 clamp(7px,0.9vw,9px) 0" }}>Services</p>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "clamp(5px,0.6vw,7px)" }}>
+          {proj.tags.map(tag => (
+            <span key={tag} style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.5rem,0.6vw,0.55rem)", fontWeight: 500, letterSpacing: "0.06em", textTransform: "uppercase", color: ACCENT, background: "rgba(24,71,242,0.07)", border: "1px solid rgba(24,71,242,0.15)", borderRadius: "3px", padding: "4px 10px" }}>{tag}</span>
+          ))}
+        </div>
+      </div>
+      {/* Metadata footer */}
+      <div style={{ borderTop: "1px solid rgba(2,10,37,0.07)", padding: "clamp(12px,1.6vw,16px) clamp(20px,2.6vw,28px)", display: "flex", gap: "clamp(18px,2.4vw,28px)", flexWrap: "wrap" }}>
+        <MetaChip label={metaKeys.type} value={proj.type} />
+        <MetaChip label={metaKeys.location} value={proj.location} />
+        {proj.budget && <MetaChip label={metaKeys.budget} value={proj.budget} />}
+        <MetaChip label={metaKeys.year} value={proj.year} />
+      </div>
+    </div>
   );
 }
 
@@ -434,15 +405,16 @@ function LeafletMap({ activeIdx }: { activeIdx:number }) {
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-interface ProjectData { id:number; name:string; type:string; location:string; year:string; budget?:string; shortDesc:string; fullDesc:string; img:string; pin:{lat:number;lng:number}; }
+interface ProjectData { id:number; name:string; type:string; location:string; year:string; budget?:string; shortDesc:string; fullDesc:string; tags:string[]; img:string; pin:{lat:number;lng:number}; mapsUrl:string; }
 interface AnimState { overlayOpacity:number; videoBlur:number; videoBrightness:number; titleOpacity:number; titleY:number; descOpacity:number; descY:number; }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function LevelProPage() {
   const aboutRef = useRef<HTMLDivElement>(null);
-  const projSectionRef = useRef<HTMLElement>(null);
   const rafRef = useRef<number|null>(null);
   const lenisRef = useRef<Lenis|null>(null);
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const mobileSliderRef = useRef<HTMLDivElement>(null);
 
   const [locale, setLocale] = useState<Locale>("en");
   const t = TRANSLATIONS[locale];
@@ -474,6 +446,7 @@ export default function LevelProPage() {
     type: t.projects.items[i].type,
     shortDesc: t.projects.items[i].shortDesc,
     fullDesc: t.projects.items[i].fullDesc,
+    tags: t.projects.items[i].tags,
   }));
 
   const services: ServiceItem[] = SERVICES_ICONS.map((icon,i) => ({
@@ -486,6 +459,8 @@ export default function LevelProPage() {
   const [anim, setAnim] = useState<AnimState>({ overlayOpacity:0, videoBlur:0, videoBrightness:1, titleOpacity:1, titleY:0, descOpacity:1, descY:0 });
   const [scrollY, setScrollY] = useState(0);
   const [activeProject, setActiveProject] = useState(0);
+  const [displayProject, setDisplayProject] = useState(0);
+  const [sidebarVisible, setSidebarVisible] = useState(true);
   const [activeSvc, setActiveSvc] = useState(0);
   const [hoveredSvc, setHoveredSvc] = useState<number|null>(null);
   const [activeLocation, setActiveLocation] = useState(0);
@@ -527,16 +502,45 @@ export default function LevelProPage() {
     return ()=>{ window.removeEventListener("scroll",onScroll); if(rafRef.current!==null)cancelAnimationFrame(rafRef.current); };
   },[computeAnim]);
 
+  // Scroll-based active card: whichever card's center is closest to 40% down the viewport
   useEffect(() => {
     const onScroll = () => {
-      const el = projSectionRef.current;
-      if (!el) return;
-      const progress = (window.scrollY - el.offsetTop) / window.innerHeight;
-      setActiveProject(Math.max(0, Math.min(PROJECTS_STATIC.length - 1, Math.floor(progress))));
+      const line = window.innerHeight * 0.40;
+      let best = 0, bestDist = Infinity;
+      cardRefs.current.forEach((el, i) => {
+        if (!el) return;
+        const { top, height } = el.getBoundingClientRect();
+        const dist = Math.abs(top + height / 2 - line);
+        if (dist < bestDist) { bestDist = dist; best = i; }
+      });
+      setActiveProject(best);
     };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
+
+  useEffect(() => {
+    const slider = mobileSliderRef.current;
+    if (!slider) return;
+    const onScroll = () => {
+      const cardWidth = slider.scrollWidth / PROJECTS_STATIC.length;
+      setActiveProject(Math.min(PROJECTS_STATIC.length - 1, Math.max(0, Math.round(slider.scrollLeft / cardWidth))));
+    };
+    slider.addEventListener("scroll", onScroll, { passive: true });
+    return () => slider.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Fade sidebar content on project change
+  useEffect(() => {
+    if (activeProject === displayProject) return;
+    setSidebarVisible(false);
+    const timer = setTimeout(() => {
+      setDisplayProject(activeProject);
+      setSidebarVisible(true);
+    }, 160);
+    return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeProject]);
 
   const pastHero = vh>0 && scrollY>vh*0.75;
   const displayLocation = hoveredLocation ?? activeLocation;
@@ -576,9 +580,7 @@ export default function LevelProPage() {
         .mat-card-title{font-family:'Titillium Web',sans-serif;font-weight:400;font-size:clamp(1rem,1.3vw,1.2rem);color:${NAVY};margin:0 0 clamp(8px,1.2vh,12px) 0;line-height:1.3;}
         .mat-card-desc{font-family:'Inter',sans-serif;font-size:clamp(0.68rem,0.82vw,0.75rem);line-height:1.65;color:rgba(2,10,37,0.5);margin:0;}
         /* Projects */
-        .proj-arrow-btn:hover:not(:disabled){background:${NAVY}!important;border-color:${NAVY}!important;color:#ffffff!important;}
-        .proj-inner{display:flex;}
-        .proj-map-panel{position:relative;}
+        .proj-maps-btn:hover{background:${NAVY}!important;border-color:${NAVY}!important;color:#ffffff!important;}
         .btn-fill{position:relative!important;overflow:hidden!important;z-index:1;transition:color 0.4s ease!important;}
         .btn-fill::before{content:''!important;position:absolute!important;bottom:0!important;left:0!important;width:100%!important;height:0!important;background-color:${NAVY}!important;z-index:-1!important;clip-path:polygon(0 45%,100% 0,100% 100%,0 100%);transition:height 0.4s cubic-bezier(0.65,0.05,0.36,1) 0.1s,clip-path 0.3s ease!important;}
         .btn-fill:hover{color:#ffffff!important;}
@@ -591,9 +593,14 @@ export default function LevelProPage() {
           .stat-block:first-child{border-top:none!important;padding-top:0!important;}
           .stats-row{flex-direction:column!important;}
           .mat-grid{grid-template-columns:1fr!important;}
-          .proj-inner{flex-direction:column!important;}
-          .proj-map-panel{width:100%!important;height:45vh!important;}
           .hero-bottom-strip{flex-direction:column!important;gap:16px!important;}
+        }
+        .projects-desktop{display:block;}
+        .projects-mobile{display:none;}
+        .proj-mobile-slider::-webkit-scrollbar{display:none;}
+        @media(max-width:768px){
+          .projects-desktop{display:none!important;}
+          .projects-mobile{display:block!important;}
         }
       `}} />
 
@@ -697,11 +704,11 @@ export default function LevelProPage() {
       </div>
 
       {/* ── Services — slider ── */}
-      <section style={{ background:"#ffffff", padding:"clamp(64px,8vh,96px) clamp(24px,5vw,72px) clamp(40px,5vh,56px)", borderTop:"1px solid rgba(2,10,37,0.05)" }}>
+      <section style={{ background:"#ffffff", padding:"clamp(28px,3.5vh,48px) clamp(24px,5vw,72px) clamp(40px,5vh,56px)", borderTop:"1px solid rgba(2,10,37,0.05)" }}>
         {/* Heading */}
         <div style={{ marginBottom:"clamp(24px,3.2vh,38px)" }}>
-          <p style={{ fontFamily:"'Inter',sans-serif", fontWeight:500, fontSize:"clamp(0.55rem,0.7vw,0.63rem)", letterSpacing:"0.2em", textTransform:"uppercase", color:"rgba(2,10,37,0.35)", margin:"0 0 clamp(12px,1.8vh,18px) 0" }}>{t.services.label}</p>
-          <h2 style={{ fontFamily:"'Titillium Web',sans-serif", fontWeight:200, fontSize:"clamp(2.2rem,5vw,5rem)", lineHeight:0.95, color:NAVY, margin:0, letterSpacing:"-0.03em" }}>
+          <p style={{ fontFamily:"'Inter',sans-serif", fontWeight:500, fontSize:"var(--lp-label-fs)", letterSpacing:"var(--lp-label-ls)", textTransform:"uppercase", color:"rgba(2,10,37,0.35)", margin:"0 0 clamp(12px,1.8vh,18px) 0" }}>{t.services.label}</p>
+          <h2 style={{ fontFamily:"'Titillium Web',sans-serif", fontWeight:300, fontSize:"var(--lp-title-fs)", lineHeight:0.95, color:NAVY, margin:0, letterSpacing:"var(--lp-title-ls)" }}>
             {t.services.headingLine1}<br />{t.services.headingLine2}<br />{t.services.headingLine3}
           </h2>
         </div>
@@ -729,8 +736,19 @@ export default function LevelProPage() {
             ))}
           </div>
           <div style={{ display:"flex", gap:"10px" }}>
-            <ArrowBtn dir="prev" onClick={() => setActiveSvc(p => Math.max(0, p-1))} disabled={activeSvc===0} />
-            <ArrowBtn dir="next" onClick={() => setActiveSvc(p => Math.min(services.length-1, p+1))} disabled={activeSvc===services.length-1} />
+            {(["prev","next"] as const).map(dir => {
+              const disabled = dir==="prev" ? activeSvc===0 : activeSvc===services.length-1;
+              return (
+                <button key={dir} onClick={() => setActiveSvc(p => dir==="prev" ? Math.max(0,p-1) : Math.min(services.length-1,p+1))} disabled={disabled}
+                  style={{ width:"46px", height:"46px", display:"flex", alignItems:"center", justifyContent:"center", background:disabled?"transparent":"rgba(2,10,37,0.06)", border:`1.5px solid ${disabled?"rgba(2,10,37,0.1)":"rgba(2,10,37,0.22)"}`, borderRadius:"50%", cursor:disabled?"default":"pointer", color:disabled?"rgba(2,10,37,0.2)":NAVY, flexShrink:0, opacity:disabled?0.35:1 }}>
+                  <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                    {dir==="prev"
+                      ? <path d="M8.5 2L4 6.5l4.5 4.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                      : <path d="M4.5 2l4.5 4.5-4.5 4.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>}
+                  </svg>
+                </button>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -739,8 +757,8 @@ export default function LevelProPage() {
       <section style={{ backgroundColor:"#ffffff", padding:"clamp(64px,10vh,120px) clamp(24px,5vw,72px)", borderTop:"1px solid rgba(2,10,37,0.05)" }}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:"clamp(24px,4vw,48px)", flexWrap:"wrap", marginBottom:"clamp(40px,6vh,72px)" }}>
           <div style={{ flex:"0 0 auto" }}>
-            <p style={{ fontFamily:"'Inter',sans-serif", fontWeight:500, fontSize:"clamp(0.55rem,0.7vw,0.63rem)", letterSpacing:"0.2em", textTransform:"uppercase", color:"rgba(2,10,37,0.35)", margin:"0 0 clamp(12px,1.8vh,18px) 0" }}>{t.stats.label}</p>
-            <RevealText as="h2" text={t.stats.heading} style={{ fontFamily:"'Titillium Web',sans-serif", fontWeight:300, fontSize:"clamp(1.8rem,3.5vw,3.4rem)", lineHeight:1.08, color:NAVY, letterSpacing:"-0.025em", maxWidth:"clamp(300px,48vw,600px)", margin:0 }} />
+            <p style={{ fontFamily:"'Inter',sans-serif", fontWeight:500, fontSize:"var(--lp-label-fs)", letterSpacing:"var(--lp-label-ls)", textTransform:"uppercase", color:"rgba(2,10,37,0.35)", margin:"0 0 clamp(12px,1.8vh,18px) 0" }}>{t.stats.label}</p>
+            <RevealText as="h2" text={t.stats.heading} style={{ fontFamily:"'Titillium Web',sans-serif", fontWeight:300, fontSize:"var(--lp-title-fs)", lineHeight:1.08, color:NAVY, letterSpacing:"var(--lp-title-ls)", maxWidth:"clamp(300px,48vw,600px)", margin:0 }} />
           </div>
           <div style={{ display:"flex", flexDirection:"column", justifyContent:"flex-end", gap:"clamp(10px,1.5vh,16px)", alignSelf:"flex-end" }}>
             <button className="btn-fill" style={{ fontFamily:"'Inter',sans-serif", fontSize:"clamp(0.62rem,0.78vw,0.7rem)", fontWeight:500, letterSpacing:"0.06em", color:NAVY, background:"transparent", border:`1px solid ${NAVY}`, borderRadius:"3px", padding:"11px 24px", cursor:"pointer", display:"flex", alignItems:"center", gap:"8px" }}>
@@ -762,7 +780,7 @@ export default function LevelProPage() {
       {/* ── Materials ── */}
       <section style={{ backgroundColor:"#ffffff", padding:"clamp(64px,10vh,120px) clamp(24px,5vw,72px)", borderTop:"1px solid rgba(2,10,37,0.05)" }}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", flexWrap:"wrap", gap:"clamp(16px,2.5vw,28px)" }}>
-          <RevealText as="h2" text={t.materials.heading} style={{ fontFamily:"'Titillium Web',sans-serif", fontWeight:300, fontSize:"clamp(1.8rem,3.2vw,3rem)", lineHeight:1.1, color:NAVY, letterSpacing:"-0.025em", maxWidth:"clamp(300px,52vw,620px)", margin:0 }} />
+          <RevealText as="h2" text={t.materials.heading} style={{ fontFamily:"'Titillium Web',sans-serif", fontWeight:300, fontSize:"var(--lp-title-fs)", lineHeight:1.1, color:NAVY, letterSpacing:"var(--lp-title-ls)", maxWidth:"clamp(300px,52vw,620px)", margin:0 }} />
           <p style={{ fontFamily:"'Inter',sans-serif", fontWeight:300, fontSize:"clamp(0.72rem,0.9vw,0.82rem)", lineHeight:1.7, color:"rgba(2,10,37,0.5)", maxWidth:"320px", alignSelf:"flex-end", margin:0 }}>{t.materials.tagline}</p>
         </div>
         <div className="mat-grid">
@@ -776,68 +794,145 @@ export default function LevelProPage() {
       </section>
 
       {/* ══ Projects ══ */}
-      <section
-        ref={projSectionRef}
-        style={{ background: "#f0eeea", position: "relative", height: `${PROJECTS_STATIC.length * 100}vh` }}
-      >
-        <div className="proj-inner" style={{ position: "sticky", top: 0, height: "100vh" }}>
+      <section className="projects-desktop" style={{ background: SECTION_BG }}>
+        <div style={{ display: "flex" }}>
 
-          {/* Left: map */}
-          <div className="proj-map-panel" style={{ width: "52%", height: "100%", flexShrink: 0 }}>
-            <LeafletMap activeIdx={activeProject} />
-            {/* Active project pill */}
-            <div style={{ position:"absolute", bottom:"clamp(16px,2.2vw,24px)", left:"50%", transform:"translateX(-50%)", zIndex:900, background:"#ffffff", borderRadius:"100px", padding:"9px 20px", display:"flex", alignItems:"center", gap:"10px", boxShadow:"0 4px 24px rgba(2,10,37,0.16)", whiteSpace:"nowrap" }}>
-              <div style={{ width:"8px", height:"8px", borderRadius:"50%", background:ACCENT, flexShrink:0 }} />
-              <span style={{ fontFamily:"'Inter',sans-serif", fontSize:"clamp(0.6rem,0.78vw,0.7rem)", fontWeight:500, color:NAVY, letterSpacing:"0.03em" }}>{projects[activeProject].name}</span>
-              <span style={{ width:"1px", height:"12px", background:"rgba(2,10,37,0.15)", flexShrink:0 }} />
-              <span style={{ fontFamily:"'Inter',sans-serif", fontSize:"clamp(0.58rem,0.7vw,0.65rem)", color:"rgba(2,10,37,0.45)" }}>{projects[activeProject].location}</span>
-            </div>
-          </div>
+          {/* Left: sticky — full-height map + overlay details panel — 60% */}
+          <div style={{ position: "sticky", top: 0, width: "60%", height: "100vh", flexShrink: 0, overflow: "hidden" }}>
 
-          {/* Right: header + tall card */}
-          <div style={{ flex: 1, minWidth: 0, height: "100%", display: "flex", flexDirection: "column", padding: "clamp(72px,9vh,100px) clamp(28px,4vw,52px) clamp(24px,3vh,36px)" }}>
-
-            {/* Header */}
-            <div style={{ marginBottom: "clamp(16px,2.2vh,24px)", flexShrink: 0 }}>
-              <p style={{ fontFamily:"'Inter',sans-serif", fontWeight:500, fontSize:"clamp(0.55rem,0.7vw,0.63rem)", letterSpacing:"0.2em", textTransform:"uppercase", color:"rgba(2,10,37,0.35)", margin:"0 0 clamp(8px,1.2vh,12px) 0" }}>{t.projects.label}</p>
-              <div style={{ display:"flex", alignItems:"flex-end", justifyContent:"space-between", gap:"16px", flexWrap:"wrap" }}>
-                <h2 style={{ fontFamily:"'Titillium Web',sans-serif", fontWeight:300, fontSize:"clamp(1.4rem,2.4vw,2.4rem)", lineHeight:1.05, color:NAVY, letterSpacing:"-0.025em", margin:0 }}>{t.projects.heading}</h2>
-                <span style={{ fontFamily:"'Inter',sans-serif", fontSize:"clamp(0.56rem,0.7vw,0.63rem)", fontWeight:500, letterSpacing:"0.12em", color:"rgba(2,10,37,0.28)", fontVariantNumeric:"tabular-nums", flexShrink:0, paddingBottom:"2px" }}>
-                  {String(activeProject+1).padStart(2,"0")} / {String(projects.length).padStart(2,"0")}
-                </span>
-              </div>
-              {/* Progress dots */}
-              <div style={{ display:"flex", gap:"6px", marginTop:"clamp(10px,1.4vh,14px)" }}>
-                {projects.map((_,i) => (
-                  <div key={i} style={{ height:"2px", width: i===activeProject?"28px":"6px", background: i===activeProject?NAVY:"rgba(2,10,37,0.15)", borderRadius:"2px", transition:"all 0.5s cubic-bezier(0.37,0,0.63,1)" }} />
-                ))}
-              </div>
+            {/* Map fills the full 100vh — extends to absolute bottom, no gaps */}
+            <div style={{ position: "absolute", inset: 0 }}>
+              <LeafletMap activeIdx={activeProject} />
             </div>
 
-            {/* Tall card area */}
-            <div style={{ flex: 1, position: "relative", overflow: "hidden", minHeight: 0 }}>
-              {projects.map((proj, i) => {
-                const offset = i - activeProject;
-                return (
-                  <div
-                    key={proj.id}
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      transform: offset === 0 ? "translateY(0) scale(1)" : offset > 0 ? "translateY(3.5%) scale(0.975)" : "translateY(-3.5%) scale(0.975)",
-                      opacity: offset === 0 ? 1 : 0,
-                      transition: "transform 0.7s cubic-bezier(0.4,0,0.2,1), opacity 0.55s ease",
-                      pointerEvents: offset === 0 ? "auto" : "none",
-                      willChange: "transform, opacity",
-                    }}
-                  >
-                    <ProjectCard proj={proj} learnMore={t.projects.learnMore} />
+            {/* Details overlay — anchored to bottom, sits atop the map */}
+            <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 11 }}>
+
+              {/* Gradient bridge: map dissolves into the details panel */}
+              <div style={{ height: "clamp(72px,11vh,100px)", background: `linear-gradient(to bottom, transparent, ${SECTION_BG})`, position: "relative" }}>
+                {/* Floating location pill — centered in the gradient transition zone */}
+                <div style={{
+                  position: "absolute", bottom: "clamp(10px,1.5vh,14px)", left: "50%",
+                  transform: "translateX(-50%)",
+                  background: "#ffffff", borderRadius: "100px", padding: "9px 20px",
+                  display: "flex", alignItems: "center", gap: "10px",
+                  boxShadow: "0 4px 24px rgba(2,10,37,0.16)", whiteSpace: "nowrap",
+                  opacity: sidebarVisible ? 1 : 0,
+                  transition: "opacity 0.25s ease",
+                }}>
+                  <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: ACCENT, flexShrink: 0 }} />
+                  <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.6rem,0.78vw,0.7rem)", fontWeight: 500, color: NAVY, letterSpacing: "0.03em" }}>{projects[displayProject].name}</span>
+                  <span style={{ width: "1px", height: "12px", background: "rgba(2,10,37,0.15)", flexShrink: 0 }} />
+                  <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.58rem,0.7vw,0.65rem)", color: "rgba(2,10,37,0.45)" }}>{projects[displayProject].location}</span>
+                </div>
+              </div>
+
+              {/* Solid details panel */}
+              <div style={{ background: SECTION_BG, padding: "clamp(16px,2.2vh,22px) clamp(28px,4vw,52px) clamp(28px,4.5vh,48px)", position: "relative", overflow: "hidden" }}>
+
+                {/* Label + progress row */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "clamp(10px,1.4vh,14px)" }}>
+                  <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 500, fontSize: "var(--lp-label-fs)", letterSpacing: "var(--lp-label-ls)", textTransform: "uppercase", color: "rgba(2,10,37,0.35)", margin: 0 }}>{t.projects.label}</p>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <div style={{ display: "flex", gap: "5px" }}>
+                      {projects.map((_, i) => (
+                        <div key={i} style={{ height: "2px", width: i === activeProject ? "22px" : "5px", background: i === activeProject ? NAVY : "rgba(2,10,37,0.15)", borderRadius: "2px", transition: "all 0.5s cubic-bezier(0.37,0,0.63,1)" }} />
+                      ))}
+                    </div>
+                    <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.52rem,0.65vw,0.6rem)", fontWeight: 500, letterSpacing: "0.12em", color: "rgba(2,10,37,0.28)", fontVariantNumeric: "tabular-nums" }}>
+                      {String(activeProject + 1).padStart(2, "0")} / {String(projects.length).padStart(2, "0")}
+                    </span>
                   </div>
-                );
-              })}
-            </div>
+                </div>
 
+                {/* Fading dynamic content — smooth opacity + lift transition on project change */}
+                <div style={{ opacity: sidebarVisible ? 1 : 0, transform: sidebarVisible ? "translateY(0)" : "translateY(6px)", transition: "opacity 0.28s ease, transform 0.4s cubic-bezier(0.22,1,0.36,1)" }}>
+
+                  {/* Project name */}
+                  <h2 style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 300, fontSize: "clamp(1.4rem,2.4vw,2.6rem)", lineHeight: 1.04, color: NAVY, letterSpacing: "-0.025em", margin: "0 0 clamp(8px,1.2vh,12px) 0" }}>
+                    {projects[displayProject].name}
+                  </h2>
+
+                  {/* Full rich description */}
+                  <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 300, fontSize: "clamp(0.64rem,0.79vw,0.72rem)", lineHeight: 1.72, color: "rgba(2,10,37,0.52)", margin: "0 0 clamp(12px,1.7vh,16px) 0", maxWidth: "clamp(280px,36vw,480px)" }}>
+                    {projects[displayProject].fullDesc}
+                  </p>
+
+                  {/* Divider */}
+                  <div style={{ height: "1px", background: "rgba(2,10,37,0.08)", margin: "0 0 clamp(10px,1.4vh,13px) 0" }} />
+
+                  {/* Service tags */}
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "5px", marginBottom: "clamp(10px,1.4vh,14px)" }}>
+                    {projects[displayProject].tags.map(tag => (
+                      <span key={tag} style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.48rem,0.57vw,0.52rem)", fontWeight: 500, letterSpacing: "0.07em", textTransform: "uppercase", color: ACCENT, background: "rgba(24,71,242,0.07)", border: "1px solid rgba(24,71,242,0.14)", borderRadius: "3px", padding: "3px 9px" }}>{tag}</span>
+                    ))}
+                  </div>
+
+                  {/* Meta chips + Maps button */}
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "clamp(8px,1.2vh,12px)" }}>
+                    <div style={{ display: "flex", gap: "clamp(14px,2vw,22px)", flexWrap: "wrap" }}>
+                      <MetaChip label={t.projects.metaKeys.type} value={projects[displayProject].type} />
+                      <MetaChip label={t.projects.metaKeys.location} value={projects[displayProject].location} />
+                      {projects[displayProject].budget && <MetaChip label={t.projects.metaKeys.budget} value={projects[displayProject].budget!} />}
+                      <MetaChip label={t.projects.metaKeys.year} value={projects[displayProject].year} />
+                    </div>
+                    <a
+                      href={projects[displayProject].mapsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="proj-maps-btn"
+                      style={{ display: "inline-flex", alignItems: "center", gap: "7px", fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.52rem,0.65vw,0.59rem)", fontWeight: 500, letterSpacing: "0.07em", textTransform: "uppercase", color: NAVY, border: "1px solid rgba(2,10,37,0.22)", borderRadius: "3px", padding: "8px 14px", textDecoration: "none", transition: "background 0.22s ease, border-color 0.22s ease, color 0.22s ease", flexShrink: 0 }}
+                    >
+                      <svg width="11" height="11" viewBox="0 0 12 12" fill="none" style={{ flexShrink: 0 }}>
+                        <path d="M6 1C4.07 1 2.5 2.57 2.5 4.5c0 2.78 3.5 6.5 3.5 6.5s3.5-3.72 3.5-6.5C9.5 2.57 7.93 1 6 1zm0 4.75a1.25 1.25 0 110-2.5 1.25 1.25 0 010 2.5z" fill="currentColor"/>
+                      </svg>
+                      {t.projects.viewOnMaps}
+                    </a>
+                  </div>
+
+                </div>
+
+                {/* Bottom fade — premium bleed effect, text dissolves into section bg */}
+                <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "clamp(36px,5.5vh,52px)", background: `linear-gradient(to bottom, transparent, ${SECTION_BG})`, pointerEvents: "none" }} />
+              </div>
+            </div>
           </div>
+
+          {/* Right: scrollable portrait card list — 40% */}
+          <div style={{ flex: 1, minWidth: 0, padding: "clamp(40px,6vh,64px) clamp(24px,3.5vw,44px) 40vh" }}>
+            {projects.map((proj, i) => (
+              <div
+                key={proj.id}
+                ref={(el: HTMLDivElement | null) => { cardRefs.current[i] = el; }}
+                style={{ marginBottom: i < projects.length - 1 ? "clamp(20px,3vh,28px)" : 0 }}
+              >
+                <ProjectCard proj={proj} metaKeys={t.projects.metaKeys} index={i} />
+              </div>
+            ))}
+          </div>
+
+        </div>
+      </section>
+
+      {/* ── Projects mobile ── */}
+      <section className="projects-mobile" style={{ background: "#f0eeea", paddingTop: "clamp(48px,7vh,72px)", paddingBottom: "clamp(48px,7vh,72px)" }}>
+        <div style={{ paddingLeft: "clamp(24px,5vw,48px)", paddingRight: "clamp(24px,5vw,48px)", marginBottom: "clamp(16px,2.5vh,24px)" }}>
+          <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 500, fontSize: "clamp(0.55rem,0.7vw,0.63rem)", letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(2,10,37,0.35)", margin: "0 0 clamp(8px,1.2vh,12px) 0" }}>{t.projects.label}</p>
+          <h2 style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 300, fontSize: "clamp(1.8rem,5vw,3rem)", lineHeight: 1.05, color: NAVY, letterSpacing: "-0.025em", margin: 0 }}>{t.projects.heading}</h2>
+        </div>
+        <div style={{ height: "clamp(200px,45vw,300px)", marginBottom: "clamp(24px,3.5vh,32px)", position: "relative" }}>
+          <LeafletMap activeIdx={activeProject} />
+        </div>
+        <div
+          ref={mobileSliderRef}
+          className="proj-mobile-slider"
+          style={{ display: "flex", overflowX: "auto", scrollSnapType: "x mandatory", gap: "clamp(12px,3vw,16px)", paddingLeft: "clamp(24px,5vw,48px)", paddingRight: "clamp(24px,5vw,48px)", paddingBottom: "4px", scrollbarWidth: "none" }}
+        >
+          {projects.map((proj, i) => (
+            <div key={proj.id} style={{ flex: "0 0 82vw", maxWidth: "360px", scrollSnapAlign: "start" }}>
+              <ProjectCard proj={proj} metaKeys={t.projects.metaKeys} index={i} />
+            </div>
+          ))}
         </div>
       </section>
 

@@ -6,12 +6,7 @@ import { TRANSLATIONS } from "../translations";
 import { NAVY, ACCENT, useLocale, Preloader, NavBar, FooterCTA } from "../components/shared";
 
 const HERO_IMG = "https://levelpro.es/wp-content/uploads/2026/05/3.jpg";
-const SVC_IMGS = [
-  "https://levelpro.es/wp-content/uploads/2026/05/1-copy.avif",
-  "https://levelpro.es/wp-content/uploads/2026/05/3.jpg",
-  "https://levelpro.es/wp-content/uploads/2026/05/1-copy.avif",
-  "https://levelpro.es/wp-content/uploads/2026/05/3.jpg",
-];
+const SVC_VIDEO = "https://levelpro.venacydigital.com/wp-content/uploads/2026/04/333333benidorm-poniente-beach-aerial-flyover-mediterra-2026-02-24-23-51-33-utc.mp4";
 
 const SECTOR_ICONS = [
   <svg key="res" width="26" height="26" viewBox="0 0 26 26" fill="none">
@@ -36,44 +31,146 @@ const SECTOR_ICONS = [
   </svg>,
 ];
 
-// ─── ServiceRow ───────────────────────────────────────────────────────────────
-function ServiceRow({ item, index, isActive, onToggle, img }: {
-  item: { name: string; shortDesc: string; body: string; tags: string[] };
-  index: number; isActive: boolean; onToggle: () => void; img: string;
+// ─── ServiceCard ──────────────────────────────────────────────────────────────
+function ServiceCard({ item, index, isActive, onActivate, videoSrc }: {
+  item: { name: string; shortDesc: string; body: string; tags: string[]; bullets: string[] };
+  index: number; isActive: boolean; onActivate: (i: number | null) => void; videoSrc: string;
 }) {
-  return (
-    <div style={{ borderBottom: "1px solid rgba(2,10,37,0.08)" }}>
-      <button
-        onClick={onToggle}
-        style={{ width: "100%", display: "flex", alignItems: "center", gap: "clamp(20px,3vw,44px)", padding: "clamp(22px,3.2vh,36px) 0", background: "transparent", border: "none", cursor: "pointer", textAlign: "left" }}
-      >
-        <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.58rem,0.72vw,0.65rem)", fontWeight: 600, letterSpacing: "0.14em", color: isActive ? ACCENT : "rgba(2,10,37,0.28)", transition: "color 0.3s ease", flexShrink: 0, fontVariantNumeric: "tabular-nums", minWidth: "28px" }}>
-          0{index + 1}
-        </span>
-        <span style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 300, fontSize: "clamp(1.6rem,3.8vw,4rem)", color: NAVY, letterSpacing: "-0.025em", flex: 1, lineHeight: 1, transition: "color 0.3s ease" }}>
-          {item.name}
-        </span>
-        <span style={{ width: "clamp(30px,2.2vw,38px)", height: "clamp(30px,2.2vw,38px)", display: "flex", alignItems: "center", justifyContent: "center", border: `1px solid ${isActive ? ACCENT : "rgba(2,10,37,0.14)"}`, borderRadius: "50%", color: isActive ? ACCENT : "rgba(2,10,37,0.35)", flexShrink: 0, transition: "all 0.3s ease" }}>
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-            {isActive
-              ? <path d="M2 6h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-              : <path d="M6 2v8M2 6h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>}
-          </svg>
-        </span>
-      </button>
+  const videoRef = useRef<HTMLVideoElement>(null);
 
-      <div style={{ maxHeight: isActive ? "520px" : "0", overflow: "hidden", opacity: isActive ? 1 : 0, transition: `max-height ${isActive ? "0.65s" : "0.4s"} cubic-bezier(0.4,0,0.2,1), opacity ${isActive ? "0.4s ease 0.12s" : "0.2s ease"}` }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr clamp(180px,36%,440px)", gap: "clamp(24px,4vw,64px)", paddingBottom: "clamp(28px,4.5vh,52px)", alignItems: "start" }}>
-          <div>
-            <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 300, fontSize: "clamp(0.78rem,0.98vw,0.9rem)", lineHeight: 1.75, color: "rgba(2,10,37,0.58)", margin: "0 0 clamp(18px,2.8vh,28px) 0", maxWidth: "560px" }}>{item.body}</p>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "7px" }}>
-              {item.tags.map(tag => (
-                <span key={tag} style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.58rem,0.72vw,0.65rem)", color: NAVY, background: "rgba(2,10,37,0.06)", borderRadius: "40px", padding: "4px 12px", letterSpacing: "0.02em" }}>{tag}</span>
-              ))}
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (isActive) { v.play().catch(() => {}); } else { v.pause(); }
+  }, [isActive]);
+
+  return (
+    <div
+      style={{
+        position: "relative",
+        overflow: "hidden",
+        minHeight: isActive ? "clamp(420px,56vh,560px)" : "clamp(110px,15vh,160px)",
+        transition: "min-height 0.65s cubic-bezier(0.4,0,0.2,1)",
+        borderBottom: "1px solid rgba(255,255,255,0.07)",
+        cursor: "pointer",
+      }}
+      onMouseEnter={() => onActivate(index)}
+      onMouseLeave={() => onActivate(null)}
+    >
+      {/* Video background */}
+      <video
+        ref={videoRef}
+        loop muted playsInline preload="metadata"
+        style={{
+          position: "absolute", inset: 0,
+          width: "100%", height: "100%",
+          objectFit: "cover",
+          opacity: isActive ? 0.55 : 0.2,
+          transition: "opacity 0.65s ease",
+        }}
+      >
+        <source src={videoSrc} type="video/mp4" />
+      </video>
+
+      {/* Overlay */}
+      <div style={{
+        position: "absolute", inset: 0,
+        background: isActive
+          ? "linear-gradient(110deg, rgba(2,10,37,0.82) 0%, rgba(2,10,37,0.58) 65%, rgba(2,10,37,0.32) 100%)"
+          : "rgba(2,10,37,0.87)",
+        transition: "background 0.65s ease",
+      }} />
+
+      {/* Content */}
+      <div style={{
+        position: "relative", zIndex: 1,
+        padding: "clamp(28px,4vw,56px)",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+      }}>
+        {/* Header row — always visible */}
+        <div style={{ display: "flex", alignItems: "center", gap: "clamp(20px,3vw,44px)" }}>
+          <span style={{
+            fontFamily: "'Inter',sans-serif",
+            fontSize: "clamp(0.6rem,0.76vw,0.68rem)",
+            fontWeight: 600,
+            letterSpacing: "0.14em",
+            color: isActive ? ACCENT : "rgba(255,255,255,0.3)",
+            transition: "color 0.3s ease",
+            flexShrink: 0,
+            minWidth: "28px",
+          }}>
+            0{index + 1}
+          </span>
+          <span style={{
+            fontFamily: "'Titillium Web',sans-serif",
+            fontWeight: 300,
+            fontSize: "clamp(2.2rem,4.8vw,5.2rem)",
+            color: "#ffffff",
+            letterSpacing: "-0.028em",
+            lineHeight: 1,
+            flex: 1,
+          }}>
+            {item.name}
+          </span>
+          <span className="svc-short-desc" style={{
+            fontFamily: "'Inter',sans-serif",
+            fontSize: "clamp(0.65rem,0.82vw,0.74rem)",
+            color: "rgba(255,255,255,0.38)",
+            maxWidth: "300px",
+            textAlign: "right" as const,
+            lineHeight: 1.5,
+            flexShrink: 0,
+          }}>
+            {item.shortDesc}
+          </span>
+        </div>
+
+        {/* Expanded content */}
+        <div style={{
+          maxHeight: isActive ? "700px" : "0",
+          overflow: "hidden",
+          opacity: isActive ? 1 : 0,
+          transition: `max-height ${isActive ? "0.65s" : "0.35s"} cubic-bezier(0.4,0,0.2,1), opacity ${isActive ? "0.45s ease 0.18s" : "0.2s ease"}`,
+        }}>
+          <div style={{ paddingTop: "clamp(24px,3.8vh,40px)", display: "grid", gridTemplateColumns: "1fr clamp(200px,38%,420px)", gap: "clamp(28px,4vw,64px)", alignItems: "start" }} className="svc-expand-grid">
+            <div>
+              <p style={{
+                fontFamily: "'Inter',sans-serif",
+                fontWeight: 300,
+                fontSize: "clamp(0.78rem,0.95vw,0.9rem)",
+                lineHeight: 1.8,
+                color: "rgba(255,255,255,0.62)",
+                margin: "0 0 clamp(18px,2.8vh,26px) 0",
+                maxWidth: "560px",
+              }}>
+                {item.body}
+              </p>
+              <ul style={{ listStyle: "none", margin: "0 0 clamp(20px,3vh,28px) 0", padding: 0, display: "flex", flexDirection: "column", gap: "clamp(8px,1.2vh,11px)" }}>
+                {item.bullets.map((b, i) => (
+                  <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: "11px", fontFamily: "'Inter',sans-serif", fontWeight: 300, fontSize: "clamp(0.7rem,0.88vw,0.82rem)", color: "rgba(255,255,255,0.55)", lineHeight: 1.6 }}>
+                    <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: ACCENT, flexShrink: 0, marginTop: "6px" }} />
+                    {b}
+                  </li>
+                ))}
+              </ul>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "7px" }}>
+                {item.tags.map(tag => (
+                  <span key={tag} style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.58rem,0.72vw,0.65rem)", color: "rgba(255,255,255,0.72)", background: "rgba(255,255,255,0.09)", border: "1px solid rgba(255,255,255,0.14)", borderRadius: "40px", padding: "4px 13px", letterSpacing: "0.02em" }}>
+                    {tag}
+                  </span>
+                ))}
+              </div>
             </div>
-          </div>
-          <div style={{ aspectRatio: "4/3", borderRadius: "10px", overflow: "hidden" }}>
-            <img src={img} alt={item.name} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+            {/* Accent line / stat block */}
+            <div style={{ borderLeft: `2px solid ${ACCENT}`, paddingLeft: "clamp(20px,2.8vw,36px)", opacity: 0.9 }}>
+              <p style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 200, fontSize: "clamp(0.72rem,0.9vw,0.82rem)", letterSpacing: "0.18em", textTransform: "uppercase" as const, color: ACCENT, margin: "0 0 10px 0" }}>Key benefits</p>
+              <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 300, fontSize: "clamp(0.68rem,0.85vw,0.78rem)", lineHeight: 1.7, color: "rgba(255,255,255,0.45)", margin: 0 }}>
+                {item.shortDesc}
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -144,12 +241,11 @@ export default function ServicesPage() {
         @keyframes fadeBlurReveal{0%{opacity:0;filter:blur(10px);transform:translateY(12px);}100%{opacity:1;filter:blur(0);transform:translateY(0);}}
         @keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
         @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
-        .svc-row-btn:hover span:first-child{color:${ACCENT}!important;}
         .shared-nav-active{text-decoration:underline;text-underline-offset:4px;text-decoration-thickness:1px;}
         .shared-lang-active{text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px;}
         @media(max-width:768px){
-          .svc-row-grid{grid-template-columns:1fr!important;}
-          .svc-row-img{display:none!important;}
+          .svc-short-desc{display:none!important;}
+          .svc-expand-grid{grid-template-columns:1fr!important;}
           .sectors-grid{grid-template-columns:1fr 1fr!important;}
           .process-grid{grid-template-columns:1fr 1fr!important;}
           .hero-strip{flex-direction:column!important;align-items:flex-start!important;gap:12px!important;}
@@ -218,34 +314,34 @@ export default function ServicesPage() {
         </div>
       </section>
 
-      {/* ── Services accordion ── */}
-      <section style={{ backgroundColor: "#faf9f7", padding: "clamp(56px,9vh,104px) clamp(24px,5vw,72px)" }}>
+      {/* ── Services cards ── */}
+      <section style={{ backgroundColor: NAVY, padding: "clamp(56px,9vh,104px) clamp(24px,5vw,72px)" }}>
         <div style={{ marginBottom: "clamp(40px,6.5vh,72px)" }}>
           {/* Thin header bar: label | tagline */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", paddingBottom: "clamp(14px,2vh,20px)", borderBottom: "1px solid rgba(2,10,37,0.1)", marginBottom: "clamp(20px,3vh,32px)", flexWrap: "wrap", gap: "12px" }}>
-            <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 500, fontSize: "clamp(0.55rem,0.7vw,0.63rem)", letterSpacing: "0.22em", textTransform: "uppercase", color: "rgba(2,10,37,0.32)", margin: 0 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", paddingBottom: "clamp(14px,2vh,20px)", borderBottom: "1px solid rgba(255,255,255,0.1)", marginBottom: "clamp(20px,3vh,32px)", flexWrap: "wrap", gap: "12px" }}>
+            <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 500, fontSize: "clamp(0.55rem,0.7vw,0.63rem)", letterSpacing: "0.22em", textTransform: "uppercase", color: "rgba(255,255,255,0.28)", margin: 0 }}>
               {t.services.label}
             </p>
-            <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 300, fontSize: "clamp(0.68rem,0.85vw,0.78rem)", lineHeight: 1.6, color: "rgba(2,10,37,0.45)", maxWidth: "380px", margin: 0, textAlign: "right" as const }}>
+            <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 300, fontSize: "clamp(0.68rem,0.85vw,0.78rem)", lineHeight: 1.6, color: "rgba(255,255,255,0.38)", maxWidth: "380px", margin: 0, textAlign: "right" as const }}>
               {t.services.tagline}
             </p>
           </div>
           {/* Bold headline statement */}
-          <h2 style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 300, fontSize: "clamp(2.6rem,5.8vw,6.5rem)", lineHeight: 0.92, color: NAVY, letterSpacing: "-0.03em", margin: 0 }}>
+          <h2 style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 300, fontSize: "var(--lp-title-fs)", lineHeight: 0.95, color: "#ffffff", letterSpacing: "var(--lp-title-ls)", margin: 0 }}>
             {t.services.headingLine1}<br />
             <span style={{ color: ACCENT }}>{t.services.headingLine2}</span> {t.services.headingLine3}
           </h2>
         </div>
 
-        <div style={{ borderTop: "1px solid rgba(2,10,37,0.08)" }}>
+        <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
           {sp.detail.items.map((item, i) => (
-            <ServiceRow
+            <ServiceCard
               key={i}
               item={item}
               index={i}
               isActive={activeSvc === i}
-              onToggle={() => setActiveSvc(activeSvc === i ? null : i)}
-              img={SVC_IMGS[i]}
+              onActivate={setActiveSvc}
+              videoSrc={SVC_VIDEO}
             />
           ))}
         </div>
@@ -258,7 +354,7 @@ export default function ServicesPage() {
             <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 500, fontSize: "clamp(0.55rem,0.7vw,0.63rem)", letterSpacing: "0.22em", textTransform: "uppercase", color: "rgba(255,255,255,0.28)", margin: "0 0 clamp(10px,1.6vh,16px) 0" }}>
               {sp.sectors.label}
             </p>
-            <h2 style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 200, fontSize: "clamp(2.5rem,6.2vw,7rem)", lineHeight: 0.88, color: "#ffffff", letterSpacing: "-0.04em", margin: 0 }}>
+            <h2 style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 300, fontSize: "var(--lp-title-fs)", lineHeight: 0.95, color: "#ffffff", letterSpacing: "var(--lp-title-ls)", margin: 0 }}>
               {sp.sectors.heading}
             </h2>
           </div>
@@ -287,7 +383,7 @@ export default function ServicesPage() {
           <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 500, fontSize: "clamp(0.55rem,0.7vw,0.63rem)", letterSpacing: "0.22em", textTransform: "uppercase", color: "rgba(2,10,37,0.3)", margin: "0 0 clamp(12px,1.8vh,20px) 0" }}>
             {sp.process.label}
           </p>
-          <h2 style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 300, fontSize: "clamp(2.2rem,5vw,5.2rem)", lineHeight: 0.93, color: NAVY, letterSpacing: "-0.03em", margin: 0 }}>
+          <h2 style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 300, fontSize: "var(--lp-title-fs)", lineHeight: 0.95, color: NAVY, letterSpacing: "var(--lp-title-ls)", margin: 0 }}>
             {sp.process.heading}
           </h2>
         </div>

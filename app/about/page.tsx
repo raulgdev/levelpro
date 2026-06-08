@@ -179,7 +179,7 @@ export default function AboutPage() {
             <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 500, fontSize: "clamp(0.55rem,0.7vw,0.63rem)", letterSpacing: "0.22em", textTransform: "uppercase", color: "rgba(255,255,255,0.22)", margin: "0 0 clamp(16px,2.2vh,22px) 0" }}>
               {ap.mission.label}
             </p>
-            <h2 style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 200, fontSize: "clamp(1.8rem,3.4vw,3.6rem)", lineHeight: 0.97, color: "#fff", letterSpacing: "-0.03em", margin: 0 }}>
+            <h2 style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 300, fontSize: "var(--lp-title-fs)", lineHeight: 0.97, color: "#fff", letterSpacing: "var(--lp-title-ls)", margin: 0 }}>
               {ap.mission.heading}
             </h2>
           </div>
@@ -200,7 +200,7 @@ export default function AboutPage() {
           <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 500, fontSize: "clamp(0.55rem,0.7vw,0.63rem)", letterSpacing: "0.22em", textTransform: "uppercase", color: "rgba(2,10,37,0.3)", margin: 0 }}>
             {ap.values.label}
           </p>
-          <h2 style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 300, fontSize: "clamp(1.6rem,2.8vw,2.8rem)", lineHeight: 1.05, color: NAVY, letterSpacing: "-0.025em", margin: 0 }}>
+          <h2 style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 300, fontSize: "var(--lp-title-fs)", lineHeight: 1.05, color: NAVY, letterSpacing: "var(--lp-title-ls)", margin: 0 }}>
             {ap.values.heading}
           </h2>
         </div>
@@ -223,7 +223,7 @@ export default function AboutPage() {
           <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 500, fontSize: "clamp(0.55rem,0.7vw,0.63rem)", letterSpacing: "0.22em", textTransform: "uppercase", color: "rgba(2,10,37,0.3)", margin: "0 0 clamp(12px,1.8vh,18px) 0" }}>
             {ap.milestones.label}
           </p>
-          <h2 style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 300, fontSize: "clamp(2rem,3.8vw,3.8rem)", lineHeight: 1.0, color: NAVY, letterSpacing: "-0.03em", margin: 0, maxWidth: "540px" }}>
+          <h2 style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 300, fontSize: "var(--lp-title-fs)", lineHeight: 1.0, color: NAVY, letterSpacing: "var(--lp-title-ls)", margin: 0, maxWidth: "540px" }}>
             {ap.milestones.heading}
           </h2>
         </div>

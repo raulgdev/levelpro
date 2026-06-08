@@ -28,9 +28,10 @@ export interface Translation {
   projects: {
     label: string;
     heading: string;
-    items: Array<{ type: string; shortDesc: string; fullDesc: string }>;
-    metaKeys: { year: string; type: string; budget: string };
+    items: Array<{ type: string; shortDesc: string; fullDesc: string; tags: string[] }>;
+    metaKeys: { year: string; type: string; budget: string; location: string };
     learnMore: string;
+    viewOnMaps: string;
   };
   footer: {
     ctaLabel: string; ctaHeading: string; ctaBtn: string;
@@ -43,7 +44,7 @@ export interface Translation {
       tagline: string; scrollLabel: string;
     };
     detail: {
-      items: Array<{ name: string; shortDesc: string; body: string; tags: string[] }>;
+      items: Array<{ name: string; shortDesc: string; body: string; tags: string[]; bullets: string[] }>;
     };
     sectors: {
       label: string; heading: string;
@@ -168,20 +169,24 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
           type: "Hotel",
           shortDesc: "Concrete pumping operations and surface finishing works for the renovation of Hotel Rosamar.",
           fullDesc: "Our team supported the development and renovation of Hotel Rosamar in Benidorm through concrete pumping operations and surface finishing works. The project, completed in 2020, required precise coordination and reliable on-site execution.",
+          tags: ["Concrete Pumping", "Surface Finishing", "Material Placement"],
         },
         {
           type: "Hotel",
           shortDesc: "Concrete pumping and surface finishing for the Nomad Hotel renovation in Cala Finestrat.",
           fullDesc: "Our team was involved in the project through concrete pumping operations and surface finishing works, contributing to the efficient execution of key construction stages.",
+          tags: ["Concrete Pumping", "Surface Finishing"],
         },
         {
           type: "Residential",
           shortDesc: "High-pressure concrete pumping across multiple floors of a coastal residential development.",
           fullDesc: "A multi-story residential complex in Altea requiring high-pressure concrete pumping across multiple floors. Our team delivered precise material placement throughout the 14-month construction period.",
+          tags: ["High-pressure Pumping", "Material Placement", "Foundation Works"],
         },
       ],
-      metaKeys: { year: "Year", type: "Type", budget: "Budget" },
+      metaKeys: { year: "Year", type: "Type", budget: "Budget", location: "Location" },
       learnMore: "Learn more",
+      viewOnMaps: "View on Maps",
     },
     footer: {
       ctaLabel: "Start a Project",
@@ -205,24 +210,52 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
             name: "Concrete Pumping",
             shortDesc: "High-pressure pumping systems for multi-story and large-scale construction sites.",
             body: "Our concrete pumping service delivers high-pressure solutions for multi-story residential and commercial buildings. Our fleet of boom pumps can reach heights of up to 50 metres, ensuring consistent placement accuracy and significantly reducing manual labour on every pour.",
+            bullets: [
+              "Boom pump reach of up to 50 metres for multi-storey residential and commercial structures",
+              "Full-scale fleet available for simultaneous deployment across multiple active sites",
+              "GPS-tracked pour scheduling integrated seamlessly with your construction programme",
+              "On-site operator supervision from start to finish on every job",
+              "Significantly reduces manual handling, scaffold requirements and site labour costs",
+            ],
             tags: ["Residential", "Commercial", "High-rise"],
           },
           {
             name: "Material Placement",
             shortDesc: "Precise concrete distribution ensuring consistent quality across every pour.",
             body: "Precise material placement is critical to the structural integrity of every project. Our experienced operators ensure even distribution and consistent depth across slabs, walls and columns — minimising waste and achieving first-time results across all project scales.",
+            bullets: [
+              "Consistent slab depth and full coverage maintained across every pour area",
+              "Certified operators experienced in structural placement for all concrete mix types",
+              "Real-time coordination with site supervisors throughout each operation",
+              "Compatible with standard mixes and specialist admixtures including fibre-reinforced concrete",
+              "On-site cleanup and equipment removal included as standard on all placements",
+            ],
             tags: ["Slabs", "Walls", "Columns"],
           },
           {
             name: "Shotcrete Works",
             shortDesc: "Pneumatic application for tunnels, retaining walls and complex geometries.",
             body: "Shotcrete — sprayed concrete applied pneumatically — is the method of choice for retaining walls, slope stabilisation and complex geometric forms. Our equipment delivers rapid, high-strength coverage with precise control over layer thickness and bond quality.",
+            bullets: [
+              "Wet-mix and dry-mix processes available to suit project specification and site requirements",
+              "High early-strength formulations for structurally critical retaining wall and tunnel applications",
+              "Rapid layer build-up for fast turnaround on slope stabilisation and emergency works",
+              "Nozzle positioning adapted for confined spaces and complex geometric surface areas",
+              "Layer thickness and uniformity verified by site supervisor at every stage of application",
+            ],
             tags: ["Retaining Walls", "Tunnels", "Slope Stabilisation"],
           },
           {
             name: "Foundation Works",
             shortDesc: "Engineered foundation solutions for demanding ground conditions.",
             body: "Reliable foundations are the bedrock of every successful structure. We design and execute engineered solutions adapted to the specific geotechnical conditions of each site — from strip footings and pad foundations to complex raft slabs for high-rise structures.",
+            bullets: [
+              "Geotechnical site assessments informing the design of every foundation solution",
+              "Reinforced concrete solutions engineered for challenging ground conditions and load requirements",
+              "Coordination with structural engineers throughout design and specification phases",
+              "Precise volumetric concrete batching for all critical foundation pours",
+              "Post-pour inspection protocols and documentation included on all engineered foundation works",
+            ],
             tags: ["Strip Footings", "Raft Slabs", "Pad Foundations"],
           },
         ],
@@ -390,20 +423,24 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
           type: "Hotel",
           shortDesc: "Betonpumparbeiten und Oberflächenbehandlung für die Renovierung des Hotel Rosamar.",
           fullDesc: "Unser Team unterstützte die Entwicklung und Renovierung des Hotel Rosamar in Benidorm durch Betonpumparbeiten und Oberflächenbehandlung. Das 2020 abgeschlossene Projekt erforderte präzise Koordination und zuverlässige Ausführung vor Ort.",
+          tags: ["Betonpumpen", "Oberflächenfinish", "Materialplatzierung"],
         },
         {
           type: "Hotel",
           shortDesc: "Betonpumpen und Oberflächenfinish für die Renovierung des Nomad Hotel in Cala Finestrat.",
           fullDesc: "Unser Team war durch Betonpumparbeiten und Oberflächenbehandlung am Projekt beteiligt und trug zur effizienten Umsetzung wichtiger Bauphasen bei.",
+          tags: ["Betonpumpen", "Oberflächenfinish"],
         },
         {
           type: "Wohnbau",
           shortDesc: "Hochdruckbetonpumpen über mehrere Stockwerke eines Küstenwohnkomplexes.",
           fullDesc: "Ein mehrgeschossiger Wohnkomplex in Altea, für den Hochdruckbetonpumpen über mehrere Etagen erforderlich war. Unser Team lieferte präzise Materialplatzierung während der 14-monatigen Bauzeit.",
+          tags: ["Hochdruckpumpen", "Materialplatzierung", "Fundamentarbeiten"],
         },
       ],
-      metaKeys: { year: "Jahr", type: "Typ", budget: "Budget" },
+      metaKeys: { year: "Jahr", type: "Typ", budget: "Budget", location: "Standort" },
       learnMore: "Mehr erfahren",
+      viewOnMaps: "Auf der Karte anzeigen",
     },
     footer: {
       ctaLabel: "Projekt starten",
@@ -427,24 +464,52 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
             name: "Betonpumpen",
             shortDesc: "Hochdruckpumpsysteme für mehrgeschossige und großflächige Baustellen.",
             body: "Unser Betonpumpservice bietet Hochdrucklösungen für mehrgeschossige Wohn- und Gewerbegebäude. Unsere Autobetonpumpen erreichen Höhen von bis zu 50 Metern und gewährleisten präzise Materialplatzierung bei deutlich reduziertem manuellem Aufwand.",
+            bullets: [
+              "Reichweite der Autobetonpumpen bis zu 50 Meter für mehrgeschossige Wohn- und Gewerbebauten",
+              "Vollständige Flotte für gleichzeitigen Einsatz auf mehreren aktiven Baustellen verfügbar",
+              "GPS-gestützte Einsatzplanung für reibungslose Integration in Ihren Bauablauf",
+              "Bedienerbetreuung vor Ort von Beginn bis Ende jedes Einsatzes",
+              "Deutliche Reduzierung von Handarbeit, Gerüstbedarf und Arbeitskosten auf der Baustelle",
+            ],
             tags: ["Wohnbau", "Gewerbe", "Hochbau"],
           },
           {
             name: "Materialplatzierung",
             shortDesc: "Präzise Betonverteilung für gleichbleibende Qualität bei jedem Guss.",
             body: "Präzise Materialplatzierung ist entscheidend für die strukturelle Integrität jedes Projekts. Unsere erfahrenen Bediener sorgen für gleichmäßige Verteilung und gleichbleibende Tiefe bei Platten, Wänden und Stützen — bei minimalem Materialverlust.",
+            bullets: [
+              "Gleichmäßige Plattentiefe und vollständige Abdeckung bei jedem Guss gewährleistet",
+              "Zertifizierte Bediener mit Erfahrung in struktureller Platzierung aller Betonmischungstypen",
+              "Echtzeit-Koordination mit Baustellenverantwortlichen während des gesamten Einsatzes",
+              "Kompatibel mit Standardmischungen und Sonderzusätzen einschließlich faserbewehrtem Beton",
+              "Baustellenreinigung und Gerätentfernung standardmäßig bei allen Platzierungen inbegriffen",
+            ],
             tags: ["Platten", "Wände", "Stützen"],
           },
           {
             name: "Spritzbeton",
             shortDesc: "Pneumatische Aufbringung für Tunnel, Stützmauern und komplexe Geometrien.",
             body: "Spritzbeton ist die bevorzugte Methode für Stützmauern, Böschungssicherung und komplexe geometrische Formen. Unsere pneumatischen Geräte ermöglichen eine schnelle, hochfeste Beschichtung mit präziser Kontrolle über Schichtdicke und Haftqualität.",
+            bullets: [
+              "Nass- und Trockenspritzverfahren für unterschiedliche Projektanforderungen und Standortbedingungen",
+              "Hochfrühfeste Formulierungen für strukturkritische Stützmauer- und Tunnelanwendungen",
+              "Schneller Schichtaufbau für rasche Böschungssicherung und Notarbeiten",
+              "Düsenführung für beengte Räume und komplexe geometrische Oberflächen angepasst",
+              "Schichtdicke und Gleichmäßigkeit in jeder Ausführungsphase vom Baustellenverantwortlichen geprüft",
+            ],
             tags: ["Stützmauern", "Tunnel", "Böschungssicherung"],
           },
           {
             name: "Fundamentarbeiten",
             shortDesc: "Konstruktive Fundamentlösungen für anspruchsvolle Bodenbedingungen.",
             body: "Zuverlässige Fundamente sind das Fundament jedes erfolgreichen Bauwerks. Wir planen und realisieren konstruktive Lösungen, die auf die spezifischen geotechnischen Bedingungen jedes Standorts abgestimmt sind — von Streifenfundamenten bis zu komplexen Bodenplatten.",
+            bullets: [
+              "Geotechnische Standortbewertungen als Grundlage jedes Fundamententwurfs",
+              "Stahlbetonlösungen für schwierige Bodenverhältnisse und hohe Lastenanforderungen",
+              "Koordination mit Tragwerksplanern in Entwurfs- und Ausführungsphase",
+              "Präzise volumetrische Betonaufbereitung für alle kritischen Fundamentgüsse",
+              "Prüfprotokolle und Dokumentation nach dem Guss bei allen konstruktiven Fundamentarbeiten inbegriffen",
+            ],
             tags: ["Streifenfundamente", "Bodenplatten", "Einzelfundamente"],
           },
         ],
@@ -612,20 +677,24 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
           type: "Hotel",
           shortDesc: "Bombeo de hormigón y trabajos de acabado superficial para la renovación del Hotel Rosamar.",
           fullDesc: "Nuestro equipo apoyó el desarrollo y la renovación del Hotel Rosamar en Benidorm mediante bombeo de hormigón y trabajos de acabado superficial. El proyecto, completado en 2020, requirió una coordinación precisa y una ejecución fiable en obra.",
+          tags: ["Bombeo de Hormigón", "Acabado Superficial", "Colocación de Material"],
         },
         {
           type: "Hotel",
           shortDesc: "Bombeo de hormigón y acabado superficial para la renovación del Nomad Hotel en Cala Finestrat.",
           fullDesc: "Nuestro equipo participó en el proyecto a través de operaciones de bombeo de hormigón y trabajos de acabado superficial, contribuyendo a la ejecución eficiente de las etapas clave de la construcción.",
+          tags: ["Bombeo de Hormigón", "Acabado Superficial"],
         },
         {
           type: "Residencial",
           shortDesc: "Bombeo de hormigón de alta presión en múltiples plantas de un complejo residencial costero.",
           fullDesc: "Un complejo residencial de varios pisos en Altea que requirió bombeo de hormigón de alta presión en múltiples plantas. Nuestro equipo realizó una colocación precisa del material durante los 14 meses de construcción.",
+          tags: ["Bombeo de Alta Presión", "Colocación de Material", "Cimentación"],
         },
       ],
-      metaKeys: { year: "Año", type: "Tipo", budget: "Presupuesto" },
+      metaKeys: { year: "Año", type: "Tipo", budget: "Presupuesto", location: "Ubicación" },
       learnMore: "Saber más",
+      viewOnMaps: "Ver en el mapa",
     },
     footer: {
       ctaLabel: "Iniciar un Proyecto",
@@ -649,24 +718,52 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
             name: "Bombeo de Hormigón",
             shortDesc: "Sistemas de bombeo de alta presión para obras multiplanta y a gran escala.",
             body: "Nuestro servicio de bombeo de hormigón ofrece soluciones de alta presión para edificios residenciales y comerciales de varios pisos. Nuestra flota de bombas pluma puede alcanzar alturas de hasta 50 metros, garantizando una colocación precisa y reduciendo el trabajo manual.",
+            bullets: [
+              "Alcance de la bomba pluma de hasta 50 metros para estructuras residenciales y comerciales de varios pisos",
+              "Flota completa disponible para despliegue simultáneo en múltiples obras activas",
+              "Programación del vertido con seguimiento GPS integrada en su plan de obra",
+              "Supervisión del operador en obra de principio a fin en cada trabajo",
+              "Reduce significativamente el manejo manual, los requisitos de andamiaje y los costes de mano de obra",
+            ],
             tags: ["Residencial", "Comercial", "Gran altura"],
           },
           {
             name: "Colocación de Material",
             shortDesc: "Distribución precisa del hormigón para garantizar calidad uniforme en cada vertido.",
             body: "La colocación precisa del material es fundamental para la integridad estructural de cada proyecto. Nuestros operadores garantizan una distribución uniforme y una profundidad constante en losas, muros y pilares, minimizando el desperdicio.",
+            bullets: [
+              "Profundidad uniforme de losa y cobertura completa mantenidas en todas las zonas de vertido",
+              "Operadores certificados con experiencia en colocación estructural para todo tipo de mezclas",
+              "Coordinación en tiempo real con los responsables de obra durante cada operación",
+              "Compatible con mezclas estándar y especialidades, incluido el hormigón reforzado con fibras",
+              "Limpieza en obra y retirada de equipos incluidas como estándar en todas las colocaciones",
+            ],
             tags: ["Losas", "Muros", "Pilares"],
           },
           {
             name: "Gunitado",
             shortDesc: "Aplicación neumática para túneles, muros de contención y geometrías complejas.",
             body: "El gunite — hormigón proyectado neumáticamente — es el método preferido para muros de contención, estabilización de taludes y formas geométricas complejas. Nuestros equipos ofrecen una cobertura rápida y de alta resistencia con control preciso del espesor de capa.",
+            bullets: [
+              "Procesos de mezcla húmeda y seca disponibles según la especificación del proyecto y los requisitos del sitio",
+              "Formulaciones de alta resistencia temprana para aplicaciones estructuralmente críticas en muros y túneles",
+              "Rápida acumulación de capas para estabilización de taludes y trabajos de emergencia",
+              "Posicionamiento de la boquilla adaptado para espacios confinados y superficies geométricas complejas",
+              "Espesor y uniformidad de capa verificados por el responsable de obra en cada fase de aplicación",
+            ],
             tags: ["Muros de Contención", "Túneles", "Estabilización de Taludes"],
           },
           {
             name: "Cimentación",
             shortDesc: "Soluciones de cimentación diseñadas para condiciones de terreno exigentes.",
             body: "Una cimentación fiable es la base de todo proyecto exitoso. Diseñamos y ejecutamos soluciones adaptadas a las condiciones geotécnicas específicas de cada emplazamiento — desde zapatas corridas hasta losas de cimentación complejas para estructuras de gran altura.",
+            bullets: [
+              "Evaluaciones geotécnicas del terreno que informan el diseño de cada solución de cimentación",
+              "Soluciones de hormigón armado diseñadas para condiciones de terreno difíciles y grandes cargas",
+              "Coordinación con ingenieros estructurales durante las fases de diseño y especificación",
+              "Dosificación volumétrica precisa del hormigón para todos los vertidos críticos de cimentación",
+              "Protocolos de inspección post-vertido y documentación incluidos en todas las obras de cimentación",
+            ],
             tags: ["Zapatas Corridas", "Losas de Cimentación", "Cimentación por Pilotes"],
           },
         ],

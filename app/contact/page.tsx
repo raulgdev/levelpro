@@ -192,7 +192,7 @@ export default function ContactPage() {
 
           {/* ── Info column ── */}
           <div>
-            <h2 style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 200, fontSize: "clamp(2rem,3.8vw,4rem)", lineHeight: 0.97, color: NAVY, letterSpacing: "-0.03em", margin: "0 0 clamp(36px,5.5vh,56px) 0" }}>
+            <h2 style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 300, fontSize: "var(--lp-title-fs)", lineHeight: 0.97, color: NAVY, letterSpacing: "var(--lp-title-ls)", margin: "0 0 clamp(36px,5.5vh,56px) 0" }}>
               {cp.info.heading}
             </h2>
 
