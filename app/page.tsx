@@ -407,15 +407,19 @@ function LeafletMap({ activeIdx }: { activeIdx:number }) {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface ProjectData { id:number; name:string; type:string; location:string; year:string; budget?:string; shortDesc:string; fullDesc:string; tags:string[]; img:string; pin:{lat:number;lng:number}; mapsUrl:string; }
-interface AnimState { overlayOpacity:number; videoBlur:number; videoBrightness:number; titleOpacity:number; titleY:number; descOpacity:number; descY:number; }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function LevelProPage() {
   const aboutRef = useRef<HTMLDivElement>(null);
-  const rafRef = useRef<number|null>(null);
   const lenisRef = useRef<Lenis|null>(null);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
   const mobileSliderRef = useRef<HTMLDivElement>(null);
+  const heroOverlayRef = useRef<HTMLDivElement>(null);
+  const heroTopBarRef = useRef<HTMLDivElement>(null);
+  const heroTitleRef = useRef<HTMLDivElement>(null);
+  const heroDescRef = useRef<HTMLDivElement>(null);
+  const heroLocTabsRef = useRef<HTMLDivElement>(null);
+  const heroVideoWrapRef = useRef<HTMLDivElement>(null);
 
   const [locale, setLocale] = useState<Locale>("en");
   const t = TRANSLATIONS[locale];
@@ -459,7 +463,6 @@ export default function LevelProPage() {
     bullets: t.services.items[i].bullets,
   }));
 
-  const [anim, setAnim] = useState<AnimState>({ overlayOpacity:0, videoBlur:0, videoBrightness:1, titleOpacity:1, titleY:0, descOpacity:1, descY:0 });
   const [pastHero, setPastHero] = useState(false);
   const [activeProject, setActiveProject] = useState(0);
   const [displayProject, setDisplayProject] = useState(0);
@@ -468,47 +471,68 @@ export default function LevelProPage() {
   const [activeLocation, setActiveLocation] = useState(0);
   const [hoveredLocation, setHoveredLocation] = useState<number|null>(null);
 
-  useEffect(() => {
-    const lenis = new Lenis({ duration:1.0, easing:(t:number)=>1-Math.pow(1-t,4) });
-    lenisRef.current = lenis;
-    let id:number;
-    const raf=(time:number)=>{ lenis.raf(time); id=requestAnimationFrame(raf); };
-    id = requestAnimationFrame(raf);
-    return ()=>{ cancelAnimationFrame(id); lenis.destroy(); lenisRef.current=null; };
-  },[]);
-
   const computeAnim = useCallback(() => {
-    const about=aboutRef.current; if(!about)return;
-    const rect=about.getBoundingClientRect(); const vhNow=window.innerHeight;
-    const rawProgress=Math.max(0,Math.min(1,(vhNow-rect.top)/vhNow));
-    if(window.scrollY===0){ setAnim({overlayOpacity:0,videoBlur:0,videoBrightness:1,titleOpacity:1,titleY:0,descOpacity:1,descY:0}); return; }
-    const scrolledPx=rawProgress*vhNow;
-    const ap=rawProgress<=DEADZONE?0:(rawProgress-DEADZONE)/(1-DEADZONE);
-    setAnim({ overlayOpacity:Math.min(1,ap*2.2), videoBlur:Math.min(12,ap*12), videoBrightness:Math.max(0.1,1-ap*1.8), titleOpacity:Math.max(0,1-ap*3.5), titleY:-(scrolledPx*0.3), descOpacity:Math.max(0,1-ap*2.8), descY:-(scrolledPx*0.2) });
-  },[]);
+    const about = aboutRef.current;
+    if (!about) return;
+    const rect = about.getBoundingClientRect();
+    const vhNow = window.innerHeight;
+    const rawProgress = Math.max(0, Math.min(1, (vhNow - rect.top) / vhNow));
 
-  // Single scroll listener — pastHero only re-renders when crossing the threshold
+    let overlayOpacity = 0, videoBrightness = 1, titleOpacity = 1, titleY = 0, descOpacity = 1, descY = 0;
+    if (window.scrollY > 0) {
+      const scrolledPx = rawProgress * vhNow;
+      const ap = rawProgress <= DEADZONE ? 0 : (rawProgress - DEADZONE) / (1 - DEADZONE);
+      overlayOpacity = Math.min(1, ap * 2.2);
+      videoBrightness = Math.max(0.1, 1 - ap * 1.8);
+      titleOpacity = Math.max(0, 1 - ap * 3.5);
+      titleY = -(scrolledPx * 0.3);
+      descOpacity = Math.max(0, 1 - ap * 2.8);
+      descY = -(scrolledPx * 0.2);
+    }
+
+    if (heroOverlayRef.current) heroOverlayRef.current.style.opacity = String(overlayOpacity);
+    if (heroVideoWrapRef.current) heroVideoWrapRef.current.style.filter = videoBrightness < 1 ? `brightness(${videoBrightness.toFixed(3)})` : "";
+    if (heroTopBarRef.current) {
+      heroTopBarRef.current.style.opacity = String(titleOpacity);
+      heroTopBarRef.current.style.transform = `translateY(${(titleY * 0.4).toFixed(2)}px)`;
+    }
+    if (heroTitleRef.current) {
+      heroTitleRef.current.style.opacity = String(titleOpacity);
+      heroTitleRef.current.style.transform = `translateY(${titleY.toFixed(2)}px)`;
+    }
+    if (heroDescRef.current) {
+      heroDescRef.current.style.opacity = String(descOpacity);
+      heroDescRef.current.style.transform = `translateY(${descY.toFixed(2)}px)`;
+    }
+    if (heroLocTabsRef.current) heroLocTabsRef.current.style.opacity = String(descOpacity);
+  }, []);
+
   useEffect(() => {
-    const onScroll = () => {
-      const nowPast = window.scrollY > window.innerHeight * 0.75;
-      setPastHero(p => p === nowPast ? p : nowPast);
-      if(rafRef.current!==null) cancelAnimationFrame(rafRef.current);
-      rafRef.current = requestAnimationFrame(computeAnim);
-    };
-    const onResize = () => {
-      const nowPast = window.scrollY > window.innerHeight * 0.75;
-      setPastHero(p => p === nowPast ? p : nowPast);
+    const lenis = new Lenis({ lerp: 0.12, smoothWheel: true });
+    lenisRef.current = lenis;
+    let id: number;
+    const raf = (time: number) => {
+      lenis.raf(time);
       computeAnim();
+      const nowPast = window.scrollY > window.innerHeight * 0.75;
+      setPastHero(p => p === nowPast ? p : nowPast);
+      id = requestAnimationFrame(raf);
     };
-    onScroll();
-    window.addEventListener("scroll", onScroll, {passive:true});
-    window.addEventListener("resize", onResize, {passive:true});
-    return ()=>{
-      window.removeEventListener("scroll", onScroll);
+    computeAnim();
+    id = requestAnimationFrame(raf);
+    const onResize = () => {
+      computeAnim();
+      const nowPast = window.scrollY > window.innerHeight * 0.75;
+      setPastHero(p => p === nowPast ? p : nowPast);
+    };
+    window.addEventListener("resize", onResize, { passive: true });
+    return () => {
+      cancelAnimationFrame(id);
+      lenis.destroy();
+      lenisRef.current = null;
       window.removeEventListener("resize", onResize);
-      if(rafRef.current!==null) cancelAnimationFrame(rafRef.current);
     };
-  },[computeAnim]);
+  }, [computeAnim]);
 
   // Scroll-based active card: whichever card's center is closest to 40% down the viewport
   useEffect(() => {
@@ -557,11 +581,11 @@ export default function LevelProPage() {
       <style dangerouslySetInnerHTML={{ __html:`
         @import url('https://fonts.googleapis.com/css2?family=Titillium+Web:ital,wght@0,200;0,300;0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500&display=swap');
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-        html{scroll-behavior:auto;}
+        html{scroll-behavior:auto;touch-action:manipulation;}
         html.lenis,html.lenis body{height:auto;}
         .lenis.lenis-smooth{scroll-behavior:auto!important;}
         .lenis.lenis-stopped{overflow:hidden;}
-        body{background-color:${NAVY};color:#ffffff;overflow-x:hidden;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;}
+        body{background-color:${NAVY};color:#ffffff;overflow-x:hidden;overscroll-behavior:none;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;}
         video::-webkit-media-controls{display:none!important;}
         ::-webkit-scrollbar{width:3px;}
         ::-webkit-scrollbar-track{background:${NAVY};}
@@ -604,6 +628,7 @@ export default function LevelProPage() {
         }
         .projects-desktop{display:block;}
         .projects-mobile{display:none;}
+        .proj-mobile-slider{-webkit-overflow-scrolling:touch;overscroll-behavior:none;}
         .proj-mobile-slider::-webkit-scrollbar{display:none;}
         @media(max-width:768px){
           .projects-desktop{display:none!important;}
@@ -620,27 +645,29 @@ export default function LevelProPage() {
       {/* ── Hero ── */}
       <div style={{ position:"relative", height:"165vh", backgroundColor:NAVY }}>
         <section style={{ position:"sticky", top:0, height:"100vh", zIndex:1, overflow:"hidden", backgroundColor:NAVY }}>
-          {LOCATIONS.map((loc, i) => (
-            <video key={loc.id} autoPlay loop muted playsInline style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover", filter:`brightness(${anim.videoBrightness}) blur(${anim.videoBlur}px)`, willChange:"filter, opacity", opacity: i === displayLocation ? 1 : 0, transition:"opacity 0.7s cubic-bezier(0.4,0,0.2,1)" }}>
-              <source src={loc.video} type="video/mp4" />
-            </video>
-          ))}
+          <div ref={heroVideoWrapRef} style={{ position:"absolute", inset:0, willChange:"filter" }}>
+            {LOCATIONS.map((loc, i) => (
+              <video key={loc.id} autoPlay loop muted playsInline style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover", opacity: i === displayLocation ? 1 : 0, transition:"opacity 0.7s cubic-bezier(0.4,0,0.2,1)" }}>
+                <source src={loc.video} type="video/mp4" />
+              </video>
+            ))}
+          </div>
           <div style={{ position:"absolute", inset:0, backgroundColor:"rgba(2,10,37,0.38)", pointerEvents:"none" }} />
           <div style={{ position:"absolute", inset:0, pointerEvents:"none", background:"linear-gradient(to bottom,rgba(2,10,37,0.3) 0%,transparent 30%,rgba(2,10,37,0.15) 70%,rgba(2,10,37,0.55) 100%)" }} />
-          <div style={{ position:"absolute", inset:0, backgroundColor:NAVY, opacity:anim.overlayOpacity, willChange:"opacity", pointerEvents:"none", transition:"none" }} />
+          <div ref={heroOverlayRef} style={{ position:"absolute", inset:0, backgroundColor:NAVY, opacity:0, willChange:"opacity", pointerEvents:"none" }} />
           <div style={{ position:"relative", zIndex:10, height:"100%", display:"flex", flexDirection:"column", justifyContent:"space-between", paddingTop:"clamp(24px,5vw,72px)", paddingLeft:"clamp(24px,5vw,72px)", paddingRight:"clamp(24px,5vw,72px)", paddingBottom:"calc(clamp(58px,7.5vh,78px) + clamp(24px,3vh,36px))" }}>
-            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginTop:"clamp(48px,8vh,88px)", opacity:anim.titleOpacity, transform:`translateY(${anim.titleY*0.4}px)`, willChange:"opacity,transform", transition:"none" }}>
+            <div ref={heroTopBarRef} style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginTop:"clamp(48px,8vh,88px)", willChange:"opacity,transform" }}>
               <p style={{ fontFamily:"'Inter',sans-serif", fontWeight:400, fontSize:"clamp(0.6rem,0.78vw,0.7rem)", letterSpacing:"0.2em", textTransform:"uppercase", color:"rgba(255,255,255,0.5)", margin:0 }}>{t.hero.eyebrow}</p>
               <p style={{ fontFamily:"'Inter',sans-serif", fontWeight:400, fontSize:"clamp(0.6rem,0.78vw,0.7rem)", letterSpacing:"0.1em", color:"rgba(255,255,255,0.35)", margin:0 }}>{t.hero.est}</p>
             </div>
-            <div style={{ opacity:anim.titleOpacity, transform:`translateY(${anim.titleY}px)`, willChange:"transform,opacity", transition:"none" }}>
+            <div ref={heroTitleRef} style={{ willChange:"transform,opacity" }}>
               <h1 style={{ fontFamily:"'Titillium Web',sans-serif", fontWeight:200, fontSize:"clamp(3.5rem,9vw,9rem)", lineHeight:0.95, color:"#ffffff", margin:0, letterSpacing:"-0.03em" }}>
                 {t.hero.titleLine1}<br />
                 {t.hero.titleLine2}<br />
                 {t.hero.titleLine3}
               </h1>
             </div>
-            <div className="hero-bottom-strip" style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-end", opacity:anim.descOpacity, transform:`translateY(${anim.descY}px)`, willChange:"transform,opacity", transition:"none", gap:"clamp(16px,3vw,32px)" }}>
+            <div ref={heroDescRef} className="hero-bottom-strip" style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-end", willChange:"transform,opacity", gap:"clamp(16px,3vw,32px)" }}>
               <p style={{ fontFamily:"'Inter',sans-serif", fontWeight:300, fontSize:"clamp(0.7rem,0.92vw,0.82rem)", lineHeight:1.65, color:"rgba(255,255,255,0.6)", margin:0, maxWidth:"clamp(260px,34vw,380px)" }}>{t.hero.tagline}</p>
               <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:"18px", flexShrink:0 }}>
                 <div style={{ display:"flex", gap:"clamp(20px,3vw,36px)" }}>
@@ -660,7 +687,7 @@ export default function LevelProPage() {
           </div>
 
           {/* ── Location tabs ── */}
-          <div style={{ position:"absolute", bottom:0, left:0, right:0, zIndex:20, display:"flex", opacity:anim.descOpacity, willChange:"opacity", transition:"none" }}>
+          <div ref={heroLocTabsRef} style={{ position:"absolute", bottom:0, left:0, right:0, zIndex:20, display:"flex" }}>
             {LOCATIONS.map((loc, i) => {
               const isActive = i === activeLocation;
               const isHovered = i === hoveredLocation;

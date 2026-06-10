@@ -21,8 +21,7 @@ export default function AboutPage() {
   const t = TRANSLATIONS[locale];
   const ap = t.aboutPage;
 
-  const [scrollY, setScrollY] = useState(0);
-  const [vh, setVh]           = useState(0);
+  const [pastHero, setPastHero] = useState(false);
   const [preloaderVisible, setPreloaderVisible] = useState(true);
   const [preloaderKey, setPreloaderKey]         = useState(0);
   const [isFastLoader, setIsFastLoader]         = useState(false);
@@ -42,33 +41,29 @@ export default function AboutPage() {
   }, [locale]);
 
   useEffect(() => {
-    const lenis = new Lenis({ duration: 1.2, easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)) });
+    const lenis = new Lenis({ lerp: 0.12, smoothWheel: true });
     let id: number;
-    const raf = (time: number) => { lenis.raf(time); id = requestAnimationFrame(raf); };
+    const check = () => {
+      const nowPast = window.scrollY > window.innerHeight * 0.75;
+      setPastHero(p => p === nowPast ? p : nowPast);
+    };
+    const raf = (time: number) => { lenis.raf(time); check(); id = requestAnimationFrame(raf); };
+    check();
     id = requestAnimationFrame(raf);
-    return () => { cancelAnimationFrame(id); lenis.destroy(); };
+    window.addEventListener("resize", check, { passive: true });
+    return () => { cancelAnimationFrame(id); lenis.destroy(); window.removeEventListener("resize", check); };
   }, []);
-
-  useEffect(() => {
-    const update = () => { setScrollY(window.scrollY); setVh(window.innerHeight); };
-    update();
-    window.addEventListener("scroll", update, { passive: true });
-    window.addEventListener("resize", update, { passive: true });
-    return () => { window.removeEventListener("scroll", update); window.removeEventListener("resize", update); };
-  }, []);
-
-  const pastHero = vh > 0 && scrollY > vh * 0.75;
 
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: `
         @import url('https://fonts.googleapis.com/css2?family=Titillium+Web:ital,wght@0,200;0,300;0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500&display=swap');
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-        html{scroll-behavior:auto;}
+        html{scroll-behavior:auto;touch-action:manipulation;}
         html.lenis,html.lenis body{height:auto;}
         .lenis.lenis-smooth{scroll-behavior:auto!important;}
         .lenis.lenis-stopped{overflow:hidden;}
-        body{background-color:${NAVY};color:#fff;overflow-x:hidden;-webkit-font-smoothing:antialiased;}
+        body{background-color:${NAVY};color:#fff;overflow-x:hidden;overscroll-behavior:none;-webkit-font-smoothing:antialiased;}
         ::-webkit-scrollbar{width:3px;}
         ::-webkit-scrollbar-track{background:${NAVY};}
         ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15);border-radius:2px;}
