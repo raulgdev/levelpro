@@ -247,8 +247,9 @@ function NavBar({ pastHero, locale, onLocaleChange }: { pastHero:boolean; locale
 }
 
 // ─── Service slide card ───────────────────────────────────────────────────────
-interface ServiceItem { name:string; detail:string; bullets:string[]; icon:React.ReactNode }
+interface ServiceItem { name:string; detail:string; shortDesc:string; tagDescs:string[]; bullets:string[]; icon:React.ReactNode }
 function SvcSlideCard({ svc, isActive, tags, onHover, onClick }: { svc:ServiceItem; isActive:boolean; tags:string[]; onHover:()=>void; onClick:()=>void }) {
+  const [activeTag, setActiveTag] = useState(0);
   return (
     <div
       onMouseEnter={onHover}
@@ -261,13 +262,13 @@ function SvcSlideCard({ svc, isActive, tags, onHover, onClick }: { svc:ServiceIt
         overflow: "hidden",
         display: "flex",
         flexDirection: "column",
-        minHeight: "clamp(220px,28vh,300px)",
+        height: "clamp(220px,28vh,300px)",
         background: isActive ? "#ffffff" : NAVY,
         boxShadow: isActive ? "0 8px 40px rgba(2,10,37,0.16)" : "none",
         transition: "flex 0.55s cubic-bezier(0.4,0,0.2,1), box-shadow 0.45s ease, background 0.4s ease",
       }}
     >
-      <div style={{ flex:1, position:"relative", display:"flex", flexDirection:"column" }}>
+      <div style={{ flex:1, minHeight:0, position:"relative", display:"flex", flexDirection:"column" }}>
 
         {/* Inactive layer */}
         <div style={{
@@ -281,16 +282,25 @@ function SvcSlideCard({ svc, isActive, tags, onHover, onClick }: { svc:ServiceIt
           transition: "opacity 0.2s ease",
           pointerEvents: isActive ? "none" : "auto",
         }}>
-          <div style={{ color:"rgba(255,255,255,0.45)" }}>{svc.icon}</div>
-          <p style={{ fontFamily:"'Titillium Web',sans-serif", fontWeight:300, fontSize:"clamp(0.92rem,1.15vw,1.05rem)", color:"rgba(255,255,255,0.88)", margin:0, lineHeight:1.25 }}>{svc.name}</p>
+          <div style={{ color:"rgba(255,255,255,0.38)" }}>{svc.icon}</div>
+          <div>
+            <p style={{ fontFamily:"'Titillium Web',sans-serif", fontWeight:300, fontSize:"clamp(1.05rem,1.35vw,1.22rem)", color:"rgba(255,255,255,0.92)", margin:"0 0 6px 0", lineHeight:1.2 }}>{svc.name}</p>
+            <p style={{ fontFamily:"'Inter',sans-serif", fontWeight:400, fontSize:"clamp(0.65rem,0.78vw,0.72rem)", color:"rgba(255,255,255,0.45)", margin:0, lineHeight:1.5 }}>{svc.shortDesc}</p>
+          </div>
         </div>
 
         {/* Active layer */}
         <div style={{
           flex: 1,
-          padding: "clamp(22px,2.8vw,30px)",
+          minHeight: 0,
+          overflow: "hidden",
+          paddingTop: "12px",
+          paddingRight: "12px",
+          paddingBottom: "12px",
+          paddingLeft: "clamp(22px,2.8vw,30px)",
           display: "flex",
-          flexDirection: "column",
+          flexDirection: "row",
+          gap: "clamp(16px,2vw,24px)",
           opacity: isActive ? 1 : 0,
           transform: isActive ? "translateY(0)" : "translateY(8px)",
           transition: isActive
@@ -298,31 +308,54 @@ function SvcSlideCard({ svc, isActive, tags, onHover, onClick }: { svc:ServiceIt
             : "opacity 0.12s ease, transform 0.12s ease",
           pointerEvents: isActive ? "auto" : "none",
         }}>
-          {/* Icon — standalone, no wrapper */}
-          <div style={{ color:"rgba(2,10,37,0.45)", marginBottom:"clamp(14px,2vh,20px)" }}>
-            {svc.icon}
+          {/* Left: text content — extra top/bottom padding to reach full card inset */}
+          <div style={{ flex:1, minWidth:0, minHeight:0, display:"flex", flexDirection:"column", paddingTop:"calc(clamp(22px,2.8vw,30px) - 12px)", paddingBottom:"calc(clamp(22px,2.8vw,30px) - 12px)" }}>
+            <div style={{ color:"rgba(2,10,37,0.45)", marginBottom:"clamp(10px,1.4vh,14px)", flexShrink:0 }}>{svc.icon}</div>
+            <h3 style={{ fontFamily:"'Inter',sans-serif", fontWeight:600, fontSize:"clamp(0.88rem,1.08vw,0.98rem)", color:NAVY, margin:"0 0 clamp(5px,0.7vh,7px) 0", lineHeight:1.3, flexShrink:0 }}>
+              {svc.name}
+            </h3>
+            <p style={{ fontFamily:"'Inter',sans-serif", fontSize:"clamp(0.7rem,0.86vw,0.78rem)", lineHeight:1.65, color:"rgba(2,10,37,0.52)", margin:0, flex:1, minHeight:0, overflow:"hidden" }}>
+              {svc.tagDescs[activeTag]}
+            </p>
+            {/* Divider + tag toggles */}
+            <div style={{ flexShrink:0 }}>
+              <div style={{ height:"1px", background:"rgba(2,10,37,0.08)", margin:"clamp(10px,1.4vh,16px) 0 clamp(8px,1.1vh,12px)" }} />
+              <div style={{ display:"flex", gap:"clamp(10px,1.4vw,18px)", flexWrap:"wrap", alignItems:"center" }}>
+                {tags.map((tag, i) => (
+                  <button
+                    key={tag}
+                    onClick={e => { e.stopPropagation(); setActiveTag(i); }}
+                    style={{
+                      fontFamily:"'Inter',sans-serif",
+                      fontSize:"clamp(0.72rem,0.88vw,0.8rem)",
+                      fontWeight: i===activeTag ? 700 : 400,
+                      color: i===activeTag ? NAVY : "rgba(2,10,37,0.45)",
+                      background:"none", border:"none", padding:0, cursor:"pointer",
+                      transition:"color 0.2s ease, font-weight 0.2s ease",
+                    }}
+                  >
+                    {i===activeTag ? `›${tag}` : tag}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
 
-          {/* Title */}
-          <h3 style={{ fontFamily:"'Inter',sans-serif", fontWeight:600, fontSize:"clamp(0.88rem,1.08vw,0.98rem)", color:NAVY, margin:"0 0 clamp(6px,0.9vh,8px) 0", lineHeight:1.3 }}>
-            {svc.name}
-          </h3>
-
-          {/* Description */}
-          <p style={{ fontFamily:"'Inter',sans-serif", fontSize:"clamp(0.7rem,0.86vw,0.78rem)", lineHeight:1.65, color:"rgba(2,10,37,0.52)", margin:0 }}>
-            {svc.detail}
-          </p>
-
-          {/* Divider + tags pushed to bottom */}
-          <div style={{ marginTop:"auto" }}>
-            <div style={{ height:"1px", background:"rgba(2,10,37,0.08)", margin:"clamp(14px,2vh,20px) 0 clamp(10px,1.5vh,14px)" }} />
-            <div style={{ display:"flex", gap:"clamp(14px,1.8vw,22px)", flexWrap:"wrap", alignItems:"center" }}>
-              {tags.map((tag, i) => (
-                <span key={tag} style={{ fontFamily:"'Inter',sans-serif", fontSize:"clamp(0.72rem,0.88vw,0.8rem)", fontWeight:i===0?700:400, color:i===0?NAVY:"rgba(2,10,37,0.5)" }}>
-                  {i===0 ? `›${tag}` : tag}
-                </span>
-              ))}
-            </div>
+          {/* Right: video */}
+          <div style={{
+            flexShrink: 0,
+            alignSelf: "stretch",
+            aspectRatio: "1/1",
+            borderRadius: "14px",
+            overflow: "hidden",
+            background: "rgba(2,10,37,0.06)",
+          }}>
+            <video
+              style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }}
+              autoPlay muted loop playsInline
+            >
+              <source src={VIDEO_SRC} type="video/mp4" />
+            </video>
           </div>
         </div>
       </div>
@@ -421,38 +454,28 @@ export default function LevelProPage() {
     icon,
     name: t.services.items[i].name,
     detail: t.services.items[i].detail,
+    shortDesc: t.services.items[i].shortDesc,
+    tagDescs: t.services.items[i].tagDescs,
     bullets: t.services.items[i].bullets,
   }));
 
   const [anim, setAnim] = useState<AnimState>({ overlayOpacity:0, videoBlur:0, videoBrightness:1, titleOpacity:1, titleY:0, descOpacity:1, descY:0 });
-  const [scrollY, setScrollY] = useState(0);
+  const [pastHero, setPastHero] = useState(false);
   const [activeProject, setActiveProject] = useState(0);
   const [displayProject, setDisplayProject] = useState(0);
   const [sidebarVisible, setSidebarVisible] = useState(true);
   const [activeSvc, setActiveSvc] = useState(0);
-  const [hoveredSvc, setHoveredSvc] = useState<number|null>(null);
   const [activeLocation, setActiveLocation] = useState(0);
   const [hoveredLocation, setHoveredLocation] = useState<number|null>(null);
-  const [vh, setVh] = useState(0);
-
 
   useEffect(() => {
-    const lenis = new Lenis({ duration:1.2, easing:(t:number)=>Math.min(1,1.001-Math.pow(2,-10*t)) });
+    const lenis = new Lenis({ duration:1.0, easing:(t:number)=>1-Math.pow(1-t,4) });
     lenisRef.current = lenis;
     let id:number;
     const raf=(time:number)=>{ lenis.raf(time); id=requestAnimationFrame(raf); };
     id = requestAnimationFrame(raf);
     return ()=>{ cancelAnimationFrame(id); lenis.destroy(); lenisRef.current=null; };
   },[]);
-
-  useEffect(() => {
-    const update=()=>{ setScrollY(window.scrollY); setVh(window.innerHeight); };
-    update();
-    window.addEventListener("scroll",update,{passive:true});
-    window.addEventListener("resize",update,{passive:true});
-    return ()=>{ window.removeEventListener("scroll",update); window.removeEventListener("resize",update); };
-  },[]);
-
 
   const computeAnim = useCallback(() => {
     const about=aboutRef.current; if(!about)return;
@@ -464,10 +487,27 @@ export default function LevelProPage() {
     setAnim({ overlayOpacity:Math.min(1,ap*2.2), videoBlur:Math.min(12,ap*12), videoBrightness:Math.max(0.1,1-ap*1.8), titleOpacity:Math.max(0,1-ap*3.5), titleY:-(scrolledPx*0.3), descOpacity:Math.max(0,1-ap*2.8), descY:-(scrolledPx*0.2) });
   },[]);
 
+  // Single scroll listener — pastHero only re-renders when crossing the threshold
   useEffect(() => {
-    const onScroll=()=>{ if(rafRef.current!==null)cancelAnimationFrame(rafRef.current); rafRef.current=requestAnimationFrame(computeAnim); };
-    window.addEventListener("scroll",onScroll,{passive:true}); computeAnim();
-    return ()=>{ window.removeEventListener("scroll",onScroll); if(rafRef.current!==null)cancelAnimationFrame(rafRef.current); };
+    const onScroll = () => {
+      const nowPast = window.scrollY > window.innerHeight * 0.75;
+      setPastHero(p => p === nowPast ? p : nowPast);
+      if(rafRef.current!==null) cancelAnimationFrame(rafRef.current);
+      rafRef.current = requestAnimationFrame(computeAnim);
+    };
+    const onResize = () => {
+      const nowPast = window.scrollY > window.innerHeight * 0.75;
+      setPastHero(p => p === nowPast ? p : nowPast);
+      computeAnim();
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, {passive:true});
+    window.addEventListener("resize", onResize, {passive:true});
+    return ()=>{
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onResize);
+      if(rafRef.current!==null) cancelAnimationFrame(rafRef.current);
+    };
   },[computeAnim]);
 
   // Scroll-based active card: whichever card's center is closest to 40% down the viewport
@@ -510,7 +550,6 @@ export default function LevelProPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeProject]);
 
-  const pastHero = vh>0 && scrollY>vh*0.75;
   const displayLocation = hoveredLocation ?? activeLocation;
 
   return (
@@ -672,26 +711,25 @@ export default function LevelProPage() {
       </div>
 
       {/* ── Services — slider ── */}
-      <section style={{ background:"#ffffff", padding:"clamp(28px,3.5vh,48px) clamp(24px,5vw,72px) clamp(40px,5vh,56px)", borderTop:"1px solid rgba(2,10,37,0.05)" }}>
+      <section style={{ background:"#ffffff", padding:"clamp(56px,7vh,80px) clamp(24px,5vw,72px)", borderTop:"1px solid rgba(2,10,37,0.05)" }}>
         {/* Heading */}
         <div style={{ marginBottom:"clamp(24px,3.2vh,38px)" }}>
           <p style={{ fontFamily:"'Inter',sans-serif", fontWeight:500, fontSize:"var(--lp-label-fs)", letterSpacing:"var(--lp-label-ls)", textTransform:"uppercase", color:"rgba(2,10,37,0.35)", margin:"0 0 clamp(12px,1.8vh,18px) 0" }}>{t.services.label}</p>
           <h2 style={{ fontFamily:"'Titillium Web',sans-serif", fontWeight:300, fontSize:"var(--lp-title-fs)", lineHeight:0.95, color:NAVY, margin:0, letterSpacing:"var(--lp-title-ls)" }}>
-            {t.services.headingLine1}<br />{t.services.headingLine2}<br />{t.services.headingLine3}
+            {t.services.headingLine1}<br />{t.services.headingLine2}
           </h2>
         </div>
 
         {/* Card strip */}
-        <div style={{ display:"flex", gap:"clamp(8px,1vw,12px)", alignItems:"stretch", marginBottom:"clamp(14px,2vh,22px)" }}
-          onMouseLeave={() => setHoveredSvc(null)}>
+        <div style={{ display:"flex", gap:"clamp(8px,1vw,12px)", alignItems:"stretch", marginBottom:"clamp(14px,2vh,22px)" }}>
           {services.map((svc, i) => (
             <SvcSlideCard
               key={svc.name}
               svc={svc}
-              isActive={i===(hoveredSvc??activeSvc)}
+              isActive={i===activeSvc}
               tags={t.services.tags}
-              onHover={() => setHoveredSvc(i)}
-              onClick={() => { setActiveSvc(i); setHoveredSvc(null); }}
+              onHover={() => setActiveSvc(i)}
+              onClick={() => setActiveSvc(i)}
             />
           ))}
         </div>
@@ -722,7 +760,7 @@ export default function LevelProPage() {
       </section>
 
       {/* ── Stats ── */}
-      <section style={{ backgroundColor:"#ffffff", padding:"clamp(64px,10vh,120px) clamp(24px,5vw,72px)", borderTop:"1px solid rgba(2,10,37,0.05)" }}>
+      <section style={{ backgroundColor:"#ffffff", padding:"clamp(56px,7vh,80px) clamp(24px,5vw,72px)", borderTop:"1px solid rgba(2,10,37,0.05)" }}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:"clamp(24px,4vw,48px)", flexWrap:"wrap", marginBottom:"clamp(40px,6vh,72px)" }}>
           <div style={{ flex:"0 0 auto" }}>
             <p style={{ fontFamily:"'Inter',sans-serif", fontWeight:500, fontSize:"var(--lp-label-fs)", letterSpacing:"var(--lp-label-ls)", textTransform:"uppercase", color:"rgba(2,10,37,0.35)", margin:"0 0 clamp(12px,1.8vh,18px) 0" }}>{t.stats.label}</p>
@@ -746,7 +784,7 @@ export default function LevelProPage() {
       </section>
 
       {/* ── Materials ── */}
-      <section style={{ backgroundColor:"#ffffff", padding:"clamp(64px,10vh,120px) clamp(24px,5vw,72px)", borderTop:"1px solid rgba(2,10,37,0.05)" }}>
+      <section style={{ backgroundColor:"#ffffff", padding:"clamp(56px,7vh,80px) clamp(24px,5vw,72px)", borderTop:"1px solid rgba(2,10,37,0.05)" }}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", flexWrap:"wrap", gap:"clamp(16px,2.5vw,28px)" }}>
           <RevealText as="h2" text={t.materials.heading} style={{ fontFamily:"'Titillium Web',sans-serif", fontWeight:300, fontSize:"var(--lp-title-fs)", lineHeight:1.1, color:NAVY, letterSpacing:"var(--lp-title-ls)", maxWidth:"clamp(300px,52vw,620px)", margin:0 }} />
           <p style={{ fontFamily:"'Inter',sans-serif", fontWeight:300, fontSize:"clamp(0.72rem,0.9vw,0.82rem)", lineHeight:1.7, color:"rgba(2,10,37,0.5)", maxWidth:"320px", alignSelf:"flex-end", margin:0 }}>{t.materials.tagline}</p>

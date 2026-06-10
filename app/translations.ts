@@ -14,7 +14,7 @@ export interface Translation {
     label: string;
     headingLine1: string; headingLine2: string; headingLine3: string;
     tagline: string;
-    items: Array<{ name: string; detail: string; bullets: string[] }>;
+    items: Array<{ name: string; detail: string; shortDesc: string; tagDescs: string[]; bullets: string[] }>;
     tags: string[];
   };
   stats: {
@@ -123,15 +123,22 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
     },
     services: {
       label: "Our Services",
-      headingLine1: "Specialized",
-      headingLine2: "concrete",
-      headingLine3: "services",
+      headingLine1: "Specialized concrete",
+      headingLine2: "services",
+      headingLine3: "",
       tagline:
         "From foundations to facades — reliable concrete pumping and precise material placement at any scale.",
       items: [
         {
           name: "Concrete Pumping",
           detail: "High-pressure pumping systems delivering consistent material flow for multi-storey residential, hotel and commercial structures. Our boom pumps reach up to 50 metres, integrating seamlessly with your construction programme.",
+          shortDesc: "High-reach boom pumps for residential, hotel and commercial pours — up to 50 metres reach.",
+          tagDescs: [
+            "Office blocks and retail centres up to 12 storeys — precise volume control and GPS-coordinated pour scheduling with minimal disruption to ongoing operations. Our boom pumps cover all structural levels in a single mobilisation.",
+            "Warehouse floors and plant pads at large footprint — line pumps handle high-volume continuous pours at consistent pressure, with full-fleet deployment for simultaneous multi-area coverage across a single site.",
+            "Towers and hotels above 8 storeys — high-pressure equipment and GPS scheduling keep every floor pour on programme. Boom reach up to 50 metres ensures uninterrupted placement across all structural levels.",
+            "Villas, townhouses and apartment blocks — flexible deployment on compact sites with full operator supervision and real-time pour coordination integrated with your site programme from start to finish.",
+          ],
           bullets: [
             "Boom pump reach up to 50 m for multi-storey structures",
             "Full fleet for simultaneous multi-site deployment",
@@ -142,6 +149,13 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
         {
           name: "Material Placement",
           detail: "Precise distribution ensuring even depth and full coverage across slabs, walls and columns — minimising waste and achieving first-time quality results at any project scale.",
+          shortDesc: "Precise slab coverage and even depth — first-time quality across every pour area.",
+          tagDescs: [
+            "Retail floors, office slabs and podium decks — uniform depth and smooth finish across large continuous pour areas, with real-time quality checks ensuring first-time results on every section.",
+            "Heavy-duty floor slabs engineered for forklift traffic, racking loads and chemical-resistant surface requirements — certified operators ensure consistent depth and full specification compliance on every pour.",
+            "Suspended slabs on high-rise frames — tight tolerances verified on every pour for consistent depth and coverage, with certified operators coordinating directly with your structural supervision team.",
+            "Ground floors, pool decks and terrace slabs — delivered with precision and care on residential sites of any size, with full cleanup and equipment removal included as standard on every job.",
+          ],
           bullets: [
             "Consistent slab depth and coverage across all pour areas",
             "Certified operators experienced with all structural mix types",
@@ -152,6 +166,13 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
         {
           name: "Shotcrete Works",
           detail: "Pneumatically applied concrete for retaining walls, slope stabilisation and complex geometric forms — rapid, high-strength coverage with precise control over layer thickness and bond quality.",
+          shortDesc: "Pneumatically applied concrete for retaining walls, slopes and complex geometric forms.",
+          tagDescs: [
+            "Basement retaining walls and underground car parks — rapid high-strength application with minimal formwork needed, reducing programme time while maintaining full structural specification compliance.",
+            "Slope stabilisation and tunnel lining for industrial and infrastructure projects — dry or wet mix selected to suit site conditions, with layer thickness verified at every application stage.",
+            "Lift shafts, stairwells and complex geometric elements — nozzle positioning adapted to confined interior spaces, delivering consistent bond quality and layer thickness on every vertical application.",
+            "Pool shells, retaining walls and landscape features — wet-mix process for a quality finish on visible surfaces, with supervisor sign-off at each layer stage to ensure durability and specification.",
+          ],
           bullets: [
             "Wet-mix and dry-mix processes to suit site conditions",
             "High early-strength mixes for retaining walls and tunnels",
@@ -162,6 +183,13 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
         {
           name: "Foundation Works",
           detail: "Engineered solutions from strip footings to complex raft slabs — designed to the geotechnical conditions of each site and fully coordinated with your structural engineer throughout.",
+          shortDesc: "Engineered footings and raft slabs designed to your site's geotechnical conditions.",
+          tagDescs: [
+            "Pad, strip and raft foundations for commercial builds — coordinated with structural engineers and geotechnical reports to ensure full compliance from design through to post-pour documentation.",
+            "Foundation systems for heavy equipment bases, crane rails and large-span structural frames at industrial scale — reinforced concrete solutions engineered to precise load and settlement requirements.",
+            "Deep raft slabs and pile caps for tower structures — engineered to precise load distribution and settlement requirements, with full coordination of your structural and geotechnical engineering teams.",
+            "Strip footings, pad foundations and reinforced raft slabs for villas and apartment buildings on any ground type — site assessment, design, placement and post-pour inspection all included.",
+          ],
           bullets: [
             "Geotechnical site assessment informing every design",
             "Reinforced concrete solutions for challenging ground conditions",
@@ -170,7 +198,7 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
           ],
         },
       ],
-      tags: ["Residential", "Commercial", "Industrial", "High-rise"],
+      tags: ["Commercial", "Industrial", "High-rise", "Residential"],
     },
     stats: {
       label: "Operations & Resources",
@@ -414,14 +442,21 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
     services: {
       label: "Unsere Dienstleistungen",
       headingLine1: "Spezialisierte",
-      headingLine2: "Beton-",
-      headingLine3: "leistungen",
+      headingLine2: "Betonleistungen",
+      headingLine3: "",
       tagline:
         "Von Fundamenten bis Fassaden — zuverlässiges Betonpumpen und präzise Materialplatzierung in jedem Maßstab.",
       items: [
         {
           name: "Betonpumpen",
           detail: "Hochdruckpumpsysteme für gleichmäßigen Materialfluss bei mehrgeschossigen Wohn-, Hotel- und Gewerbeobjekten. Unsere Autobetonpumpen erreichen bis zu 50 Meter und fügen sich nahtlos in Ihren Bauablauf ein.",
+          shortDesc: "Hochreichende Autobetonpumpen für Wohn-, Hotel- und Gewerbeobjekte — bis zu 50 Meter Reichweite.",
+          tagDescs: [
+            "Bürogebäude und Einzelhandelszentren bis 12 Stockwerke — präzise Mengenkontrolle und GPS-gestützte Gussplanung mit minimaler Beeinträchtigung des Betriebs. Unsere Pumpen decken alle Strukturebenen in einem Einsatz ab.",
+            "Hallenfußböden und Anlagenfundamente auf großer Fläche — Leitungspumpen für hochvolumige Dauerausschüttungen bei gleichmäßigem Druck, mit Vollflotteneinsatz für simultane Mehrbereicksabdeckung auf einer Baustelle.",
+            "Türme und Hotels über 8 Stockwerke — Hochdruckgeräte und GPS-Planung halten jeden Deckenguss im Zeitplan. Reichweite bis zu 50 Meter garantiert ununterbrochene Platzierung auf allen Strukturebenen.",
+            "Villen, Reihenhäuser und Wohnanlagen — flexibler Einsatz auf beengten Baustellen mit vollständiger Bedieneraufsicht und Echtzeit-Gusskoordination integriert in Ihr Baustellenprogramm von Anfang bis Ende.",
+          ],
           bullets: [
             "Reichweite bis zu 50 m für mehrgeschossige Bauten",
             "Vollständige Flotte für gleichzeitigen Einsatz auf mehreren Baustellen",
@@ -432,6 +467,13 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
         {
           name: "Materialplatzierung",
           detail: "Präzise Verteilung für gleichmäßige Tiefe und vollständige Abdeckung bei Platten, Wänden und Stützen — minimaler Materialverlust und erstklassige Ergebnisse bei jedem Projektmaßstab.",
+          shortDesc: "Präzise Plattenabdeckung und gleichmäßige Tiefe — erstklassige Ergebnisse bei jedem Betoniervorgang.",
+          tagDescs: [
+            "Handelsböden, Büroplatten und Podiumsdecks — gleichmäßige Tiefe und glatte Oberfläche bei großen Gussflächen, mit Echtzeit-Qualitätskontrollen für erstklassige Ergebnisse bei jedem Abschnitt.",
+            "Schwerlastböden für Gabelstapler, Regallasten und chemisch beständige Oberflächen — zertifizierte Bediener gewährleisten gleichmäßige Tiefe und Normenkonformität bei jedem Betoniervorgang.",
+            "Freitragende Platten im Hochhausbau — enge Toleranzen bei Tiefe und Abdeckung auf jeder Etage verifiziert, mit zertifizierten Bedienern in direkter Koordination mit Ihrer Bauleitung.",
+            "Erdgeschossplatten, Pooldecks und Terrassenplatten — präzise und sorgfältig auf Wohnbaustellen jeder Größe, mit vollständiger Reinigung und Gerätentfernung standardmäßig inbegriffen.",
+          ],
           bullets: [
             "Gleichmäßige Plattentiefe und Abdeckung bei allen Gussbereichen",
             "Zertifizierte Bediener für alle strukturellen Betonmischungstypen",
@@ -442,6 +484,13 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
         {
           name: "Spritzbeton",
           detail: "Pneumatisch aufgebrachter Beton für Stützmauern, Böschungssicherung und komplexe Geometrien — schnelle, hochfeste Abdeckung mit präziser Kontrolle über Schichtdicke und Haftqualität.",
+          shortDesc: "Pneumatisch aufgebrachter Beton für Stützmauern, Böschungen und komplexe Geometrien.",
+          tagDescs: [
+            "Kellerstahlbetonwände und Tiefgaragen — schnelle Hochfestigkeit mit minimalem Schalungsaufwand, was die Bauzeit verkürzt und gleichzeitig die vollständige Einhaltung der Tragwerksanforderungen sicherstellt.",
+            "Böschungssicherung und Tunnelauskleidung für Industrie- und Infrastrukturprojekte — Nass- oder Trockenverfahren je nach Standortbedingungen, mit Schichtdickenkontrolle in jeder Ausführungsphase.",
+            "Aufzugsschächte, Treppenhäuser und komplexe Betonelemente — Düsenpositionierung für beengte Innenräume angepasst, mit gleichmäßiger Haftqualität und Schichtdicke bei jeder vertikalen Anwendung.",
+            "Poolschalen, Stützmauern und Landschaftselemente — Nassverfahren für hochwertige Sichtbetonoberflächen, mit Abnahme durch Verantwortlichen nach jeder Schicht zur Gewährleistung von Dauerhaftigkeit und Norm.",
+          ],
           bullets: [
             "Nass- und Trockenspritzverfahren je nach Standortanforderungen",
             "Hochfrühfeste Mischungen für Stützmauern und Tunnel",
@@ -452,6 +501,13 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
         {
           name: "Fundamentarbeiten",
           detail: "Konstruktive Lösungen von Streifenfundamenten bis zu komplexen Bodenplatten — auf die geotechnischen Bedingungen jedes Standorts abgestimmt und mit Ihrem Tragwerksplaner koordiniert.",
+          shortDesc: "Konstruktive Fundamente und Bodenplatten, auf die geotechnischen Bedingungen jedes Standorts abgestimmt.",
+          tagDescs: [
+            "Einzel-, Streifen- und Plattenfundamente für Gewerbebau — koordiniert mit Tragwerksplanern und geotechnischen Gutachten für vollständige Normenkonformität von der Planung bis zur Nachgussdokumentation.",
+            "Fundamente für schwere Maschinenbasen, Kranschienen und weitspannende Tragwerke im Industriemaßstab — Stahlbetonlösungen nach präzisen Last- und Setzungsanforderungen konstruktiv ausgelegt.",
+            "Tiefe Bodenplatten und Pfahlkopfplatten für Hochhäuser — nach präzisen Last- und Setzungsanforderungen ausgelegt, mit vollständiger Koordination Ihres Tragwerk- und Geotechnikteams.",
+            "Streifenfundamente, Einzelfundamente und armierte Bodenplatten für Villen und Wohnanlagen auf jedem Baugrund — Standortbewertung, Planung, Ausführung und Nachgussprüfung alles inbegriffen.",
+          ],
           bullets: [
             "Geotechnische Standortbewertung als Grundlage jedes Entwurfs",
             "Stahlbetonlösungen für schwierige Bodenverhältnisse",
@@ -460,7 +516,7 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
           ],
         },
       ],
-      tags: ["Wohnbau", "Gewerbe", "Industrie", "Hochbau"],
+      tags: ["Gewerbe", "Industrie", "Hochbau", "Wohnbau"],
     },
     stats: {
       label: "Betrieb & Ressourcen",
@@ -703,15 +759,22 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
     },
     services: {
       label: "Nuestros Servicios",
-      headingLine1: "Servicios",
-      headingLine2: "especializados",
-      headingLine3: "de hormigón",
+      headingLine1: "Servicios especializados",
+      headingLine2: "de hormigón",
+      headingLine3: "",
       tagline:
         "De los cimientos a las fachadas — bombeo de hormigón fiable y colocación precisa de material a cualquier escala.",
       items: [
         {
           name: "Bombeo de Hormigón",
           detail: "Sistemas de bombeo de alta presión para un flujo de material constante en edificios residenciales, hoteleros y comerciales de varios pisos. Nuestras bombas pluma alcanzan hasta 50 metros e integran su programa de obra.",
+          shortDesc: "Bombas pluma de largo alcance para obras residenciales, hoteleras y comerciales — hasta 50 metros.",
+          tagDescs: [
+            "Edificios de oficinas y centros comerciales hasta 12 plantas — control preciso de volumen y programación del vertido por GPS con mínima interferencia. Nuestras bombas cubren todos los niveles estructurales en una sola movilización.",
+            "Suelos de naves y bases de instalaciones de gran superficie — bombas de línea para vertidos continuos de gran volumen a presión constante, con flota completa para cobertura simultánea en múltiples zonas del mismo recinto.",
+            "Torres y hoteles de más de 8 plantas — equipos de alta presión y programación GPS mantienen cada vertido en plazo. Alcance hasta 50 metros garantiza la colocación continua en todos los niveles estructurales.",
+            "Villas, adosados y bloques de pisos — despliegue flexible en obras compactas con supervisión completa del operador y coordinación del vertido en tiempo real integrada en su programa de obra de principio a fin.",
+          ],
           bullets: [
             "Alcance de bomba pluma hasta 50 m para estructuras de varios pisos",
             "Flota completa para despliegue simultáneo en múltiples obras",
@@ -722,6 +785,13 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
         {
           name: "Colocación de Material",
           detail: "Distribución precisa para profundidad uniforme y cobertura completa en losas, muros y pilares — mínimo desperdicio y resultados de primera calidad en cualquier escala.",
+          shortDesc: "Cobertura de losa precisa y profundidad uniforme — calidad de primera en cada área de vertido.",
+          tagDescs: [
+            "Suelos comerciales, losas de oficinas y cubiertas — profundidad uniforme y acabado liso en grandes superficies de vertido, con controles de calidad en tiempo real para resultados de primera en cada sección.",
+            "Losas industriales resistentes para tráfico de carretillas, cargas de estanterías y superficies con tratamiento químico — operadores certificados garantizan profundidad uniforme y cumplimiento normativo en cada vertido.",
+            "Forjados en altura — tolerancias estrictas verificadas en cada vertido para profundidad y cobertura constantes, con operadores certificados coordinados directamente con su equipo de supervisión estructural.",
+            "Soleras, losas de piscina y terrazas — precisión y cuidado en obras residenciales de cualquier escala, con limpieza completa y retirada de equipos incluidas como estándar en cada trabajo.",
+          ],
           bullets: [
             "Profundidad uniforme de losa y cobertura en todas las zonas",
             "Operadores certificados para todos los tipos de mezcla estructural",
@@ -732,6 +802,13 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
         {
           name: "Gunitado",
           detail: "Hormigón proyectado neumáticamente para muros de contención, estabilización de taludes y formas geométricas complejas — cobertura rápida de alta resistencia con control preciso del espesor de capa.",
+          shortDesc: "Hormigón proyectado neumáticamente para muros de contención, taludes y formas geométricas complejas.",
+          tagDescs: [
+            "Muros de sótano y aparcamientos subterráneos — aplicación de alta resistencia rápida con necesidad mínima de encofrado, reduciendo el plazo de obra y manteniendo el pleno cumplimiento de la especificación estructural.",
+            "Estabilización de taludes y revestimiento de túneles en obras industriales e infraestructuras — mezcla húmeda o seca según las condiciones del sitio, con espesor de capa verificado en cada fase de aplicación.",
+            "Cajas de ascensores, núcleos y elementos de geometría compleja — boquilla adaptada para espacios interiores confinados, con calidad de adherencia y espesor de capa constantes en cada aplicación vertical.",
+            "Vasos de piscina, muros de contención y elementos de jardinería — proceso húmedo para acabados vistos de calidad, con visto bueno del responsable tras cada capa para garantizar durabilidad y especificación.",
+          ],
           bullets: [
             "Procesos de mezcla húmeda y seca según las condiciones del sitio",
             "Mezclas de alta resistencia temprana para muros y túneles",
@@ -742,6 +819,13 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
         {
           name: "Cimentación",
           detail: "Soluciones desde zapatas corridas hasta losas de cimentación complejas — diseñadas según las condiciones geotécnicas de cada emplazamiento y coordinadas con su ingeniero estructural.",
+          shortDesc: "Zapatas y losas armadas diseñadas según las condiciones geotécnicas de cada emplazamiento.",
+          tagDescs: [
+            "Zapatas, zanjas corridas y losas de cimentación para obras comerciales — coordinadas con ingenieros y estudios geotécnicos para pleno cumplimiento normativo desde el diseño hasta la documentación post-vertido.",
+            "Sistemas de cimentación para bases de maquinaria pesada, carriles de grúa y estructuras de gran vano industrial — soluciones de hormigón armado diseñadas según requisitos precisos de carga y asiento.",
+            "Losas profundas y encepados para torres — diseñados según requisitos precisos de distribución de cargas y asientos, con coordinación completa de su equipo de ingeniería estructural y geotécnica.",
+            "Zapatas corridas, zapatas aisladas y losas armadas para villas y edificios residenciales en cualquier terreno — evaluación del sitio, diseño, ejecución e inspección post-vertido todo incluido.",
+          ],
           bullets: [
             "Evaluación geotécnica del terreno para cada diseño",
             "Hormigón armado para condiciones de terreno difíciles",
@@ -750,7 +834,7 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
           ],
         },
       ],
-      tags: ["Residencial", "Comercial", "Industrial", "Gran altura"],
+      tags: ["Comercial", "Industrial", "Gran altura", "Residencial"],
     },
     stats: {
       label: "Operaciones y Recursos",
