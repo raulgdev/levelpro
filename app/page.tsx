@@ -19,16 +19,7 @@ const LOCATIONS = [
   { id: 2, name: "Palma de Mallorca", video: VIDEO_SRC },
 ];
 
-const SERVICE_IMG = "https://levelpro.es/wp-content/uploads/2026/05/3.jpg";
 const DEADZONE = 0.03;
-
-// Replace these with actual service-specific images
-const SERVICE_IMGS = [
-  "https://levelpro.es/wp-content/uploads/2026/05/3.jpg",
-  "https://levelpro.es/wp-content/uploads/2026/05/3.jpg",
-  "https://levelpro.es/wp-content/uploads/2026/05/3.jpg",
-  "https://levelpro.es/wp-content/uploads/2026/05/3.jpg",
-];
 
 const PROJ_IMG = "https://levelpro.es/wp-content/uploads/2026/05/1-copy.avif";
 const PROJECTS_STATIC = [
@@ -256,7 +247,7 @@ function NavBar({ pastHero, locale, onLocaleChange }: { pastHero:boolean; locale
 }
 
 // ─── Service slide card ───────────────────────────────────────────────────────
-interface ServiceItem { name:string; detail:string; icon:React.ReactNode; img:string }
+interface ServiceItem { name:string; detail:string; bullets:string[]; icon:React.ReactNode }
 function SvcSlideCard({ svc, isActive, tags, onHover, onClick }: { svc:ServiceItem; isActive:boolean; tags:string[]; onHover:()=>void; onClick:()=>void }) {
   return (
     <div
@@ -265,98 +256,75 @@ function SvcSlideCard({ svc, isActive, tags, onHover, onClick }: { svc:ServiceIt
       style={{
         flex: isActive ? "2.5 1 0" : "1 1 0",
         minWidth: 0,
-        borderRadius: "16px",
+        borderRadius: "18px",
         cursor: "pointer",
-        background: isActive ? "#ffffff" : "rgba(2,10,37,0.9)",
-        boxShadow: isActive ? "0 16px 52px rgba(2,10,37,0.11)" : "none",
         overflow: "hidden",
-        position: "relative",
-        minHeight: "clamp(158px,20vh,210px)",
-        transition: "flex 0.55s cubic-bezier(0.4,0,0.2,1), box-shadow 0.45s ease, background 0.3s ease",
+        display: "flex",
+        flexDirection: "column",
+        minHeight: "clamp(220px,28vh,300px)",
+        background: isActive ? "#ffffff" : NAVY,
+        boxShadow: isActive ? "0 8px 40px rgba(2,10,37,0.16)" : "none",
+        transition: "flex 0.55s cubic-bezier(0.4,0,0.2,1), box-shadow 0.45s ease, background 0.4s ease",
       }}
     >
-      {/* Default compact layer — icon + name, always rendered, fades out */}
-      <div style={{
-        position: "absolute",
-        inset: 0,
-        padding: "clamp(18px,2.2vw,26px)",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "space-between",
-        opacity: isActive ? 0 : 1,
-        transition: "opacity 0.18s ease",
-        pointerEvents: isActive ? "none" : "auto",
-      }}>
-        <div style={{ color:"rgba(255,255,255,0.62)" }}>{svc.icon}</div>
-        <p style={{ fontFamily:"'Titillium Web',sans-serif", fontWeight:300, fontSize:"clamp(0.8rem,0.98vw,0.88rem)", color:"rgba(255,255,255,0.88)", margin:0, lineHeight:1.3 }}>{svc.name}</p>
-      </div>
+      <div style={{ flex:1, position:"relative", display:"flex", flexDirection:"column" }}>
 
-      {/* Active expanded layer — always rendered, fades in with slide-up */}
-      <div style={{
-        position: "absolute",
-        inset: 0,
-        paddingTop: "clamp(18px,2.2vw,26px)",
-        paddingBottom: "clamp(18px,2.2vw,26px)",
-        paddingLeft: "clamp(18px,2.2vw,26px)",
-        paddingRight: "calc(38% + clamp(10px,1.2vw,14px))",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "space-between",
-        opacity: isActive ? 1 : 0,
-        transform: isActive ? "translateY(0)" : "translateY(10px)",
-        transition: isActive
-          ? "opacity 0.3s ease 0.14s, transform 0.4s cubic-bezier(0.22,1,0.36,1) 0.14s"
-          : "opacity 0.15s ease, transform 0.15s ease",
-        pointerEvents: isActive ? "auto" : "none",
-      }}>
-        <div style={{ width:"36px", height:"36px", borderRadius:"8px", background:"rgba(2,10,37,0.07)", display:"flex", alignItems:"center", justifyContent:"center", color:"rgba(2,10,37,0.5)", flexShrink:0 }}>
-          {svc.icon}
+        {/* Inactive layer */}
+        <div style={{
+          position: "absolute",
+          inset: 0,
+          padding: "clamp(22px,2.8vw,30px)",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+          opacity: isActive ? 0 : 1,
+          transition: "opacity 0.2s ease",
+          pointerEvents: isActive ? "none" : "auto",
+        }}>
+          <div style={{ color:"rgba(255,255,255,0.45)" }}>{svc.icon}</div>
+          <p style={{ fontFamily:"'Titillium Web',sans-serif", fontWeight:300, fontSize:"clamp(0.92rem,1.15vw,1.05rem)", color:"rgba(255,255,255,0.88)", margin:0, lineHeight:1.25 }}>{svc.name}</p>
         </div>
-        <div>
-          <h3 style={{ fontFamily:"'Titillium Web',sans-serif", fontWeight:600, fontSize:"clamp(0.82rem,1vw,0.92rem)", color:NAVY, margin:"0 0 clamp(6px,0.9vh,9px) 0", lineHeight:1.3 }}>
+
+        {/* Active layer */}
+        <div style={{
+          flex: 1,
+          padding: "clamp(22px,2.8vw,30px)",
+          display: "flex",
+          flexDirection: "column",
+          opacity: isActive ? 1 : 0,
+          transform: isActive ? "translateY(0)" : "translateY(8px)",
+          transition: isActive
+            ? "opacity 0.28s ease 0.1s, transform 0.38s cubic-bezier(0.22,1,0.36,1) 0.1s"
+            : "opacity 0.12s ease, transform 0.12s ease",
+          pointerEvents: isActive ? "auto" : "none",
+        }}>
+          {/* Icon — standalone, no wrapper */}
+          <div style={{ color:"rgba(2,10,37,0.45)", marginBottom:"clamp(14px,2vh,20px)" }}>
+            {svc.icon}
+          </div>
+
+          {/* Title */}
+          <h3 style={{ fontFamily:"'Inter',sans-serif", fontWeight:600, fontSize:"clamp(0.88rem,1.08vw,0.98rem)", color:NAVY, margin:"0 0 clamp(6px,0.9vh,8px) 0", lineHeight:1.3 }}>
             {svc.name}
           </h3>
-          <p style={{ fontFamily:"'Inter',sans-serif", fontSize:"clamp(0.62rem,0.78vw,0.7rem)", lineHeight:1.62, color:"rgba(2,10,37,0.52)", margin:0, display:"-webkit-box", WebkitLineClamp:3, WebkitBoxOrient:"vertical", overflow:"hidden" }}>
+
+          {/* Description */}
+          <p style={{ fontFamily:"'Inter',sans-serif", fontSize:"clamp(0.7rem,0.86vw,0.78rem)", lineHeight:1.65, color:"rgba(2,10,37,0.52)", margin:0 }}>
             {svc.detail}
           </p>
-        </div>
-        <div>
-          <div style={{ height:"1px", background:"rgba(2,10,37,0.08)", marginBottom:"clamp(8px,1.2vh,12px)" }} />
-          <div style={{ display:"flex", flexWrap:"wrap", gap:"clamp(8px,1.1vw,16px)" }}>
-            {tags.map(tag => (
-              <span key={tag} style={{ fontFamily:"'Inter',sans-serif", fontSize:"clamp(0.58rem,0.72vw,0.66rem)", fontWeight:500, color:"rgba(2,10,37,0.42)", letterSpacing:"0.02em" }}>{tag}</span>
-            ))}
+
+          {/* Divider + tags pushed to bottom */}
+          <div style={{ marginTop:"auto" }}>
+            <div style={{ height:"1px", background:"rgba(2,10,37,0.08)", margin:"clamp(14px,2vh,20px) 0 clamp(10px,1.5vh,14px)" }} />
+            <div style={{ display:"flex", gap:"clamp(14px,1.8vw,22px)", flexWrap:"wrap", alignItems:"center" }}>
+              {tags.map((tag, i) => (
+                <span key={tag} style={{ fontFamily:"'Inter',sans-serif", fontSize:"clamp(0.72rem,0.88vw,0.8rem)", fontWeight:i===0?700:400, color:i===0?NAVY:"rgba(2,10,37,0.5)" }}>
+                  {i===0 ? `›${tag}` : tag}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
-
-      {/* Image — clips in from right, GPU-only via clip-path */}
-      <div style={{
-        position: "absolute",
-        right: 0,
-        top: 0,
-        bottom: 0,
-        width: "38%",
-        clipPath: isActive ? "inset(0 0 0 0)" : "inset(0 0 0 100%)",
-        transition: isActive
-          ? "clip-path 0.5s cubic-bezier(0.4,0,0.2,1) 0.06s"
-          : "clip-path 0.35s cubic-bezier(0.4,0,0.2,1)",
-      }}>
-        <img
-          src={svc.img}
-          alt={svc.name}
-          style={{
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-            objectPosition: "center",
-            display: "block",
-            transform: isActive ? "scale(1)" : "scale(1.06)",
-            transition: isActive
-              ? "transform 0.65s cubic-bezier(0.22,1,0.36,1) 0.06s"
-              : "transform 0.35s ease",
-          }}
-        />
       </div>
     </div>
   );
@@ -453,7 +421,7 @@ export default function LevelProPage() {
     icon,
     name: t.services.items[i].name,
     detail: t.services.items[i].detail,
-    img: SERVICE_IMGS[i],
+    bullets: t.services.items[i].bullets,
   }));
 
   const [anim, setAnim] = useState<AnimState>({ overlayOpacity:0, videoBlur:0, videoBrightness:1, titleOpacity:1, titleY:0, descOpacity:1, descY:0 });
@@ -801,7 +769,8 @@ export default function LevelProPage() {
           <div style={{ position: "sticky", top: 0, width: "60%", height: "100vh", flexShrink: 0, overflow: "hidden" }}>
 
             {/* Map fills the full 100vh — extends to absolute bottom, no gaps */}
-            <div style={{ position: "absolute", inset: 0 }}>
+            {/* isolation:isolate contains Leaflet's internal z-indexes (200/400/600) so they don't bleed above the details overlay */}
+            <div style={{ position: "absolute", inset: 0, isolation: "isolate" }}>
               <LeafletMap activeIdx={activeProject} />
             </div>
 

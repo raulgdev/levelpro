@@ -14,7 +14,7 @@ export interface Translation {
     label: string;
     headingLine1: string; headingLine2: string; headingLine3: string;
     tagline: string;
-    items: Array<{ name: string; detail: string }>;
+    items: Array<{ name: string; detail: string; bullets: string[] }>;
     tags: string[];
   };
   stats: {
@@ -129,10 +129,46 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
       tagline:
         "From foundations to facades — reliable concrete pumping and precise material placement at any scale.",
       items: [
-        { name: "Concrete Pumping", detail: "High-pressure pumping systems for multi-story and large-scale construction sites." },
-        { name: "Material Placement", detail: "Precise concrete distribution ensuring consistent quality across every pour." },
-        { name: "Shotcrete Works", detail: "Pneumatic application for tunnels, retaining walls and complex geometries." },
-        { name: "Foundation Works", detail: "Engineered foundation solutions designed for demanding ground conditions." },
+        {
+          name: "Concrete Pumping",
+          detail: "High-pressure pumping systems delivering consistent material flow for multi-storey residential, hotel and commercial structures. Our boom pumps reach up to 50 metres, integrating seamlessly with your construction programme.",
+          bullets: [
+            "Boom pump reach up to 50 m for multi-storey structures",
+            "Full fleet for simultaneous multi-site deployment",
+            "GPS-coordinated pour scheduling integrated with your programme",
+            "On-site operator supervision from start to finish",
+          ],
+        },
+        {
+          name: "Material Placement",
+          detail: "Precise distribution ensuring even depth and full coverage across slabs, walls and columns — minimising waste and achieving first-time quality results at any project scale.",
+          bullets: [
+            "Consistent slab depth and coverage across all pour areas",
+            "Certified operators experienced with all structural mix types",
+            "Real-time coordination with your site supervisors",
+            "On-site cleanup and equipment removal included",
+          ],
+        },
+        {
+          name: "Shotcrete Works",
+          detail: "Pneumatically applied concrete for retaining walls, slope stabilisation and complex geometric forms — rapid, high-strength coverage with precise control over layer thickness and bond quality.",
+          bullets: [
+            "Wet-mix and dry-mix processes to suit site conditions",
+            "High early-strength mixes for retaining walls and tunnels",
+            "Nozzle positioning adapted for confined or irregular spaces",
+            "Layer thickness verified by supervisor at every application stage",
+          ],
+        },
+        {
+          name: "Foundation Works",
+          detail: "Engineered solutions from strip footings to complex raft slabs — designed to the geotechnical conditions of each site and fully coordinated with your structural engineer throughout.",
+          bullets: [
+            "Geotechnical site assessment informing every design",
+            "Reinforced concrete solutions for challenging ground conditions",
+            "Full coordination with structural engineers in all phases",
+            "Post-pour inspection and documentation included",
+          ],
+        },
       ],
       tags: ["Residential", "Commercial", "Industrial", "High-rise"],
     },
@@ -383,10 +419,46 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
       tagline:
         "Von Fundamenten bis Fassaden — zuverlässiges Betonpumpen und präzise Materialplatzierung in jedem Maßstab.",
       items: [
-        { name: "Betonpumpen", detail: "Hochdruckpumpsysteme für mehrgeschossige und großflächige Baustellen." },
-        { name: "Materialplatzierung", detail: "Präzise Betonverteilung für gleichbleibende Qualität bei jedem Guss." },
-        { name: "Spritzbeton", detail: "Pneumatische Aufbringung für Tunnel, Stützmauern und komplexe Geometrien." },
-        { name: "Fundamentarbeiten", detail: "Konstruktive Fundamentlösungen für anspruchsvolle Bodenbedingungen." },
+        {
+          name: "Betonpumpen",
+          detail: "Hochdruckpumpsysteme für gleichmäßigen Materialfluss bei mehrgeschossigen Wohn-, Hotel- und Gewerbeobjekten. Unsere Autobetonpumpen erreichen bis zu 50 Meter und fügen sich nahtlos in Ihren Bauablauf ein.",
+          bullets: [
+            "Reichweite bis zu 50 m für mehrgeschossige Bauten",
+            "Vollständige Flotte für gleichzeitigen Einsatz auf mehreren Baustellen",
+            "GPS-gestützte Einsatzplanung in Ihren Bauablauf integriert",
+            "Bedienerbetreuung vor Ort von Beginn bis Ende",
+          ],
+        },
+        {
+          name: "Materialplatzierung",
+          detail: "Präzise Verteilung für gleichmäßige Tiefe und vollständige Abdeckung bei Platten, Wänden und Stützen — minimaler Materialverlust und erstklassige Ergebnisse bei jedem Projektmaßstab.",
+          bullets: [
+            "Gleichmäßige Plattentiefe und Abdeckung bei allen Gussbereichen",
+            "Zertifizierte Bediener für alle strukturellen Betonmischungstypen",
+            "Echtzeit-Koordination mit Baustellenverantwortlichen",
+            "Baustellenreinigung und Gerätentfernung inbegriffen",
+          ],
+        },
+        {
+          name: "Spritzbeton",
+          detail: "Pneumatisch aufgebrachter Beton für Stützmauern, Böschungssicherung und komplexe Geometrien — schnelle, hochfeste Abdeckung mit präziser Kontrolle über Schichtdicke und Haftqualität.",
+          bullets: [
+            "Nass- und Trockenspritzverfahren je nach Standortanforderungen",
+            "Hochfrühfeste Mischungen für Stützmauern und Tunnel",
+            "Düsenführung für beengte und unregelmäßige Räume angepasst",
+            "Schichtdicke in jeder Ausführungsphase vom Verantwortlichen geprüft",
+          ],
+        },
+        {
+          name: "Fundamentarbeiten",
+          detail: "Konstruktive Lösungen von Streifenfundamenten bis zu komplexen Bodenplatten — auf die geotechnischen Bedingungen jedes Standorts abgestimmt und mit Ihrem Tragwerksplaner koordiniert.",
+          bullets: [
+            "Geotechnische Standortbewertung als Grundlage jedes Entwurfs",
+            "Stahlbetonlösungen für schwierige Bodenverhältnisse",
+            "Vollständige Koordination mit Tragwerksplanern in allen Phasen",
+            "Prüfprotokolle und Dokumentation nach dem Guss inbegriffen",
+          ],
+        },
       ],
       tags: ["Wohnbau", "Gewerbe", "Industrie", "Hochbau"],
     },
@@ -637,10 +709,46 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
       tagline:
         "De los cimientos a las fachadas — bombeo de hormigón fiable y colocación precisa de material a cualquier escala.",
       items: [
-        { name: "Bombeo de Hormigón", detail: "Sistemas de bombeo de alta presión para obras multiplanta y a gran escala." },
-        { name: "Colocación de Material", detail: "Distribución precisa del hormigón para garantizar calidad uniforme en cada vertido." },
-        { name: "Gunitado", detail: "Aplicación neumática para túneles, muros de contención y geometrías complejas." },
-        { name: "Cimentación", detail: "Soluciones de cimentación diseñadas para condiciones de terreno exigentes." },
+        {
+          name: "Bombeo de Hormigón",
+          detail: "Sistemas de bombeo de alta presión para un flujo de material constante en edificios residenciales, hoteleros y comerciales de varios pisos. Nuestras bombas pluma alcanzan hasta 50 metros e integran su programa de obra.",
+          bullets: [
+            "Alcance de bomba pluma hasta 50 m para estructuras de varios pisos",
+            "Flota completa para despliegue simultáneo en múltiples obras",
+            "Programación del vertido con GPS integrada en su plan de obra",
+            "Supervisión del operador en obra de principio a fin",
+          ],
+        },
+        {
+          name: "Colocación de Material",
+          detail: "Distribución precisa para profundidad uniforme y cobertura completa en losas, muros y pilares — mínimo desperdicio y resultados de primera calidad en cualquier escala.",
+          bullets: [
+            "Profundidad uniforme de losa y cobertura en todas las zonas",
+            "Operadores certificados para todos los tipos de mezcla estructural",
+            "Coordinación en tiempo real con los responsables de obra",
+            "Limpieza en obra y retirada de equipos incluidas",
+          ],
+        },
+        {
+          name: "Gunitado",
+          detail: "Hormigón proyectado neumáticamente para muros de contención, estabilización de taludes y formas geométricas complejas — cobertura rápida de alta resistencia con control preciso del espesor de capa.",
+          bullets: [
+            "Procesos de mezcla húmeda y seca según las condiciones del sitio",
+            "Mezclas de alta resistencia temprana para muros y túneles",
+            "Posicionamiento de boquilla para espacios confinados o irregulares",
+            "Espesor de capa verificado por el responsable en cada fase",
+          ],
+        },
+        {
+          name: "Cimentación",
+          detail: "Soluciones desde zapatas corridas hasta losas de cimentación complejas — diseñadas según las condiciones geotécnicas de cada emplazamiento y coordinadas con su ingeniero estructural.",
+          bullets: [
+            "Evaluación geotécnica del terreno para cada diseño",
+            "Hormigón armado para condiciones de terreno difíciles",
+            "Coordinación completa con ingenieros estructurales en todas las fases",
+            "Inspección y documentación post-vertido incluidas",
+          ],
+        },
       ],
       tags: ["Residencial", "Comercial", "Industrial", "Gran altura"],
     },
