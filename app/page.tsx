@@ -643,7 +643,7 @@ export default function LevelProPage() {
       <NavBar pastHero={pastHero} locale={locale} onLocaleChange={handleLocaleChange} />
 
       {/* ── Hero ── */}
-      <div style={{ position:"relative", height:"165vh", backgroundColor:NAVY }}>
+      <div style={{ position:"relative", height:"145vh", backgroundColor:NAVY }}>
         <section style={{ position:"sticky", top:0, height:"100vh", zIndex:1, overflow:"hidden", backgroundColor:NAVY }}>
           <div ref={heroVideoWrapRef} style={{ position:"absolute", inset:0, willChange:"filter" }}>
             {LOCATIONS.map((loc, i) => (
@@ -728,9 +728,9 @@ export default function LevelProPage() {
             })}
           </div>
         </section>
-        <div ref={aboutRef} style={{ position:"absolute", top:"100vh", left:0, right:0, height:"65vh", zIndex:2 }}>
-          <div style={{ height:"22vh", background:`linear-gradient(to bottom,transparent,${NAVY})`, pointerEvents:"none" }} />
-          <div style={{ height:"43vh", backgroundColor:NAVY, display:"flex", flexDirection:"column", justifyContent:"center", padding:"clamp(30px,5vh,60px) clamp(24px,5vw,72px)" }}>
+        <div ref={aboutRef} style={{ position:"absolute", top:"100vh", left:0, right:0, height:"45vh", zIndex:2 }}>
+          <div style={{ height:"14vh", background:`linear-gradient(to bottom,transparent,${NAVY})`, pointerEvents:"none" }} />
+          <div style={{ height:"31vh", backgroundColor:NAVY, display:"flex", flexDirection:"column", justifyContent:"flex-start", padding:"clamp(24px,3.5vh,40px) clamp(24px,5vw,72px) clamp(20px,3vh,36px)" }}>
             <RevealText text={t.about.label} style={{ fontFamily:"'Inter',sans-serif", fontWeight:400, fontSize:"clamp(0.6rem,0.8vw,0.7rem)", letterSpacing:"0.2em", textTransform:"uppercase", color:"rgba(255,255,255,0.35)", margin:"0 0 clamp(16px,2.5vh,28px) 0" }} />
             <RevealText text={t.about.body} delayOffset={3} style={{ fontFamily:"'Titillium Web',sans-serif", fontWeight:200, fontSize:"clamp(1.5rem,3.2vw,3rem)", lineHeight:1.12, color:"rgba(255,255,255,0.9)", margin:0, maxWidth:"clamp(320px,72vw,900px)", letterSpacing:"-0.02em" }} />
           </div>
