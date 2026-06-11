@@ -178,9 +178,6 @@ function ProjectCard({ proj, metaKeys, index }: { proj: ProjectData; metaKeys: {
           alt={proj.name}
           style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 30%", display: "block" }}
         />
-        <div style={{ position: "absolute", top: "clamp(12px,1.6vw,16px)", left: "clamp(14px,1.8vw,18px)", background: "rgba(2,10,37,0.68)", backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)", borderRadius: "3px", padding: "4px 10px" }}>
-          <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.44rem,0.52vw,0.48rem)", fontWeight: 600, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.92)" }}>{String(index + 1).padStart(2, "0")}</span>
-        </div>
       </div>
       {/* Title */}
       <div style={{ padding: "clamp(18px,2.4vw,26px) clamp(20px,2.6vw,28px) clamp(6px,0.9vw,8px)" }}>
@@ -190,13 +187,13 @@ function ProjectCard({ proj, metaKeys, index }: { proj: ProjectData; metaKeys: {
       <div style={{ padding: "0 clamp(20px,2.6vw,28px) clamp(14px,1.8vw,18px)" }}>
         <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 300, fontSize: "clamp(0.65rem,0.8vw,0.72rem)", lineHeight: 1.74, color: "rgba(2,10,37,0.5)", margin: 0 }}>{proj.fullDesc}</p>
       </div>
-      {/* Service tags — dedicated layout with divider */}
+      {/* Service tags — plain text list */}
       <div style={{ padding: "0 clamp(20px,2.6vw,28px) clamp(16px,2.1vw,20px)" }}>
         <div style={{ height: "1px", background: "rgba(2,10,37,0.06)", marginBottom: "clamp(10px,1.4vw,14px)" }} />
         <p style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.42rem,0.5vw,0.46rem)", fontWeight: 600, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(2,10,37,0.25)", margin: "0 0 clamp(7px,0.9vw,9px) 0" }}>Services</p>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "clamp(5px,0.6vw,7px)" }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "clamp(14px,1.8vw,20px)" }}>
           {proj.tags.map(tag => (
-            <span key={tag} style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.5rem,0.6vw,0.55rem)", fontWeight: 500, letterSpacing: "0.06em", textTransform: "uppercase", color: ACCENT, background: "rgba(24,71,242,0.07)", border: "1px solid rgba(24,71,242,0.15)", borderRadius: "3px", padding: "4px 10px" }}>{tag}</span>
+            <span key={tag} style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.68rem,0.84vw,0.76rem)", fontWeight: 500, color: NAVY }}>{tag}</span>
           ))}
         </div>
       </div>
@@ -658,7 +655,6 @@ export default function LevelProPage() {
           <div style={{ position:"relative", zIndex:10, height:"100%", display:"flex", flexDirection:"column", justifyContent:"space-between", paddingTop:"clamp(24px,5vw,72px)", paddingLeft:"clamp(24px,5vw,72px)", paddingRight:"clamp(24px,5vw,72px)", paddingBottom:"calc(clamp(58px,7.5vh,78px) + clamp(24px,3vh,36px))" }}>
             <div ref={heroTopBarRef} style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginTop:"clamp(48px,8vh,88px)", willChange:"opacity,transform" }}>
               <p style={{ fontFamily:"'Inter',sans-serif", fontWeight:400, fontSize:"clamp(0.6rem,0.78vw,0.7rem)", letterSpacing:"0.2em", textTransform:"uppercase", color:"rgba(255,255,255,0.5)", margin:0 }}>{t.hero.eyebrow}</p>
-              <p style={{ fontFamily:"'Inter',sans-serif", fontWeight:400, fontSize:"clamp(0.6rem,0.78vw,0.7rem)", letterSpacing:"0.1em", color:"rgba(255,255,255,0.35)", margin:0 }}>{t.hero.est}</p>
             </div>
             <div ref={heroTitleRef} style={{ willChange:"transform,opacity" }}>
               <h1 style={{ fontFamily:"'Titillium Web',sans-serif", fontWeight:200, fontSize:"clamp(3.5rem,9vw,9rem)", lineHeight:0.95, color:"#ffffff", margin:0, letterSpacing:"-0.03em" }}>
@@ -667,22 +663,8 @@ export default function LevelProPage() {
                 {t.hero.titleLine3}
               </h1>
             </div>
-            <div ref={heroDescRef} className="hero-bottom-strip" style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-end", willChange:"transform,opacity", gap:"clamp(16px,3vw,32px)" }}>
+            <div ref={heroDescRef} className="hero-bottom-strip" style={{ willChange:"transform,opacity" }}>
               <p style={{ fontFamily:"'Inter',sans-serif", fontWeight:300, fontSize:"clamp(0.7rem,0.92vw,0.82rem)", lineHeight:1.65, color:"rgba(255,255,255,0.6)", margin:0, maxWidth:"clamp(260px,34vw,380px)" }}>{t.hero.tagline}</p>
-              <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:"18px", flexShrink:0 }}>
-                <div style={{ display:"flex", gap:"clamp(20px,3vw,36px)" }}>
-                  {[{n:"200+",l:t.hero.statsLabels.projects},{n:"9+",l:t.hero.statsLabels.years},{n:"24h",l:t.hero.statsLabels.mobilization}].map(({n,l})=>(
-                    <div key={l} style={{ textAlign:"center" }}>
-                      <div style={{ fontFamily:"'Titillium Web',sans-serif", fontWeight:300, fontSize:"clamp(1.4rem,2.2vw,2rem)", color:"#ffffff", letterSpacing:"-0.02em" }}>{n}</div>
-                      <div style={{ fontFamily:"'Inter',sans-serif", fontSize:"clamp(0.55rem,0.68vw,0.62rem)", color:"rgba(255,255,255,0.38)", letterSpacing:"0.1em", textTransform:"uppercase", marginTop:"3px" }}>{l}</div>
-                    </div>
-                  ))}
-                </div>
-                <div style={{ display:"flex", alignItems:"center", gap:"10px" }}>
-                  <div style={{ width:"32px", height:"1px", background:"rgba(255,255,255,0.3)" }} />
-                  <span style={{ fontFamily:"'Inter',sans-serif", fontSize:"clamp(0.55rem,0.68vw,0.62rem)", color:"rgba(255,255,255,0.35)", letterSpacing:"0.15em", textTransform:"uppercase" }}>{t.hero.scroll}</span>
-                </div>
-              </div>
             </div>
           </div>
 
@@ -702,24 +684,17 @@ export default function LevelProPage() {
                     flex: 1,
                     height: "clamp(58px,7.5vh,78px)",
                     background: isHovered ? "rgba(255,255,255,0.07)" : isActive ? "rgba(255,255,255,0.04)" : "rgba(2,10,37,0.52)",
-                    backdropFilter: "blur(16px)",
-                    WebkitBackdropFilter: "blur(16px)",
                     border: "none",
                     borderRight: i < LOCATIONS.length - 1 ? "1px solid rgba(255,255,255,0.07)" : "none",
                     boxShadow: highlighted ? "inset 0 2px 0 rgba(255,255,255,0.82)" : "inset 0 1px 0 rgba(255,255,255,0.1)",
                     cursor: "pointer",
                     display: "flex",
-                    flexDirection: "column",
                     alignItems: "center",
                     justifyContent: "center",
-                    gap: "4px",
                     padding: 0,
                     transition: "background 0.35s ease, box-shadow 0.35s ease",
                   }}
                 >
-                  <span style={{ fontFamily:"'Inter',sans-serif", fontSize:"clamp(0.47rem,0.56vw,0.52rem)", fontWeight:500, letterSpacing:"0.18em", textTransform:"uppercase", color: highlighted ? "rgba(255,255,255,0.88)" : "rgba(255,255,255,0.3)", transition:"color 0.35s ease" }}>
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
                   <span style={{ fontFamily:"'Titillium Web',sans-serif", fontWeight: highlighted ? 400 : 300, fontSize:"clamp(0.78rem,1vw,0.9rem)", letterSpacing:"0.05em", color: highlighted ? "#ffffff" : "rgba(255,255,255,0.48)", transition:"color 0.35s ease" }}>
                     {loc.name}
                   </span>
@@ -896,9 +871,9 @@ export default function LevelProPage() {
                   <div style={{ height: "1px", background: "rgba(2,10,37,0.08)", margin: "0 0 clamp(10px,1.4vh,13px) 0" }} />
 
                   {/* Service tags */}
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: "5px", marginBottom: "clamp(10px,1.4vh,14px)" }}>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "clamp(14px,1.8vw,20px)", marginBottom: "clamp(10px,1.4vh,14px)" }}>
                     {projects[displayProject].tags.map(tag => (
-                      <span key={tag} style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.48rem,0.57vw,0.52rem)", fontWeight: 500, letterSpacing: "0.07em", textTransform: "uppercase", color: ACCENT, background: "rgba(24,71,242,0.07)", border: "1px solid rgba(24,71,242,0.14)", borderRadius: "3px", padding: "3px 9px" }}>{tag}</span>
+                      <span key={tag} style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.68rem,0.84vw,0.76rem)", fontWeight: 500, color: NAVY }}>{tag}</span>
                     ))}
                   </div>
 
