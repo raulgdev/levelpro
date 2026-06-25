@@ -28,7 +28,7 @@ export function useLocale() {
 }
 
 // ─── Preloader ────────────────────────────────────────────────────────────────
-export function Preloader({ onComplete, fast = false }: { onComplete: () => void; fast?: boolean }) {
+export function Preloader({ onComplete, onCovered, fast = false }: { onComplete: () => void; onCovered?: () => void; fast?: boolean }) {
   const [progress, setProgress] = useState(0);
   const [phase, setPhase] = useState<"counting" | "exiting">("counting");
   const duration = fast ? 550 : 1500;
@@ -44,6 +44,9 @@ export function Preloader({ onComplete, fast = false }: { onComplete: () => void
       setProgress(Math.round(eased * 100));
       if (t < 1) { raf = requestAnimationFrame(tick); }
       else {
+        // Fully covering the viewport here — swap underlying content (e.g. locale)
+        // now, while it's hidden, so the reveal shows the final state with no flash.
+        onCovered?.();
         t1 = setTimeout(() => {
           setPhase("exiting");
           t2 = setTimeout(onComplete, fast ? 550 : 850);
@@ -103,16 +106,105 @@ export function RevealText({ text, delayOffset = 0, style, as: Tag = "p" }: { te
   );
 }
 
+// ─── Nav styles ───────────────────────────────────────────────────────────────
+// Self-contained: the NavBar injects this once, so it renders identically on every
+// page without depending on per-page <style> blocks. Light/dark is driven by a
+// [data-tone] attribute — "light" over the dark hero, "dark" over glass / overlay.
+const NAV_CSS = `
+.lpnav-logo{font-family:'General Sans','Inter',sans-serif;font-weight:600;font-size:clamp(0.9rem,1.2vw,1.05rem);letter-spacing:0.12em;text-transform:uppercase;text-decoration:none;transition:color 0.45s ease;}
+.lpnav-links{display:flex;gap:clamp(22px,3vw,42px);align-items:center;}
+.lpnav-link{position:relative;font-family:'General Sans','Inter',sans-serif;font-size:clamp(0.7rem,0.84vw,0.78rem);font-weight:500;letter-spacing:0.01em;text-decoration:none;padding:4px 0;transition:color 0.3s ease;}
+.lpnav-link::after{content:'';position:absolute;left:0;bottom:-2px;height:1px;width:100%;transform:scaleX(0);transform-origin:left;transition:transform 0.4s cubic-bezier(0.22,1,0.36,1);}
+.lpnav-link:hover::after,.lpnav-link[aria-current="page"]::after{transform:scaleX(1);}
+.lpnav-right{display:flex;align-items:center;gap:clamp(10px,1.4vw,18px);}
+.lpnav-cta{font-family:'General Sans','Inter',sans-serif;font-size:clamp(0.65rem,0.8vw,0.72rem);font-weight:500;letter-spacing:0.06em;border-radius:100px;padding:9px 22px;cursor:pointer;white-space:nowrap;text-decoration:none;border:1px solid transparent;transition:background 0.45s cubic-bezier(0.4,0,0.2,1),color 0.4s ease,border-color 0.45s ease;}
+
+.lpnav[data-tone="light"] .lpnav-logo{color:#ffffff;}
+.lpnav[data-tone="light"] .lpnav-link{color:rgba(255,255,255,0.7);}
+.lpnav[data-tone="light"] .lpnav-link:hover,.lpnav[data-tone="light"] .lpnav-link[aria-current="page"]{color:#ffffff;}
+.lpnav[data-tone="light"] .lpnav-link::after{background:#ffffff;}
+.lpnav[data-tone="light"] .lpnav-cta{color:#ffffff;background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.38);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);}
+.lpnav[data-tone="light"] .lpnav-cta:hover{background:#ffffff;color:${NAVY};border-color:#ffffff;}
+.lpnav[data-tone="light"] .lpnav-burger{color:#ffffff;}
+
+.lpnav[data-tone="dark"] .lpnav-logo{color:${NAVY};}
+.lpnav[data-tone="dark"] .lpnav-link{color:rgba(2,10,37,0.55);}
+.lpnav[data-tone="dark"] .lpnav-link:hover,.lpnav[data-tone="dark"] .lpnav-link[aria-current="page"]{color:${NAVY};}
+.lpnav[data-tone="dark"] .lpnav-link::after{background:${NAVY};}
+.lpnav[data-tone="dark"] .lpnav-cta{color:${NAVY};background:rgba(2,10,37,0.05);border-color:rgba(2,10,37,0.2);}
+.lpnav[data-tone="dark"] .lpnav-cta:hover{background:${NAVY};color:#ffffff;border-color:${NAVY};}
+.lpnav[data-tone="dark"] .lpnav-burger{color:${NAVY};}
+
+/* Glass pill holding the nav links + the solid CONTACT button (no shadows — fine
+   border + backdrop-blur only). Both adapt to the light/dark tone. */
+.lpnav-pill{display:flex;align-items:center;gap:clamp(18px,2.2vw,34px);border-radius:100px;padding:clamp(9px,0.85vw,12px) clamp(20px,1.8vw,28px);border:1px solid transparent;transition:background 0.5s cubic-bezier(0.4,0,0.2,1),border-color 0.5s ease;}
+.lpnav[data-tone="light"] .lpnav-pill{background:rgba(44,44,46,0.4);border-color:rgba(255,255,255,0.16);backdrop-filter:blur(18px) saturate(120%);-webkit-backdrop-filter:blur(18px) saturate(120%);}
+.lpnav[data-tone="dark"] .lpnav-pill{background:rgba(255,255,255,0.66);border-color:rgba(2,10,37,0.08);backdrop-filter:blur(16px) saturate(150%);-webkit-backdrop-filter:blur(16px) saturate(150%);}
+.lpnav-contact{font-family:'General Sans','Inter',sans-serif;font-size:clamp(0.62rem,0.76vw,0.7rem);font-weight:600;letter-spacing:0.12em;text-transform:uppercase;border-radius:100px;padding:clamp(11px,1vw,14px) clamp(22px,1.9vw,30px);text-decoration:none;border:1px solid transparent;white-space:nowrap;transition:background 0.45s ease,color 0.4s ease,border-color 0.45s ease;}
+.lpnav[data-tone="light"] .lpnav-contact{background:#ffffff;color:${NAVY};border-color:#ffffff;}
+.lpnav[data-tone="light"] .lpnav-contact:hover{background:rgba(255,255,255,0.85);}
+.lpnav[data-tone="dark"] .lpnav-contact{background:#1e1e20;color:#ffffff;border-color:#1e1e20;}
+.lpnav[data-tone="dark"] .lpnav-contact:hover{background:#2c2c2f;}
+
+.lpnav-burger{display:none;width:42px;height:42px;margin-right:-9px;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:none;border:none;padding:0;cursor:pointer;transition:color 0.45s ease;}
+.lpnav-burger span{display:block;width:22px;height:1.5px;background:currentColor;border-radius:2px;transition:transform 0.42s cubic-bezier(0.4,0,0.2,1),opacity 0.3s ease;}
+.lpnav-burger[data-open="true"] span:first-child{transform:translateY(3.75px) rotate(45deg);}
+.lpnav-burger[data-open="true"] span:last-child{transform:translateY(-3.75px) rotate(-45deg);}
+
+.lpnav-lang{display:inline-flex;align-items:center;}
+.lpnav-lang-rule{width:1px;height:13px;margin-right:14px;flex-shrink:0;}
+.lpnav-lang-sep{font-family:'Inter',sans-serif;font-size:clamp(0.5rem,0.6vw,0.55rem);margin:0 1px;user-select:none;}
+.lpnav-lang-btn{font-family:'Inter',sans-serif;font-size:clamp(0.56rem,0.68vw,0.62rem);font-weight:400;letter-spacing:0.1em;text-transform:uppercase;background:none;border:none;cursor:pointer;padding:5px 5px;transition:color 0.3s ease;}
+.lpnav-lang-btn.is-active{font-weight:600;text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px;}
+.lpnav-lang--lg .lpnav-lang-btn{font-size:clamp(0.82rem,3.6vw,0.95rem);padding:8px 9px;}
+[data-tone="light"] .lpnav-lang-rule{background:rgba(255,255,255,0.22);}
+[data-tone="light"] .lpnav-lang-sep{color:rgba(255,255,255,0.25);}
+[data-tone="light"] .lpnav-lang-btn{color:rgba(255,255,255,0.5);}
+[data-tone="light"] .lpnav-lang-btn:hover{color:#ffffff;}
+[data-tone="light"] .lpnav-lang-btn.is-active{color:#ffffff;}
+[data-tone="dark"] .lpnav-lang-rule{background:rgba(2,10,37,0.14);}
+[data-tone="dark"] .lpnav-lang-sep{color:rgba(2,10,37,0.2);}
+[data-tone="dark"] .lpnav-lang-btn{color:rgba(2,10,37,0.4);}
+[data-tone="dark"] .lpnav-lang-btn:hover{color:${NAVY};}
+[data-tone="dark"] .lpnav-lang-btn.is-active{color:${NAVY};}
+
+.lpnav-overlay{position:fixed;inset:0;z-index:150;display:flex;flex-direction:column;padding:calc(clamp(56px,5.5vw,68px) + clamp(18px,3vh,30px)) clamp(24px,7vw,56px) clamp(34px,6vh,54px);background:rgba(244,244,246,0.72);backdrop-filter:blur(26px) saturate(160%);-webkit-backdrop-filter:blur(26px) saturate(160%);opacity:0;pointer-events:none;transition:opacity 0.42s ease;}
+.lpnav-overlay[data-open="true"]{opacity:1;pointer-events:auto;}
+.lpnav-panel{margin:auto 0;display:flex;flex-direction:column;gap:clamp(2px,1vh,8px);}
+.lpnav-panel-link{display:flex;align-items:baseline;gap:clamp(12px,3vw,18px);text-decoration:none;padding:clamp(5px,1vh,9px) 0;opacity:0;transform:translateY(16px);filter:blur(5px);transition:opacity 0.5s ease,transform 0.6s cubic-bezier(0.22,1,0.36,1),filter 0.5s ease;}
+.lpnav-overlay[data-open="true"] .lpnav-panel-link{opacity:1;transform:none;filter:none;}
+.lpnav-panel-idx{font-family:'Inter',sans-serif;font-size:clamp(0.6rem,2.4vw,0.72rem);font-weight:500;letter-spacing:0.1em;color:rgba(2,10,37,0.32);min-width:1.4em;}
+.lpnav-panel-label{font-family:'Titillium Web',sans-serif;font-weight:300;font-size:clamp(2rem,8.5vw,3.3rem);line-height:1.16;letter-spacing:-0.02em;color:rgba(2,10,37,0.82);transition:color 0.3s ease;}
+.lpnav-panel-link:hover .lpnav-panel-label,.lpnav-panel-link[aria-current="page"] .lpnav-panel-label{color:${NAVY};}
+.lpnav-panel-link[aria-current="page"] .lpnav-panel-idx{color:${ACCENT};}
+.lpnav-panel-foot{display:flex;align-items:center;gap:18px;border-top:1px solid rgba(2,10,37,0.1);padding-top:clamp(20px,3vh,28px);opacity:0;transform:translateY(16px);transition:opacity 0.5s ease,transform 0.6s cubic-bezier(0.22,1,0.36,1);}
+.lpnav-overlay[data-open="true"] .lpnav-panel-foot{opacity:1;transform:none;}
+
+@media (max-width:768px){
+  .lpnav-desktop{display:none!important;}
+  .lpnav-burger{display:inline-flex!important;}
+}
+@media (prefers-reduced-motion:reduce){
+  .lpnav-link::after,.lpnav-burger span,.lpnav-overlay,.lpnav-panel-link,.lpnav-panel-foot{transition-duration:0.01ms!important;}
+}
+`;
+
+const MENU_LABELS: Record<Locale, { open: string; close: string }> = {
+  en: { open: "Open menu", close: "Close menu" },
+  de: { open: "Menü öffnen", close: "Menü schließen" },
+  es: { open: "Abrir menú", close: "Cerrar menú" },
+};
+
 // ─── LangSwitcher ─────────────────────────────────────────────────────────────
-export function LangSwitcher({ locale, onLocaleChange, pastHero }: { locale: Locale; onLocaleChange: (l: Locale) => void; pastHero: boolean }) {
+export function LangSwitcher({ locale, onLocaleChange, size = "sm", showRule = true }: { locale: Locale; onLocaleChange: (l: Locale) => void; size?: "sm" | "lg"; showRule?: boolean }) {
   const langs: Locale[] = ["en", "de", "es"];
   return (
-    <div style={{ display: "flex", alignItems: "center" }}>
-      <div style={{ width: "1px", height: "13px", background: pastHero ? "rgba(2,10,37,0.14)" : "rgba(255,255,255,0.2)", marginRight: "14px", flexShrink: 0 }} />
+    <div className={size === "lg" ? "lpnav-lang lpnav-lang--lg" : "lpnav-lang"}>
+      {showRule && <span className="lpnav-lang-rule" aria-hidden />}
       {langs.map((l, i) => (
         <Fragment key={l}>
-          {i > 0 && <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.5rem,0.6vw,0.55rem)", color: pastHero ? "rgba(2,10,37,0.18)" : "rgba(255,255,255,0.2)", margin: "0 1px", userSelect: "none" }}>·</span>}
-          <button onClick={() => onLocaleChange(l)} className={l === locale ? "shared-lang-active" : ""} style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.56rem,0.68vw,0.62rem)", fontWeight: l === locale ? 600 : 400, letterSpacing: "0.1em", textTransform: "uppercase", color: l === locale ? (pastHero ? NAVY : "#ffffff") : (pastHero ? "rgba(2,10,37,0.38)" : "rgba(255,255,255,0.42)"), background: "transparent", border: "none", cursor: "pointer", padding: "5px 5px", transition: "color 0.3s ease" }}>
+          {i > 0 && <span className="lpnav-lang-sep" aria-hidden>·</span>}
+          <button type="button" onClick={() => onLocaleChange(l)} aria-pressed={l === locale} className={l === locale ? "lpnav-lang-btn is-active" : "lpnav-lang-btn"}>
             {l.toUpperCase()}
           </button>
         </Fragment>
@@ -125,25 +217,122 @@ export function LangSwitcher({ locale, onLocaleChange, pastHero }: { locale: Loc
 export function NavBar({ pastHero, locale, onLocaleChange }: { pastHero: boolean; locale: Locale; onLocaleChange: (l: Locale) => void }) {
   const t = TRANSLATIONS[locale];
   const pathname = usePathname();
+  const menuLabels = MENU_LABELS[locale];
+
+  // open = visual/animation state; render = whether the overlay is mounted.
+  // Splitting them lets the close transition play before we unmount.
+  const [open, setOpen] = useState(false);
+  const [render, setRender] = useState(false);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const openMenu = useCallback(() => {
+    if (closeTimer.current) { clearTimeout(closeTimer.current); closeTimer.current = null; }
+    setRender(true);
+    // Two frames so the browser paints the hidden state before transitioning in.
+    requestAnimationFrame(() => requestAnimationFrame(() => setOpen(true)));
+  }, []);
+
+  const closeMenu = useCallback(() => {
+    setOpen(false);
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    closeTimer.current = setTimeout(() => setRender(false), 460);
+  }, []);
+
+  // Lock background scroll (clamps Lenis, which scrolls the window) + Escape to close.
+  useEffect(() => {
+    if (!render) return;
+    const html = document.documentElement, body = document.body;
+    const prevHtml = html.style.overflow, prevBody = body.style.overflow;
+    html.style.overflow = "hidden"; body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") closeMenu(); };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      html.style.overflow = prevHtml; body.style.overflow = prevBody;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [render, closeMenu]);
+
+  useEffect(() => () => { if (closeTimer.current) clearTimeout(closeTimer.current); }, []);
+
+  const tone = pastHero || open ? "dark" : "light";
+
+  // Nav bar itself stays transparent — the glass pill is the visible container,
+  // matching the reference. Links 0–3 live in the pill; the last link ("Contact")
+  // becomes the solid CONTACT button.
+  const pillLinks = t.nav.links.slice(0, 4);
+  const contactLabel = t.nav.links[4] ?? t.nav.cta;
+
   return (
-    <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 200, height: "clamp(56px,5.5vw,68px)", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 clamp(20px,5vw,72px)", background: pastHero ? "rgba(255,255,255,0.97)" : "transparent", backdropFilter: pastHero ? "blur(16px)" : "none", borderBottom: pastHero ? "1px solid rgba(2,10,37,0.07)" : "none", transition: "background 0.5s cubic-bezier(0.4,0,0.2,1), border-color 0.5s ease, backdrop-filter 0.5s ease" }}>
-      <Link href="/" style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 600, fontSize: "clamp(0.9rem,1.2vw,1.05rem)", letterSpacing: "0.12em", textTransform: "uppercase", color: pastHero ? NAVY : "#ffffff", transition: "color 0.5s ease" }}>Level Pro</Link>
-      <div style={{ display: "flex", gap: "clamp(24px,3vw,44px)", alignItems: "center" }}>
-        {t.nav.links.map((label, i) => {
-          const href = NAV_ROUTES[i] ?? "#";
-          const isActive = pathname === href;
-          return (
-            <Link key={label} href={href} className={isActive ? "shared-nav-active" : ""} style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.68rem,0.82vw,0.75rem)", fontWeight: isActive ? 500 : 400, letterSpacing: "0.04em", color: isActive ? (pastHero ? NAVY : "#ffffff") : (pastHero ? "rgba(2,10,37,0.55)" : "rgba(255,255,255,0.65)"), transition: "color 0.3s ease" }}>
-              {label}
-            </Link>
-          );
-        })}
-      </div>
-      <div style={{ display: "flex", alignItems: "center" }}>
-        <Link href="/contact" className="btn-fill" style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.65rem,0.8vw,0.72rem)", fontWeight: 500, letterSpacing: "0.06em", color: NAVY, background: pastHero ? "transparent" : "rgba(255,255,255,0.93)", border: pastHero ? "1px solid rgba(2,10,37,0.32)" : "1px solid transparent", borderRadius: "3px", padding: "9px 20px", cursor: "pointer", transition: "background 0.5s cubic-bezier(0.4,0,0.2,1), border-color 0.5s ease", whiteSpace: "nowrap" }}>{t.nav.cta}</Link>
-        <LangSwitcher locale={locale} onLocaleChange={onLocaleChange} pastHero={pastHero} />
-      </div>
-    </nav>
+    <>
+      <style dangerouslySetInnerHTML={{ __html: NAV_CSS }} />
+      <nav
+        className="lpnav"
+        data-tone={tone}
+        style={{
+          position: "fixed", top: 0, left: 0, right: 0, zIndex: 200,
+          height: "clamp(56px,5.5vw,72px)",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "0 clamp(20px,5vw,72px)",
+          background: "transparent",
+          borderBottom: "1px solid transparent",
+        }}
+      >
+        <Link href="/" className="lpnav-logo" onClick={open ? closeMenu : undefined}>Level Pro</Link>
+
+        <div className="lpnav-right lpnav-desktop">
+          <LangSwitcher locale={locale} onLocaleChange={onLocaleChange} showRule={false} />
+          <div className="lpnav-pill">
+            {pillLinks.map((label, i) => {
+              const href = NAV_ROUTES[i] ?? "#";
+              return (
+                <Link key={label} href={href} className="lpnav-link" aria-current={pathname === href ? "page" : undefined}>
+                  {label}
+                </Link>
+              );
+            })}
+          </div>
+          <Link href="/contact" className="lpnav-contact" aria-current={pathname === "/contact" ? "page" : undefined}>{contactLabel}</Link>
+        </div>
+
+        <button
+          type="button"
+          className="lpnav-burger"
+          aria-label={open ? menuLabels.close : menuLabels.open}
+          aria-expanded={open}
+          aria-controls="lpnav-overlay"
+          data-open={open}
+          onClick={() => (open ? closeMenu() : openMenu())}
+        >
+          <span /><span />
+        </button>
+      </nav>
+
+      {render && (
+        <div id="lpnav-overlay" className="lpnav-overlay" data-open={open} role="dialog" aria-modal="true" aria-label={t.nav.cta}>
+          <nav className="lpnav-panel">
+            {t.nav.links.map((label, i) => {
+              const href = NAV_ROUTES[i] ?? "#";
+              return (
+                <Link
+                  key={label}
+                  href={href}
+                  className="lpnav-panel-link"
+                  aria-current={pathname === href ? "page" : undefined}
+                  style={{ transitionDelay: `${i * 55}ms` }}
+                  onClick={closeMenu}
+                >
+                  <span className="lpnav-panel-idx">0{i + 1}</span>
+                  <span className="lpnav-panel-label">{label}</span>
+                </Link>
+              );
+            })}
+          </nav>
+          <div className="lpnav-panel-foot" data-tone="dark" style={{ transitionDelay: `${t.nav.links.length * 55}ms` }}>
+            <LangSwitcher locale={locale} onLocaleChange={onLocaleChange} size="lg" showRule={false} />
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 

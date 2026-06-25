@@ -29,12 +29,13 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <style dangerouslySetInnerHTML={{ __html: `
+          @import url('https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&display=swap');
           :root {
             --lp-title-fs: clamp(2rem, 3.8vw, 3.8rem);
             --lp-title-ls: -0.03em;
-            --lp-label-fs: clamp(0.55rem, 0.7vw, 0.63rem);
-            --lp-label-ls: 0.22em;
-            --lp-body-fs: clamp(0.72rem, 0.88vw, 0.82rem);
+            --lp-label-fs: clamp(0.64rem, 0.74vw, 0.72rem);
+            --lp-label-ls: 0.2em;
+            --lp-body-fs: clamp(0.8rem, 0.92vw, 0.9rem);
             --lp-body-lh: 1.72;
           }
         `}} />

@@ -6,6 +6,9 @@ export interface Translation {
     eyebrow: string; est: string;
     titleLine1: string; titleLine2: string; titleLine3: string;
     tagline: string;
+    ctaPrimary: string; ctaSecondary: string;
+    locations: string[];
+    watchLabel: string; watchDesc: string;
     statsLabels: { projects: string; years: string; mobilization: string };
     scroll: string;
   };
@@ -114,6 +117,11 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
       titleLine3: "challenge",
       tagline:
         "At Level Pro, we partner with our customers to bring their ambitions to life — delivering concrete projects that make a lasting difference for people and communities.",
+      ctaPrimary: "Contact Us",
+      ctaSecondary: "View Projects",
+      locations: ["Benidorm", "Ibiza", "Palma de Mallorca"],
+      watchLabel: "See in Action",
+      watchDesc: "Watch our crews and equipment at work across the Costa Blanca.",
       statsLabels: { projects: "Projects", years: "Years", mobilization: "Mobilization" },
       scroll: "Scroll",
     },
@@ -432,6 +440,11 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
       titleLine3: "Herausforderung",
       tagline:
         "Bei Level Pro arbeiten wir mit unseren Kunden zusammen, um ihre Ambitionen zu verwirklichen — und liefern Betonprojekte, die einen bleibenden Unterschied für Menschen und Gemeinschaften machen.",
+      ctaPrimary: "Kontaktieren Sie uns",
+      ctaSecondary: "Projekte ansehen",
+      locations: ["Benidorm", "Ibiza", "Palma de Mallorca"],
+      watchLabel: "In Aktion sehen",
+      watchDesc: "Erleben Sie unsere Teams und Maschinen im Einsatz an der Costa Blanca.",
       statsLabels: { projects: "Projekte", years: "Jahre", mobilization: "Mobilisierung" },
       scroll: "Scrollen",
     },
@@ -750,6 +763,11 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
       titleLine3: "reto",
       tagline:
         "En Level Pro, colaboramos con nuestros clientes para hacer realidad sus ambiciones — entregando proyectos de hormigón que marcan una diferencia duradera para las personas y las comunidades.",
+      ctaPrimary: "Contáctanos",
+      ctaSecondary: "Ver proyectos",
+      locations: ["Benidorm", "Ibiza", "Palma de Mallorca"],
+      watchLabel: "Ver en acción",
+      watchDesc: "Mira a nuestros equipos y maquinaria trabajando por la Costa Blanca.",
       statsLabels: { projects: "Proyectos", years: "Años", mobilization: "Movilización" },
       scroll: "Scroll",
     },

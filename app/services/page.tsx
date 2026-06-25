@@ -192,10 +192,13 @@ export default function ServicesPage() {
   const [isFastLoader, setIsFastLoader] = useState(false);
   const pendingLocaleRef = useRef<ReturnType<typeof useLocale>[0] | null>(null);
 
-  const handlePreloaderComplete = useCallback(() => {
+  const handlePreloaderCovered = useCallback(() => {
     if (pendingLocaleRef.current) { setLocale(pendingLocaleRef.current); pendingLocaleRef.current = null; }
-    setPreloaderVisible(false);
   }, [setLocale]);
+
+  const handlePreloaderComplete = useCallback(() => {
+    setPreloaderVisible(false);
+  }, []);
 
   const handleLocaleChange = useCallback((newLocale: typeof locale) => {
     if (newLocale === locale) return;
@@ -252,7 +255,7 @@ export default function ServicesPage() {
         }
       ` }} />
 
-      {preloaderVisible && <Preloader key={preloaderKey} onComplete={handlePreloaderComplete} fast={isFastLoader} />}
+      {preloaderVisible && <Preloader key={preloaderKey} onComplete={handlePreloaderComplete} onCovered={handlePreloaderCovered} fast={isFastLoader} />}
       <NavBar pastHero={pastHero} locale={locale} onLocaleChange={handleLocaleChange} />
 
       {/* ── Hero ── */}

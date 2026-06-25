@@ -1,9 +1,11 @@
 "use client";
 
-import { useRef, useEffect, useState, useCallback, Fragment } from "react";
+import { useRef, useEffect, useState, useCallback, useSyncExternalStore, Fragment } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import Lenis from "lenis";
 import { Locale, TRANSLATIONS } from "./translations";
+import { useLocale, NavBar } from "./components/shared";
 
 const NAV_ROUTES = ["/services", "/projects", "/equipment", "/about", "/contact"];
 
@@ -13,15 +15,19 @@ const SECTION_BG = "#f0eeea";
 const VIDEO_SRC =
   "https://levelpro.venacydigital.com/wp-content/uploads/2026/04/333333benidorm-poniente-beach-aerial-flyover-mediterra-2026-02-24-23-51-33-utc.mp4";
 
-const LOCATIONS = [
-  { id: 0, name: "Benidorm",          video: VIDEO_SRC },
-  { id: 1, name: "Ibiza",             video: VIDEO_SRC },
-  { id: 2, name: "Palma de Mallorca", video: VIDEO_SRC },
-];
+// One <video> per location, in the same order as t.hero.locations. All three
+// currently point to the single real asset in the repo; drop distinct per-location
+// URLs in here and the rotation/progress sync keeps working unchanged.
+const LOCATION_VIDEOS = [VIDEO_SRC, VIDEO_SRC, VIDEO_SRC];
 
 const DEADZONE = 0.03;
+// Each location's hero video plays for this long (ms) before auto-advancing.
+const LOC_DURATION = 10000;
 
 const PROJ_IMG = "https://levelpro.es/wp-content/uploads/2026/05/1-copy.avif";
+// Photo shown on the mobile service cards (desktop uses a looping video instead).
+// Same asset for every card, mirroring the single shared media on desktop.
+const SVC_IMG = "https://levelpro.es/wp-content/uploads/2026/05/1-copy.avif";
 const PROJECTS_STATIC = [
   { id: 1, name: "Hotel Rosamar",            location: "Benidorm", year: "2020", budget: "€3M"   as string|undefined, img: PROJ_IMG, pin: { lat: 38.5411, lng: -0.1225 }, mapsUrl: "https://maps.google.com/?q=38.5411,-0.1225" },
   { id: 2, name: "Nomad Hotel Cala Finestrat 1", location: "Benidorm", year: "2020", budget: undefined as string|undefined, img: PROJ_IMG, pin: { lat: 38.5345, lng: -0.1305 }, mapsUrl: "https://maps.google.com/?q=38.5345,-0.1305" },
@@ -72,7 +78,7 @@ const MAT_ICONS = [
 ];
 
 // ─── Preloader ────────────────────────────────────────────────────────────────
-function Preloader({ onComplete, fast = false }: { onComplete: () => void; fast?: boolean }) {
+function Preloader({ onComplete, onCovered, fast = false }: { onComplete: () => void; onCovered?: () => void; fast?: boolean }) {
   const [progress, setProgress] = useState(0);
   const [phase, setPhase] = useState<"counting"|"exiting">("counting");
   const duration = fast ? 550 : 1500;
@@ -88,6 +94,9 @@ function Preloader({ onComplete, fast = false }: { onComplete: () => void; fast?
       setProgress(Math.round(eased * 100));
       if (t < 1) { raf = requestAnimationFrame(tick); }
       else {
+        // Viewport fully covered — swap underlying content (locale) now, while
+        // hidden, so the reveal shows the translated state with no visible flip.
+        onCovered?.();
         t1 = setTimeout(() => {
           setPhase("exiting");
           t2 = setTimeout(onComplete, fast ? 550 : 850);
@@ -160,9 +169,9 @@ function StatNum({ value, suffix="", delay=0 }:{ value:number; suffix?:string; d
 // ─── Meta chip ────────────────────────────────────────────────────────────────
 function MetaChip({ label, value }: { label: string; value: string }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
-      <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.42rem,0.5vw,0.46rem)", fontWeight: 600, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(2,10,37,0.3)" }}>{label}</span>
-      <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.6rem,0.72vw,0.66rem)", fontWeight: 500, color: NAVY }}>{value}</span>
+    <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+      <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.6rem,0.72vw,0.66rem)", fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(2,10,37,0.5)" }}>{label}</span>
+      <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.8rem,0.92vw,0.88rem)", fontWeight: 500, color: NAVY }}>{value}</span>
     </div>
   );
 }
@@ -185,15 +194,15 @@ function ProjectCard({ proj, metaKeys, index }: { proj: ProjectData; metaKeys: {
       </div>
       {/* Full description — 3-4 rows */}
       <div style={{ padding: "0 clamp(20px,2.6vw,28px) clamp(14px,1.8vw,18px)" }}>
-        <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 300, fontSize: "clamp(0.65rem,0.8vw,0.72rem)", lineHeight: 1.74, color: "rgba(2,10,37,0.5)", margin: 0 }}>{proj.fullDesc}</p>
+        <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 400, fontSize: "clamp(0.8rem,0.95vw,0.9rem)", lineHeight: 1.68, color: "rgba(2,10,37,0.62)", margin: 0 }}>{proj.fullDesc}</p>
       </div>
       {/* Service tags — plain text list */}
       <div style={{ padding: "0 clamp(20px,2.6vw,28px) clamp(16px,2.1vw,20px)" }}>
         <div style={{ height: "1px", background: "rgba(2,10,37,0.06)", marginBottom: "clamp(10px,1.4vw,14px)" }} />
-        <p style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.42rem,0.5vw,0.46rem)", fontWeight: 600, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(2,10,37,0.25)", margin: "0 0 clamp(7px,0.9vw,9px) 0" }}>Services</p>
+        <p style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.6rem,0.72vw,0.66rem)", fontWeight: 600, letterSpacing: "0.16em", textTransform: "uppercase", color: "rgba(2,10,37,0.42)", margin: "0 0 clamp(8px,1vw,10px) 0" }}>Services</p>
         <div style={{ display: "flex", flexWrap: "wrap", gap: "clamp(14px,1.8vw,20px)" }}>
           {proj.tags.map(tag => (
-            <span key={tag} style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.68rem,0.84vw,0.76rem)", fontWeight: 500, color: NAVY }}>{tag}</span>
+            <span key={tag} style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.78rem,0.9vw,0.85rem)", fontWeight: 500, color: NAVY }}>{tag}</span>
           ))}
         </div>
       </div>
@@ -208,40 +217,111 @@ function ProjectCard({ proj, metaKeys, index }: { proj: ProjectData; metaKeys: {
   );
 }
 
-// ─── Language switcher ────────────────────────────────────────────────────────
-function LangSwitcher({ locale, onLocaleChange, pastHero }: { locale:Locale; onLocaleChange:(l:Locale)=>void; pastHero:boolean }) {
-  const langs:Locale[] = ["en","de","es"];
+// ─── Hero glass mini-card: auto-rotating projects ─────────────────────────────
+function HeroProjectsCard({ items, label, reduced }: { items: Array<{ name: string; location: string; year: string; img: string }>; label: string; reduced: boolean }) {
+  const [idx, setIdx] = useState(0);
+  const [shown, setShown] = useState(true);
+
+  useEffect(() => {
+    if (items.length <= 1) return;
+    if (reduced) {
+      const id = setInterval(() => setIdx(i => (i + 1) % items.length), 5200);
+      return () => clearInterval(id);
+    }
+    let swap: ReturnType<typeof setTimeout> | undefined;
+    const id = setInterval(() => {
+      setShown(false);
+      swap = setTimeout(() => { setIdx(i => (i + 1) % items.length); setShown(true); }, 360);
+    }, 4200);
+    return () => { clearInterval(id); if (swap) clearTimeout(swap); };
+  }, [items.length, reduced]);
+
+  const p = items[idx];
   return (
-    <div style={{ display:"flex", alignItems:"center" }}>
-      <div style={{ width:"1px", height:"13px", background: pastHero?"rgba(2,10,37,0.14)":"rgba(255,255,255,0.2)", marginRight:"14px", flexShrink:0 }} />
-      {langs.map((l,i) => (
-        <Fragment key={l}>
-          {i>0 && <span style={{ fontFamily:"'Inter',sans-serif", fontSize:"clamp(0.5rem,0.6vw,0.55rem)", color:pastHero?"rgba(2,10,37,0.18)":"rgba(255,255,255,0.2)", margin:"0 1px", userSelect:"none" }}>·</span>}
-          <button onClick={()=>onLocaleChange(l)} className={l===locale?"lang-btn lang-btn--active":"lang-btn"} style={{ fontFamily:"'Inter',sans-serif", fontSize:"clamp(0.56rem,0.68vw,0.62rem)", fontWeight:l===locale?600:400, letterSpacing:"0.1em", textTransform:"uppercase", color:l===locale?(pastHero?NAVY:"#ffffff"):(pastHero?"rgba(2,10,37,0.38)":"rgba(255,255,255,0.42)"), background:"transparent", border:"none", cursor:"pointer", padding:"5px 5px", transition:"color 0.3s ease" }}>
-            {l.toUpperCase()}
-          </button>
-        </Fragment>
-      ))}
+    <div className="hero-glass" style={{ padding: "clamp(15px,1.45vw,20px)" }}>
+      <div style={{ display: "flex", alignItems: "flex-start", gap: "clamp(14px,1.6vw,20px)" }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "clamp(12px,1.5vw,16px)" }}>
+            <span style={{ width: "7px", height: "7px", background: "rgba(255,255,255,0.9)", flexShrink: 0 }} />
+            <span style={{ fontFamily: "'General Sans','Inter',sans-serif", fontWeight: 600, fontSize: "clamp(0.58rem,0.7vw,0.66rem)", letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.82)" }}>{label}</span>
+          </div>
+          <h3 style={{ fontFamily: "'General Sans','Inter',sans-serif", fontWeight: 600, fontSize: "clamp(1.1rem,1.45vw,1.4rem)", lineHeight: 1.28, color: "#ffffff", margin: 0, opacity: shown ? 1 : 0, transform: shown ? "translateY(0)" : "translateY(6px)", transition: reduced ? "none" : "opacity 0.34s ease, transform 0.44s cubic-bezier(0.22,1,0.36,1)" }}>{p.name}</h3>
+        </div>
+        <div style={{ width: "clamp(78px,7.5vw,96px)", height: "clamp(66px,6.2vw,80px)", borderRadius: "10px", overflow: "hidden", flexShrink: 0, background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.14)", opacity: shown ? 1 : 0, transition: reduced ? "none" : "opacity 0.34s ease" }}>
+          <img src={p.img} alt={p.name} loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+        </div>
+      </div>
     </div>
   );
 }
 
-// ─── Navbar ───────────────────────────────────────────────────────────────────
-function NavBar({ pastHero, locale, onLocaleChange }: { pastHero:boolean; locale:Locale; onLocaleChange:(l:Locale)=>void }) {
-  const t = TRANSLATIONS[locale];
+// ─── Hero glass mini-card: "See in Action" — static poster, plays in a modal ───
+// Per spec: the thumbnail does NOT autoplay. Clicking the play button opens a modal
+// (dark backdrop + close button) where the clip plays; closing pauses it. Reduced
+// motion skips the modal fade. All listeners + the scroll lock are cleaned up.
+function HeroVideoCard({ src, label, desc, reduced }: { src: string; label: string; desc: string; reduced: boolean }) {
+  const [open, setOpen] = useState(false);
+  const modalVideoRef = useRef<HTMLVideoElement>(null);
+
+  const close = useCallback(() => {
+    const v = modalVideoRef.current;
+    if (v) v.pause();
+    setOpen(false);
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    const v = modalVideoRef.current;
+    if (v) { try { v.currentTime = 0; } catch {} const r = v.play(); if (r && typeof r.catch === "function") r.catch(() => {}); }
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") close(); };
+    window.addEventListener("keydown", onKey);
+    const html = document.documentElement, body = document.body;
+    const prevHtml = html.style.overflow, prevBody = body.style.overflow;
+    html.style.overflow = "hidden"; body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      html.style.overflow = prevHtml; body.style.overflow = prevBody;
+    };
+  }, [open, close]);
+
   return (
-    <nav style={{ position:"fixed", top:0, left:0, right:0, zIndex:200, height:"clamp(56px,5.5vw,68px)", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 clamp(20px,5vw,72px)", background:pastHero?"rgba(255,255,255,0.97)":"transparent", backdropFilter:pastHero?"blur(16px)":"none", borderBottom:pastHero?"1px solid rgba(2,10,37,0.07)":"none", transition:"background 0.5s cubic-bezier(0.4,0,0.2,1), border-color 0.5s ease, backdrop-filter 0.5s ease" }}>
-      <Link href="/" style={{ fontFamily:"'Titillium Web',sans-serif", fontWeight:600, fontSize:"clamp(0.9rem,1.2vw,1.05rem)", letterSpacing:"0.12em", textTransform:"uppercase", color:pastHero?NAVY:"#ffffff", transition:"color 0.5s ease", textDecoration:"none" }}>Level Pro</Link>
-      <div className="nav-links" style={{ display:"flex", gap:"clamp(24px,3vw,44px)", alignItems:"center" }}>
-        {t.nav.links.map((l,i)=><Link key={l} href={NAV_ROUTES[i]??"/"+l.toLowerCase().replace(/\s+/g,"-")} style={{ fontFamily:"'Inter',sans-serif", fontSize:"clamp(0.68rem,0.82vw,0.75rem)", fontWeight:400, letterSpacing:"0.04em", color:pastHero?"rgba(2,10,37,0.65)":"rgba(255,255,255,0.75)", textDecoration:"none", transition:"color 0.3s ease" }}>{l}</Link>)}
-      </div>
-      <div style={{ display:"flex", alignItems:"center" }}>
-        <Link href="/contact" className="btn-fill" style={{ fontFamily:"'Inter',sans-serif", fontSize:"clamp(0.65rem,0.8vw,0.72rem)", fontWeight:500, letterSpacing:"0.06em", color:NAVY, background:pastHero?"transparent":"rgba(255,255,255,0.93)", border:pastHero?"1px solid rgba(2,10,37,0.32)":"1px solid transparent", borderRadius:"3px", padding:"9px 20px", cursor:"pointer", transition:"background 0.5s cubic-bezier(0.4,0,0.2,1), border-color 0.5s ease", whiteSpace:"nowrap", textDecoration:"none" }}>{t.nav.cta}</Link>
-        <LangSwitcher locale={locale} onLocaleChange={onLocaleChange} pastHero={pastHero} />
-      </div>
-    </nav>
+    <div className="hero-glass" style={{ padding: "clamp(18px,1.7vw,24px)" }}>
+      <p style={{ fontFamily: "'General Sans','Inter',sans-serif", fontWeight: 500, fontSize: "clamp(0.86rem,1.02vw,0.98rem)", lineHeight: 1.5, color: "rgba(255,255,255,0.92)", margin: "0 0 clamp(14px,1.6vw,18px) 0" }}>{desc}</p>
+      <button type="button" onClick={() => setOpen(true)} aria-label={label} className="hero-vcard-btn" style={{ position: "relative", display: "block", width: "100%", borderRadius: "10px", overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)", padding: 0, cursor: "pointer", background: "rgba(255,255,255,0.06)" }}>
+        {/* Static first-frame poster — preloaded only, never autoplaying */}
+        <video muted playsInline preload="metadata" tabIndex={-1} aria-hidden="true" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", pointerEvents: "none" }}>
+          <source src={`${src}#t=0.5`} type="video/mp4" />
+        </video>
+        <span style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.04) 55%, transparent 100%)", pointerEvents: "none" }} />
+        <span style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%,-50%)", display: "flex", alignItems: "center", gap: "9px", padding: "clamp(8px,0.9vw,11px) clamp(14px,1.4vw,19px)", borderRadius: "9px", background: "rgba(18,18,20,0.4)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.16)", pointerEvents: "none" }}>
+          <svg width="11" height="13" viewBox="0 0 11 13" fill="none"><path d="M1 1l9 5.5-9 5.5V1z" fill="#ffffff" /></svg>
+          <span style={{ fontFamily: "'General Sans','Inter',sans-serif", fontWeight: 500, fontSize: "clamp(0.78rem,0.9vw,0.88rem)", letterSpacing: "0.01em", color: "#ffffff" }}>{label}</span>
+        </span>
+      </button>
+
+      {open && createPortal(
+        <div
+          role="dialog" aria-modal="true" aria-label={label}
+          onClick={close}
+          style={{ position: "fixed", inset: 0, zIndex: 9998, background: "rgba(0,0,0,0.92)", display: "flex", alignItems: "center", justifyContent: "center", padding: "clamp(16px,4vw,56px)", animation: reduced ? "none" : "heroModalIn 0.22s ease both" }}
+        >
+          <button type="button" onClick={close} aria-label="Close" style={{ position: "absolute", top: "clamp(16px,3vh,28px)", right: "clamp(16px,3vw,28px)", width: "44px", height: "44px", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.25)", borderRadius: "50%", cursor: "pointer", color: "#ffffff" }}>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>
+          </button>
+          <div onClick={(e) => e.stopPropagation()} style={{ width: "min(100%, 1100px)", aspectRatio: "16 / 9", maxHeight: "82vh", borderRadius: "12px", overflow: "hidden", background: "#000000" }}>
+            <video ref={modalVideoRef} controls playsInline style={{ width: "100%", height: "100%", objectFit: "contain", display: "block", background: "#000000" }}>
+              <source src={src} type="video/mp4" />
+            </video>
+          </div>
+        </div>,
+        document.body
+      )}
+    </div>
   );
 }
+
+// NavBar + LangSwitcher now live in ./components/shared (single source of truth,
+// with the responsive hamburger menu). Imported above.
 
 // ─── Service slide card ───────────────────────────────────────────────────────
 interface ServiceItem { name:string; detail:string; shortDesc:string; tagDescs:string[]; bullets:string[]; icon:React.ReactNode }
@@ -282,7 +362,7 @@ function SvcSlideCard({ svc, isActive, tags, onHover, onClick }: { svc:ServiceIt
           <div style={{ color:"rgba(255,255,255,0.38)" }}>{svc.icon}</div>
           <div>
             <p style={{ fontFamily:"'Titillium Web',sans-serif", fontWeight:300, fontSize:"clamp(1.05rem,1.35vw,1.22rem)", color:"rgba(255,255,255,0.92)", margin:"0 0 6px 0", lineHeight:1.2 }}>{svc.name}</p>
-            <p style={{ fontFamily:"'Inter',sans-serif", fontWeight:400, fontSize:"clamp(0.65rem,0.78vw,0.72rem)", color:"rgba(255,255,255,0.45)", margin:0, lineHeight:1.5 }}>{svc.shortDesc}</p>
+            <p style={{ fontFamily:"'Inter',sans-serif", fontWeight:400, fontSize:"clamp(0.75rem,0.86vw,0.82rem)", color:"rgba(255,255,255,0.58)", margin:0, lineHeight:1.55 }}>{svc.shortDesc}</p>
           </div>
         </div>
 
@@ -311,7 +391,7 @@ function SvcSlideCard({ svc, isActive, tags, onHover, onClick }: { svc:ServiceIt
             <h3 style={{ fontFamily:"'Inter',sans-serif", fontWeight:600, fontSize:"clamp(0.88rem,1.08vw,0.98rem)", color:NAVY, margin:"0 0 clamp(5px,0.7vh,7px) 0", lineHeight:1.3, flexShrink:0 }}>
               {svc.name}
             </h3>
-            <p style={{ fontFamily:"'Inter',sans-serif", fontSize:"clamp(0.7rem,0.86vw,0.78rem)", lineHeight:1.65, color:"rgba(2,10,37,0.52)", margin:0, flex:1, minHeight:0, overflow:"hidden" }}>
+            <p style={{ fontFamily:"'Inter',sans-serif", fontSize:"clamp(0.78rem,0.92vw,0.85rem)", lineHeight:1.62, color:"rgba(2,10,37,0.62)", margin:0, flex:1, minHeight:0, overflow:"hidden" }}>
               {svc.tagDescs[activeTag]}
             </p>
             {/* Divider + tag toggles */}
@@ -354,6 +434,35 @@ function SvcSlideCard({ svc, isActive, tags, onHover, onClick }: { svc:ServiceIt
               <source src={VIDEO_SRC} type="video/mp4" />
             </video>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Service card — mobile/tablet (mirrors the desktop expanded card; photo, no video) ──
+function SvcMobileCard({ svc, tags }: { svc:ServiceItem; tags:string[] }) {
+  const [activeTag, setActiveTag] = useState(0);
+  return (
+    <div className="svc-m-card">
+      <div className="svc-m-media">
+        <img src={SVC_IMG} alt={svc.name} loading="lazy" />
+      </div>
+      <div className="svc-m-body">
+        <div className="svc-m-icon">{svc.icon}</div>
+        <h3 className="svc-m-name">{svc.name}</h3>
+        <p className="svc-m-desc">{svc.tagDescs[activeTag]}</p>
+        <div className="svc-m-divider" />
+        <div className="svc-m-tags">
+          {tags.map((tag, i) => (
+            <button
+              key={tag}
+              onClick={() => setActiveTag(i)}
+              className={i === activeTag ? "svc-m-tag svc-m-tag--active" : "svc-m-tag"}
+            >
+              {i === activeTag ? `›${tag}` : tag}
+            </button>
+          ))}
         </div>
       </div>
     </div>
@@ -412,14 +521,21 @@ export default function LevelProPage() {
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
   const mobileSliderRef = useRef<HTMLDivElement>(null);
   const heroOverlayRef = useRef<HTMLDivElement>(null);
-  const heroTopBarRef = useRef<HTMLDivElement>(null);
-  const heroTitleRef = useRef<HTMLDivElement>(null);
-  const heroDescRef = useRef<HTMLDivElement>(null);
   const heroLocTabsRef = useRef<HTMLDivElement>(null);
   const heroVideoWrapRef = useRef<HTMLDivElement>(null);
+  // Location rotation — refs drive per-frame progress writes without React re-renders
+  const activeLocationRef = useRef(0);
+  const locVideoRefs = useRef<(HTMLVideoElement | null)[]>([]);
+  const locTrackRefs = useRef<(HTMLSpanElement | null)[]>([]);
+  const locFillRefs = useRef<(HTMLSpanElement | null)[]>([]);
+  const locAccRef = useRef(0);
+  const locLastTsRef = useRef<number | null>(null);
+  const locHoverRef = useRef(false);
 
-  const [locale, setLocale] = useState<Locale>("en");
+  const [locale, setLocale] = useLocale();
   const t = TRANSLATIONS[locale];
+  const locationNames = t.hero.locations;
+  const locationCount = locationNames.length;
 
   // Preloader state — supports retrigger on locale change
   const [preloaderVisible, setPreloaderVisible] = useState(true);
@@ -427,11 +543,14 @@ export default function LevelProPage() {
   const [isFastLoader, setIsFastLoader] = useState(false);
   const pendingLocaleRef = useRef<Locale|null>(null);
 
-  const handlePreloaderComplete = useCallback(() => {
+  const handlePreloaderCovered = useCallback(() => {
     if (pendingLocaleRef.current) {
       setLocale(pendingLocaleRef.current);
       pendingLocaleRef.current = null;
     }
+  }, [setLocale]);
+
+  const handlePreloaderComplete = useCallback(() => {
     setPreloaderVisible(false);
   }, []);
 
@@ -466,7 +585,83 @@ export default function LevelProPage() {
   const [sidebarVisible, setSidebarVisible] = useState(true);
   const [activeSvc, setActiveSvc] = useState(0);
   const [activeLocation, setActiveLocation] = useState(0);
-  const [hoveredLocation, setHoveredLocation] = useState<number|null>(null);
+
+  // Only mount the Leaflet map on desktop — the mobile Projects section has no map,
+  // and keeping it off mobile avoids loading Leaflet there and prevents flyTo() from
+  // throwing on the hidden (0×0) container. useSyncExternalStore keeps it SSR-safe
+  // (server snapshot = false) without a cascading setState-in-effect.
+  const isDesktop = useSyncExternalStore(
+    (onChange) => {
+      const mq = window.matchMedia("(min-width: 769px)");
+      mq.addEventListener("change", onChange);
+      return () => mq.removeEventListener("change", onChange);
+    },
+    () => window.matchMedia("(min-width: 769px)").matches,
+    () => false,
+  );
+
+  // Reduced-motion preference — gates the heavy rAF progress animation. SSR-safe
+  // (server snapshot = false) like isDesktop above.
+  const prefersReducedMotion = useSyncExternalStore(
+    (onChange) => {
+      const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+      mq.addEventListener("change", onChange);
+      return () => mq.removeEventListener("change", onChange);
+    },
+    () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+    () => false,
+  );
+
+  // Switch the active location: resets the progress accumulator and (re)starts that
+  // location's video. Called both by auto-advance and by clicking a location item.
+  const goToLocation = useCallback((i: number) => {
+    activeLocationRef.current = i;
+    locAccRef.current = 0;
+    locLastTsRef.current = null;
+    setActiveLocation(i);
+    const v = locVideoRefs.current[i];
+    if (v) { const r = v.play(); if (r && typeof r.catch === "function") r.catch(() => {}); }
+  }, []);
+
+  // Full-motion: rAF loop ties the bar fill + track-opacity ramp to *real* video
+  // playback — time only accrues while the active video is actually playing (not
+  // paused, ended, buffering, or hover-paused), so the bar matches what's on screen.
+  useEffect(() => {
+    if (prefersReducedMotion) return;
+    let raf = 0;
+    const frame = (ts: number) => {
+      if (locLastTsRef.current === null) locLastTsRef.current = ts;
+      const dt = ts - locLastTsRef.current;
+      locLastTsRef.current = ts;
+      const active = activeLocationRef.current;
+      const v = locVideoRefs.current[active];
+      const playing = !!v && !v.paused && !v.ended && v.readyState >= 3 && !locHoverRef.current;
+      if (playing) locAccRef.current += dt;
+      const p = Math.min(locAccRef.current / LOC_DURATION, 1);
+      for (let i = 0; i < locationCount; i++) {
+        const fill = locFillRefs.current[i];
+        const track = locTrackRefs.current[i];
+        if (i === active) {
+          if (fill) fill.style.width = (p * 100).toFixed(2) + "%";
+          if (track) track.style.opacity = (0.16 + p * 0.54).toFixed(3);
+        } else {
+          if (fill) fill.style.width = "0%";
+          if (track) track.style.opacity = "0.16";
+        }
+      }
+      if (p >= 1) goToLocation((active + 1) % locationCount);
+      raf = requestAnimationFrame(frame);
+    };
+    raf = requestAnimationFrame(frame);
+    return () => cancelAnimationFrame(raf);
+  }, [prefersReducedMotion, goToLocation, locationCount]);
+
+  // Reduced-motion: no progressive animation — just advance on a plain timer.
+  useEffect(() => {
+    if (!prefersReducedMotion) return;
+    const id = setInterval(() => goToLocation((activeLocationRef.current + 1) % locationCount), LOC_DURATION);
+    return () => clearInterval(id);
+  }, [prefersReducedMotion, goToLocation, locationCount]);
 
   const computeAnim = useCallback(() => {
     const about = aboutRef.current;
@@ -475,33 +670,22 @@ export default function LevelProPage() {
     const vhNow = window.innerHeight;
     const rawProgress = Math.max(0, Math.min(1, (vhNow - rect.top) / vhNow));
 
-    let overlayOpacity = 0, videoBrightness = 1, titleOpacity = 1, titleY = 0, descOpacity = 1, descY = 0;
+    // Hero content (title / buttons / cards) stays STATIC. Putting a transform or
+    // will-change on their wrappers makes each a "backdrop root", which silently
+    // kills the glass backdrop-filter on the cards and buttons. So the scroll-out
+    // only drives the video dim + navy wash + location-bar fade — none of which are
+    // ancestors of the glass, so the blur keeps sampling the real video behind it.
+    let overlayOpacity = 0, videoBrightness = 1, exitOpacity = 1;
     if (window.scrollY > 0) {
-      const scrolledPx = rawProgress * vhNow;
       const ap = rawProgress <= DEADZONE ? 0 : (rawProgress - DEADZONE) / (1 - DEADZONE);
       overlayOpacity = Math.min(1, ap * 2.2);
       videoBrightness = Math.max(0.1, 1 - ap * 1.8);
-      titleOpacity = Math.max(0, 1 - ap * 3.5);
-      titleY = -(scrolledPx * 0.3);
-      descOpacity = Math.max(0, 1 - ap * 2.8);
-      descY = -(scrolledPx * 0.2);
+      exitOpacity = Math.max(0, 1 - ap * 2.8);
     }
 
     if (heroOverlayRef.current) heroOverlayRef.current.style.opacity = String(overlayOpacity);
     if (heroVideoWrapRef.current) heroVideoWrapRef.current.style.filter = videoBrightness < 1 ? `brightness(${videoBrightness.toFixed(3)})` : "";
-    if (heroTopBarRef.current) {
-      heroTopBarRef.current.style.opacity = String(titleOpacity);
-      heroTopBarRef.current.style.transform = `translateY(${(titleY * 0.4).toFixed(2)}px)`;
-    }
-    if (heroTitleRef.current) {
-      heroTitleRef.current.style.opacity = String(titleOpacity);
-      heroTitleRef.current.style.transform = `translateY(${titleY.toFixed(2)}px)`;
-    }
-    if (heroDescRef.current) {
-      heroDescRef.current.style.opacity = String(descOpacity);
-      heroDescRef.current.style.transform = `translateY(${descY.toFixed(2)}px)`;
-    }
-    if (heroLocTabsRef.current) heroLocTabsRef.current.style.opacity = String(descOpacity);
+    if (heroLocTabsRef.current) heroLocTabsRef.current.style.opacity = String(exitOpacity);
   }, []);
 
   useEffect(() => {
@@ -571,8 +755,6 @@ export default function LevelProPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeProject]);
 
-  const displayLocation = hoveredLocation ?? activeLocation;
-
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html:`
@@ -591,14 +773,47 @@ export default function LevelProPage() {
         @keyframes fadeBlurReveal{0%{opacity:0;filter:blur(10px);transform:translateY(12px);}100%{opacity:1;filter:blur(0);transform:translateY(0);}}
         @keyframes kenBurns{0%{transform:scale(1);}100%{transform:scale(1.07);}}
         @keyframes preloaderFadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+        @keyframes heroModalIn{from{opacity:0;}to{opacity:1;}}
         @keyframes svcFadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
-        .lang-btn{text-decoration:none;}
-        .lang-btn--active{text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px;}
-        @media(max-width:640px){.nav-links{display:none!important;}}
+        /* ── Hero content ── */
+        .hero-content{padding:clamp(94px,14vh,150px) clamp(24px,5vw,72px) clamp(104px,16vh,166px);}
+        .hero-title{font-family:'General Sans','Inter',sans-serif;font-weight:500;font-size:clamp(2.8rem,6.8vw,6.4rem);line-height:1.0;color:#ffffff;margin:0;letter-spacing:-0.02em;}
+        .hero-main-row{display:flex;align-items:flex-end;justify-content:space-between;gap:clamp(28px,4.5vw,64px);}
+        .hero-left{flex:1 1 auto;min-width:0;}
+        .hero-cards{flex:0 0 auto;width:min(35vw,400px);display:flex;flex-direction:column;gap:clamp(14px,1.5vw,18px);}
+        /* Frosted GREY glass over the hero video — translucent neutral fill + real
+           backdrop blur + a thin fine border. No navy fill, no shadow. */
+        .hero-glass{background:rgba(38,38,41,0.56);backdrop-filter:blur(22px) saturate(115%);-webkit-backdrop-filter:blur(22px) saturate(115%);border:1px solid rgba(255,255,255,0.12);border-radius:18px;}
+        /* ── Hero CTAs — static grey-glass buttons (no animation, no shadow) ── */
+        .hero-cta-row{display:flex;flex-wrap:wrap;gap:clamp(10px,1.1vw,14px);margin-top:clamp(24px,3.4vh,40px);}
+        .hero-btn{font-family:'General Sans','Inter',sans-serif;font-size:clamp(0.82rem,0.98vw,0.94rem);font-weight:500;letter-spacing:0.01em;border-radius:10px;padding:clamp(14px,1.2vw,18px) clamp(26px,2.3vw,38px);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;white-space:nowrap;color:#ffffff;background:rgba(44,44,46,0.42);border:1px solid rgba(255,255,255,0.18);backdrop-filter:blur(16px) saturate(118%);-webkit-backdrop-filter:blur(16px) saturate(118%);}
+        .hero-btn:hover{background:rgba(62,62,66,0.5);}
+        /* ── Hero video card ── */
+        .hero-vcard-btn{aspect-ratio:16/9;}
+        /* ── Location switcher ── */
+        .hero-loc{display:flex;gap:clamp(18px,3vw,48px);padding:0 clamp(24px,5vw,72px) clamp(22px,3.2vh,34px);}
+        .hero-loc-item{flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:clamp(9px,1.1vh,13px);background:none;border:none;padding:0;cursor:pointer;text-align:left;}
+        .hero-loc-trackwrap{position:relative;width:100%;height:2px;border-radius:2px;}
+        .hero-loc-track{position:absolute;inset:0;background:#ffffff;opacity:0.16;border-radius:2px;}
+        .hero-loc-fill{position:absolute;left:0;top:0;bottom:0;width:0;background:#ffffff;opacity:0.95;border-radius:2px;}
+        .hero-loc-name{font-family:'General Sans','Inter',sans-serif;font-weight:500;font-size:clamp(0.9rem,1.25vw,1.12rem);letter-spacing:0.01em;color:#ffffff;}
+        @media(max-width:900px){
+          .hero-content{padding:clamp(82px,12vh,110px) clamp(24px,5vw,72px) clamp(96px,13vh,120px);justify-content:center!important;}
+          .hero-main-row{flex-direction:column;align-items:stretch;gap:clamp(18px,3.5vw,26px);}
+          .hero-title{font-size:clamp(2.5rem,9vw,3.4rem);}
+          .hero-cards{width:100%;flex-direction:row;}
+          .hero-cards>*{flex:1 1 0;min-width:0;}
+        }
+        @media(max-width:600px){
+          .hero-cards{flex-direction:column;}
+          .hero-cards>*{flex:none;}
+          .hero-loc{gap:clamp(10px,3vw,18px);}
+          .hero-loc-name{font-size:clamp(0.72rem,3.3vw,0.92rem);}
+        }
         .stat-block{flex:1;min-width:0;padding:clamp(32px,4.5vw,60px) clamp(20px,3vw,48px);border-left:1px solid rgba(2,10,37,0.08);position:relative;}
         .stat-block:first-child{border-left:none;padding-left:0;}
         .stat-val{font-family:'Titillium Web',sans-serif;font-weight:200;font-size:clamp(3rem,6vw,5.5rem);color:${NAVY};letter-spacing:-0.03em;line-height:1;margin:0 0 clamp(8px,1.2vh,14px) 0;}
-        .stat-label{font-family:'Inter',sans-serif;font-size:clamp(0.62rem,0.78vw,0.7rem);color:rgba(2,10,37,0.42);letter-spacing:0.02em;line-height:1.5;}
+        .stat-label{font-family:'Inter',sans-serif;font-size:clamp(0.74rem,0.85vw,0.8rem);color:rgba(2,10,37,0.52);letter-spacing:0.01em;line-height:1.5;}
         .stat-rule{position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(to right,${ACCENT},transparent);opacity:0;transition:opacity 0.5s ease;}
         .stat-block:hover .stat-rule{opacity:1;}
         .mat-grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(12px,1.5vw,20px);margin-top:clamp(40px,5.5vh,64px);}
@@ -606,7 +821,7 @@ export default function LevelProPage() {
         .mat-card:hover{background:#e8e6e2;}
         .mat-icon-wrap{width:40px;height:40px;border-radius:8px;background:rgba(2,10,37,0.07);display:flex;align-items:center;justify-content:center;color:rgba(2,10,37,0.5);}
         .mat-card-title{font-family:'Titillium Web',sans-serif;font-weight:400;font-size:clamp(1rem,1.3vw,1.2rem);color:${NAVY};margin:0 0 clamp(8px,1.2vh,12px) 0;line-height:1.3;}
-        .mat-card-desc{font-family:'Inter',sans-serif;font-size:clamp(0.68rem,0.82vw,0.75rem);line-height:1.65;color:rgba(2,10,37,0.5);margin:0;}
+        .mat-card-desc{font-family:'Inter',sans-serif;font-size:clamp(0.8rem,0.92vw,0.88rem);line-height:1.62;color:rgba(2,10,37,0.6);margin:0;}
         /* Projects */
         .proj-maps-btn:hover{background:${NAVY}!important;border-color:${NAVY}!important;color:#ffffff!important;}
         .btn-fill{position:relative!important;overflow:hidden!important;z-index:1;transition:color 0.4s ease!important;}
@@ -621,7 +836,32 @@ export default function LevelProPage() {
           .stat-block:first-child{border-top:none!important;padding-top:0!important;}
           .stats-row{flex-direction:column!important;}
           .mat-grid{grid-template-columns:1fr!important;}
-          .hero-bottom-strip{flex-direction:column!important;gap:16px!important;}
+        }
+        /* Services — desktop strip vs mobile/tablet stack of desktop-style cards */
+        .svc-strip{display:flex;}
+        .svc-stack{display:none;}
+        .svc-controls{display:flex;}
+        .svc-m-card{background:#ffffff;border:1px solid rgba(2,10,37,0.08);border-radius:18px;overflow:hidden;box-shadow:0 6px 30px rgba(2,10,37,0.08);display:flex;flex-direction:column;}
+        .svc-m-media{width:100%;height:clamp(190px,52vw,260px);background:rgba(2,10,37,0.06);overflow:hidden;flex-shrink:0;}
+        .svc-m-media img{width:100%;height:100%;object-fit:cover;display:block;}
+        .svc-m-body{padding:clamp(22px,5.5vw,30px);display:flex;flex-direction:column;}
+        .svc-m-icon{color:rgba(2,10,37,0.45);margin-bottom:clamp(12px,3vw,16px);}
+        .svc-m-name{font-family:'Inter',sans-serif;font-weight:600;font-size:clamp(1.05rem,4vw,1.2rem);color:${NAVY};margin:0 0 clamp(8px,2vw,11px) 0;line-height:1.3;}
+        .svc-m-desc{font-family:'Inter',sans-serif;font-weight:400;font-size:clamp(0.86rem,3.4vw,0.94rem);line-height:1.6;color:rgba(2,10,37,0.62);margin:0;}
+        .svc-m-divider{height:1px;background:rgba(2,10,37,0.1);margin:clamp(16px,3.8vw,20px) 0 clamp(12px,2.6vw,15px);}
+        .svc-m-tags{display:flex;gap:clamp(14px,3.6vw,20px);flex-wrap:wrap;align-items:center;}
+        .svc-m-tag{font-family:'Inter',sans-serif;font-size:clamp(0.8rem,3.2vw,0.88rem);font-weight:400;color:rgba(2,10,37,0.45);background:none;border:none;padding:0;cursor:pointer;transition:color 0.2s ease;}
+        .svc-m-tag--active{font-weight:700;color:${NAVY};}
+        @media(max-width:900px){
+          .svc-strip{display:none!important;}
+          .svc-controls{display:none!important;}
+          .svc-stack{display:flex!important;flex-direction:column;gap:clamp(16px,3vw,22px);}
+        }
+        /* Wider tablets: media beside the text, like the desktop card */
+        @media(min-width:620px) and (max-width:900px){
+          .svc-m-card{flex-direction:row-reverse;}
+          .svc-m-media{width:42%;height:auto;align-self:stretch;}
+          .svc-m-body{width:58%;justify-content:center;}
         }
         .projects-desktop{display:block;}
         .projects-mobile{display:none;}
@@ -634,7 +874,7 @@ export default function LevelProPage() {
       `}} />
 
       {preloaderVisible && (
-        <Preloader key={preloaderKey} onComplete={handlePreloaderComplete} fast={isFastLoader} />
+        <Preloader key={preloaderKey} onComplete={handlePreloaderComplete} onCovered={handlePreloaderCovered} fast={isFastLoader} />
       )}
 
       <NavBar pastHero={pastHero} locale={locale} onLocaleChange={handleLocaleChange} />
@@ -643,61 +883,63 @@ export default function LevelProPage() {
       <div style={{ position:"relative", height:"145vh", backgroundColor:NAVY }}>
         <section style={{ position:"sticky", top:0, height:"100vh", zIndex:1, overflow:"hidden", backgroundColor:NAVY }}>
           <div ref={heroVideoWrapRef} style={{ position:"absolute", inset:0, willChange:"filter" }}>
-            {LOCATIONS.map((loc, i) => (
-              <video key={loc.id} autoPlay loop muted playsInline style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover", opacity: i === displayLocation ? 1 : 0, transition:"opacity 0.7s cubic-bezier(0.4,0,0.2,1)" }}>
-                <source src={loc.video} type="video/mp4" />
+            {LOCATION_VIDEOS.map((src, i) => (
+              <video
+                key={i}
+                ref={(el) => { locVideoRefs.current[i] = el; }}
+                autoPlay loop muted playsInline preload="auto"
+                style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover", opacity: i === activeLocation ? 1 : 0, transition:"opacity 0.8s cubic-bezier(0.4,0,0.2,1)" }}
+              >
+                <source src={src} type="video/mp4" />
               </video>
             ))}
           </div>
-          <div style={{ position:"absolute", inset:0, backgroundColor:"rgba(2,10,37,0.38)", pointerEvents:"none" }} />
-          <div style={{ position:"absolute", inset:0, pointerEvents:"none", background:"linear-gradient(to bottom,rgba(2,10,37,0.3) 0%,transparent 30%,rgba(2,10,37,0.15) 70%,rgba(2,10,37,0.55) 100%)" }} />
+          <div style={{ position:"absolute", inset:0, backgroundColor:"rgba(0,0,0,0.28)", pointerEvents:"none" }} />
+          <div style={{ position:"absolute", inset:0, pointerEvents:"none", background:"linear-gradient(to bottom,rgba(0,0,0,0.32) 0%,transparent 30%,rgba(0,0,0,0.1) 70%,rgba(0,0,0,0.5) 100%)" }} />
           <div ref={heroOverlayRef} style={{ position:"absolute", inset:0, backgroundColor:NAVY, opacity:0, willChange:"opacity", pointerEvents:"none" }} />
-          <div style={{ position:"relative", zIndex:10, height:"100%", display:"flex", flexDirection:"column", justifyContent:"space-between", paddingTop:"clamp(24px,5vw,72px)", paddingLeft:"clamp(24px,5vw,72px)", paddingRight:"clamp(24px,5vw,72px)", paddingBottom:"calc(clamp(58px,7.5vh,78px) + clamp(24px,3vh,36px))" }}>
-            <div ref={heroTopBarRef} style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginTop:"clamp(48px,8vh,88px)", willChange:"opacity,transform" }}>
-              <p style={{ fontFamily:"'Inter',sans-serif", fontWeight:400, fontSize:"clamp(0.6rem,0.78vw,0.7rem)", letterSpacing:"0.2em", textTransform:"uppercase", color:"rgba(255,255,255,0.5)", margin:0 }}>{t.hero.eyebrow}</p>
-            </div>
-            <div ref={heroTitleRef} style={{ willChange:"transform,opacity" }}>
-              <h1 style={{ fontFamily:"'Titillium Web',sans-serif", fontWeight:200, fontSize:"clamp(3.5rem,9vw,9rem)", lineHeight:0.95, color:"#ffffff", margin:0, letterSpacing:"-0.03em" }}>
-                {t.hero.titleLine1}<br />
-                {t.hero.titleLine2}<br />
-                {t.hero.titleLine3}
-              </h1>
-            </div>
-            <div ref={heroDescRef} className="hero-bottom-strip" style={{ willChange:"transform,opacity" }}>
-              <p style={{ fontFamily:"'Inter',sans-serif", fontWeight:300, fontSize:"clamp(0.7rem,0.92vw,0.82rem)", lineHeight:1.65, color:"rgba(255,255,255,0.6)", margin:0, maxWidth:"clamp(260px,34vw,380px)" }}>{t.hero.tagline}</p>
+          {/* ── Hero content — title + CTAs (left), glass mini-cards (right) ── */}
+          <div className="hero-content" style={{ position:"relative", zIndex:10, height:"100%", display:"flex", flexDirection:"column", justifyContent:"flex-end" }}>
+            <div className="hero-main-row">
+              {/* Left */}
+              <div className="hero-left">
+                <div>
+                  <h1 className="hero-title">
+                    {t.hero.titleLine1}<br />
+                    {t.hero.titleLine2}<br />
+                    {t.hero.titleLine3}
+                  </h1>
+                </div>
+                <div className="hero-cta-row">
+                  <Link href="/projects" className="hero-btn">{t.hero.ctaSecondary}</Link>
+                  <Link href="/contact" className="hero-btn">{t.hero.ctaPrimary}</Link>
+                </div>
+              </div>
+
+              {/* Right — stacked glass mini-cards (move below the title on mobile) */}
+              <div className="hero-cards">
+                <HeroProjectsCard items={projects} label={t.projects.label} reduced={prefersReducedMotion} />
+                <HeroVideoCard src={VIDEO_SRC} label={t.hero.watchLabel} desc={t.hero.watchDesc} reduced={prefersReducedMotion} />
+              </div>
             </div>
           </div>
 
-          {/* ── Location tabs ── */}
-          <div ref={heroLocTabsRef} style={{ position:"absolute", bottom:0, left:0, right:0, zIndex:20, display:"flex" }}>
-            {LOCATIONS.map((loc, i) => {
-              const isActive = i === activeLocation;
-              const isHovered = i === hoveredLocation;
-              const highlighted = isActive || isHovered;
+          {/* ── Location switcher — synced progress bars over the full hero width ── */}
+          <div
+            ref={heroLocTabsRef}
+            className="hero-loc"
+            style={{ position:"absolute", bottom:0, left:0, right:0, zIndex:20, willChange:"opacity" }}
+            onMouseEnter={() => { locHoverRef.current = true; }}
+            onMouseLeave={() => { locHoverRef.current = false; }}
+          >
+            {locationNames.map((name, i) => {
+              const active = i === activeLocation;
               return (
-                <button
-                  key={loc.id}
-                  onMouseEnter={() => setHoveredLocation(i)}
-                  onMouseLeave={() => setHoveredLocation(null)}
-                  onClick={() => setActiveLocation(i)}
-                  style={{
-                    flex: 1,
-                    height: "clamp(58px,7.5vh,78px)",
-                    background: isHovered ? "rgba(255,255,255,0.07)" : isActive ? "rgba(255,255,255,0.04)" : "rgba(2,10,37,0.52)",
-                    border: "none",
-                    borderRight: i < LOCATIONS.length - 1 ? "1px solid rgba(255,255,255,0.07)" : "none",
-                    boxShadow: highlighted ? "inset 0 2px 0 rgba(255,255,255,0.82)" : "inset 0 1px 0 rgba(255,255,255,0.1)",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    padding: 0,
-                    transition: "background 0.35s ease, box-shadow 0.35s ease",
-                  }}
-                >
-                  <span style={{ fontFamily:"'Titillium Web',sans-serif", fontWeight: highlighted ? 400 : 300, fontSize:"clamp(0.78rem,1vw,0.9rem)", letterSpacing:"0.05em", color: highlighted ? "#ffffff" : "rgba(255,255,255,0.48)", transition:"color 0.35s ease" }}>
-                    {loc.name}
+                <button key={i} type="button" className="hero-loc-item" onClick={() => goToLocation(i)} aria-pressed={active}>
+                  <span className="hero-loc-trackwrap">
+                    <span className="hero-loc-track" ref={(el) => { locTrackRefs.current[i] = el; }} style={prefersReducedMotion ? { opacity: active ? 0.7 : 0.16, transition:"opacity 0.6s ease" } : undefined} />
+                    <span className="hero-loc-fill" ref={(el) => { locFillRefs.current[i] = el; }} style={prefersReducedMotion ? { width: active ? "100%" : "0%", transition:"width 0.6s cubic-bezier(0.4,0,0.2,1)" } : undefined} />
                   </span>
+                  <span className="hero-loc-name" style={{ opacity: active ? 1 : 0.42, transition:"opacity 0.55s ease" }}>{name}</span>
                 </button>
               );
             })}
@@ -716,14 +958,14 @@ export default function LevelProPage() {
       <section style={{ background:"#ffffff", padding:"clamp(56px,7vh,80px) clamp(24px,5vw,72px)", borderTop:"1px solid rgba(2,10,37,0.05)" }}>
         {/* Heading */}
         <div style={{ marginBottom:"clamp(24px,3.2vh,38px)" }}>
-          <p style={{ fontFamily:"'Inter',sans-serif", fontWeight:500, fontSize:"var(--lp-label-fs)", letterSpacing:"var(--lp-label-ls)", textTransform:"uppercase", color:"rgba(2,10,37,0.35)", margin:"0 0 clamp(12px,1.8vh,18px) 0" }}>{t.services.label}</p>
+          <p style={{ fontFamily:"'Inter',sans-serif", fontWeight:600, fontSize:"var(--lp-label-fs)", letterSpacing:"var(--lp-label-ls)", textTransform:"uppercase", color:"rgba(2,10,37,0.46)", margin:"0 0 clamp(12px,1.8vh,18px) 0" }}>{t.services.label}</p>
           <h2 style={{ fontFamily:"'Titillium Web',sans-serif", fontWeight:300, fontSize:"var(--lp-title-fs)", lineHeight:0.95, color:NAVY, margin:0, letterSpacing:"var(--lp-title-ls)" }}>
             {t.services.headingLine1}<br />{t.services.headingLine2}
           </h2>
         </div>
 
-        {/* Card strip */}
-        <div style={{ display:"flex", gap:"clamp(8px,1vw,12px)", alignItems:"stretch", marginBottom:"clamp(14px,2vh,22px)" }}>
+        {/* Card strip — desktop expand-on-hover */}
+        <div className="svc-strip" style={{ gap:"clamp(8px,1vw,12px)", alignItems:"stretch", marginBottom:"clamp(14px,2vh,22px)" }}>
           {services.map((svc, i) => (
             <SvcSlideCard
               key={svc.name}
@@ -736,8 +978,15 @@ export default function LevelProPage() {
           ))}
         </div>
 
-        {/* Dots + Arrows */}
-        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+        {/* Card stack — mobile / tablet: desktop-style cards, one below another, photo not video */}
+        <div className="svc-stack">
+          {services.map((svc) => (
+            <SvcMobileCard key={svc.name} svc={svc} tags={t.services.tags} />
+          ))}
+        </div>
+
+        {/* Dots + Arrows — desktop only */}
+        <div className="svc-controls" style={{ justifyContent:"space-between", alignItems:"center" }}>
           <div style={{ display:"flex", gap:"8px", alignItems:"center" }}>
             {services.map((_, i) => (
               <button key={i} onClick={() => setActiveSvc(i)} style={{ width:i===activeSvc?"28px":"6px", height:"3px", background:i===activeSvc?"rgba(2,10,37,0.7)":"rgba(2,10,37,0.15)", border:"none", borderRadius:"2px", cursor:"pointer", padding:0, transition:"all 0.5s cubic-bezier(0.37,0,0.63,1)" }} />
@@ -765,7 +1014,7 @@ export default function LevelProPage() {
       <section style={{ backgroundColor:"#ffffff", padding:"clamp(56px,7vh,80px) clamp(24px,5vw,72px)", borderTop:"1px solid rgba(2,10,37,0.05)" }}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:"clamp(24px,4vw,48px)", flexWrap:"wrap", marginBottom:"clamp(40px,6vh,72px)" }}>
           <div style={{ flex:"0 0 auto" }}>
-            <p style={{ fontFamily:"'Inter',sans-serif", fontWeight:500, fontSize:"var(--lp-label-fs)", letterSpacing:"var(--lp-label-ls)", textTransform:"uppercase", color:"rgba(2,10,37,0.35)", margin:"0 0 clamp(12px,1.8vh,18px) 0" }}>{t.stats.label}</p>
+            <p style={{ fontFamily:"'Inter',sans-serif", fontWeight:600, fontSize:"var(--lp-label-fs)", letterSpacing:"var(--lp-label-ls)", textTransform:"uppercase", color:"rgba(2,10,37,0.46)", margin:"0 0 clamp(12px,1.8vh,18px) 0" }}>{t.stats.label}</p>
             <RevealText as="h2" text={t.stats.heading} style={{ fontFamily:"'Titillium Web',sans-serif", fontWeight:300, fontSize:"var(--lp-title-fs)", lineHeight:1.08, color:NAVY, letterSpacing:"var(--lp-title-ls)", maxWidth:"clamp(300px,48vw,600px)", margin:0 }} />
           </div>
           <div style={{ display:"flex", flexDirection:"column", justifyContent:"flex-end", gap:"clamp(10px,1.5vh,16px)", alignSelf:"flex-end" }}>
@@ -789,7 +1038,7 @@ export default function LevelProPage() {
       <section style={{ backgroundColor:"#ffffff", padding:"clamp(56px,7vh,80px) clamp(24px,5vw,72px)", borderTop:"1px solid rgba(2,10,37,0.05)" }}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", flexWrap:"wrap", gap:"clamp(16px,2.5vw,28px)" }}>
           <RevealText as="h2" text={t.materials.heading} style={{ fontFamily:"'Titillium Web',sans-serif", fontWeight:300, fontSize:"var(--lp-title-fs)", lineHeight:1.1, color:NAVY, letterSpacing:"var(--lp-title-ls)", maxWidth:"clamp(300px,52vw,620px)", margin:0 }} />
-          <p style={{ fontFamily:"'Inter',sans-serif", fontWeight:300, fontSize:"clamp(0.72rem,0.9vw,0.82rem)", lineHeight:1.7, color:"rgba(2,10,37,0.5)", maxWidth:"320px", alignSelf:"flex-end", margin:0 }}>{t.materials.tagline}</p>
+          <p style={{ fontFamily:"'Inter',sans-serif", fontWeight:400, fontSize:"clamp(0.82rem,0.98vw,0.92rem)", lineHeight:1.68, color:"rgba(2,10,37,0.6)", maxWidth:"340px", alignSelf:"flex-end", margin:0 }}>{t.materials.tagline}</p>
         </div>
         <div className="mat-grid">
           {t.materials.cards.map(({title,desc},i)=>(
@@ -801,119 +1050,95 @@ export default function LevelProPage() {
         </div>
       </section>
 
-      {/* ══ Projects ══ */}
-      <section className="projects-desktop" style={{ background: SECTION_BG }}>
-        <div style={{ display: "flex" }}>
+      {/* ══ Projects — desktop: full-bleed map, cards floating on the right ══ */}
+      <section className="projects-desktop" style={{ background: SECTION_BG, position: "relative" }}>
+        {/* Grid stack: sticky full-width map and the scrolling card column share one cell */}
+        <div style={{ display: "grid" }}>
 
-          {/* Left: sticky — full-height map + overlay details panel — 60% */}
-          <div style={{ position: "sticky", top: 0, width: "60%", height: "100vh", flexShrink: 0, overflow: "hidden" }}>
+          {/* ── Full-width sticky map layer ── */}
+          <div style={{ gridColumn: 1, gridRow: 1, position: "sticky", top: 0, height: "100vh", overflow: "hidden", zIndex: 1 }}>
 
-            {/* Map fills the full 100vh — extends to absolute bottom, no gaps */}
-            {/* isolation:isolate contains Leaflet's internal z-indexes (200/400/600) so they don't bleed above the details overlay */}
+            {/* Map — isolated stacking context so Leaflet's internal z-indexes (200/400/600) stay below the overlays */}
             <div style={{ position: "absolute", inset: 0, isolation: "isolate" }}>
-              <LeafletMap activeIdx={activeProject} />
+              {isDesktop && <LeafletMap activeIdx={activeProject} />}
             </div>
 
-            {/* Details overlay — anchored to bottom, sits atop the map */}
-            <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 11 }}>
+            {/* Left + bottom scrims — keep the floating overlays legible over the light map */}
+            <div style={{ position: "absolute", inset: 0, pointerEvents: "none", background: `linear-gradient(105deg, ${SECTION_BG} 0%, rgba(240,238,234,0.6) 18%, rgba(240,238,234,0) 46%)` }} />
+            <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: "42%", pointerEvents: "none", background: `linear-gradient(to top, ${SECTION_BG} 4%, rgba(240,238,234,0) 100%)` }} />
 
-              {/* Gradient bridge: map dissolves into the details panel */}
-              <div style={{ height: "clamp(72px,11vh,100px)", background: `linear-gradient(to bottom, transparent, ${SECTION_BG})`, position: "relative" }}>
-                {/* Floating location pill — centered in the gradient transition zone */}
-                <div style={{
-                  position: "absolute", bottom: "clamp(10px,1.5vh,14px)", left: "50%",
-                  transform: "translateX(-50%)",
-                  background: "#ffffff", borderRadius: "100px", padding: "9px 20px",
-                  display: "flex", alignItems: "center", gap: "10px",
-                  boxShadow: "0 4px 24px rgba(2,10,37,0.16)", whiteSpace: "nowrap",
-                  opacity: sidebarVisible ? 1 : 0,
-                  transition: "opacity 0.25s ease",
-                }}>
-                  <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: ACCENT, flexShrink: 0 }} />
-                  <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.6rem,0.78vw,0.7rem)", fontWeight: 500, color: NAVY, letterSpacing: "0.03em" }}>{projects[displayProject].name}</span>
-                  <span style={{ width: "1px", height: "12px", background: "rgba(2,10,37,0.15)", flexShrink: 0 }} />
-                  <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.58rem,0.7vw,0.65rem)", color: "rgba(2,10,37,0.45)" }}>{projects[displayProject].location}</span>
+            {/* Section heading — pinned top-left */}
+            <div style={{ position: "absolute", top: "clamp(98px,13vh,150px)", left: "clamp(24px,4vw,64px)", maxWidth: "min(42%,460px)", zIndex: 4 }}>
+              <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 600, fontSize: "clamp(0.66rem,0.82vw,0.74rem)", letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(2,10,37,0.5)", margin: "0 0 clamp(12px,1.6vh,18px) 0" }}>{t.projects.label}</p>
+              <h2 style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 300, fontSize: "clamp(1.9rem,3vw,3rem)", lineHeight: 1.04, color: NAVY, letterSpacing: "-0.025em", margin: 0 }}>{t.projects.heading}</h2>
+            </div>
+
+            {/* Floating glass info panel — pinned bottom-left, syncs with the active card */}
+            <div style={{
+              position: "absolute", left: "clamp(24px,4vw,64px)", bottom: "clamp(28px,5vh,56px)",
+              width: "min(40%,420px)", zIndex: 4,
+              background: "rgba(255,255,255,0.72)",
+              backdropFilter: "blur(22px) saturate(150%)", WebkitBackdropFilter: "blur(22px) saturate(150%)",
+              border: "1px solid rgba(255,255,255,0.7)", borderRadius: "18px",
+              boxShadow: "0 24px 70px rgba(2,10,37,0.18)",
+              padding: "clamp(20px,1.9vw,26px) clamp(22px,2.1vw,28px)", overflow: "hidden",
+            }}>
+              {/* Label + progress row */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "clamp(12px,1.5vh,16px)" }}>
+                <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 600, fontSize: "clamp(0.58rem,0.7vw,0.64rem)", letterSpacing: "0.16em", textTransform: "uppercase", color: "rgba(2,10,37,0.42)", margin: 0 }}>{String(activeProject + 1).padStart(2, "0")} / {String(projects.length).padStart(2, "0")}</p>
+                <div style={{ display: "flex", gap: "5px" }}>
+                  {projects.map((_, i) => (
+                    <div key={i} style={{ height: "3px", width: i === activeProject ? "22px" : "6px", background: i === activeProject ? NAVY : "rgba(2,10,37,0.18)", borderRadius: "2px", transition: "all 0.5s cubic-bezier(0.37,0,0.63,1)" }} />
+                  ))}
                 </div>
               </div>
 
-              {/* Solid details panel */}
-              <div style={{ background: SECTION_BG, padding: "clamp(16px,2.2vh,22px) clamp(28px,4vw,52px) clamp(28px,4.5vh,48px)", position: "relative", overflow: "hidden" }}>
-
-                {/* Label + progress row */}
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "clamp(10px,1.4vh,14px)" }}>
-                  <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 500, fontSize: "var(--lp-label-fs)", letterSpacing: "var(--lp-label-ls)", textTransform: "uppercase", color: "rgba(2,10,37,0.35)", margin: 0 }}>{t.projects.label}</p>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <div style={{ display: "flex", gap: "5px" }}>
-                      {projects.map((_, i) => (
-                        <div key={i} style={{ height: "2px", width: i === activeProject ? "22px" : "5px", background: i === activeProject ? NAVY : "rgba(2,10,37,0.15)", borderRadius: "2px", transition: "all 0.5s cubic-bezier(0.37,0,0.63,1)" }} />
-                      ))}
-                    </div>
-                    <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.52rem,0.65vw,0.6rem)", fontWeight: 500, letterSpacing: "0.12em", color: "rgba(2,10,37,0.28)", fontVariantNumeric: "tabular-nums" }}>
-                      {String(activeProject + 1).padStart(2, "0")} / {String(projects.length).padStart(2, "0")}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Fading dynamic content — smooth opacity + lift transition on project change */}
-                <div style={{ opacity: sidebarVisible ? 1 : 0, transform: sidebarVisible ? "translateY(0)" : "translateY(6px)", transition: "opacity 0.28s ease, transform 0.4s cubic-bezier(0.22,1,0.36,1)" }}>
-
-                  {/* Project name */}
-                  <h2 style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 300, fontSize: "clamp(1.4rem,2.4vw,2.6rem)", lineHeight: 1.04, color: NAVY, letterSpacing: "-0.025em", margin: "0 0 clamp(8px,1.2vh,12px) 0" }}>
+              {/* Fading dynamic content */}
+              <div style={{ opacity: sidebarVisible ? 1 : 0, transform: sidebarVisible ? "translateY(0)" : "translateY(6px)", transition: "opacity 0.28s ease, transform 0.4s cubic-bezier(0.22,1,0.36,1)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "clamp(8px,1.1vh,11px)" }}>
+                  <div style={{ width: "9px", height: "9px", borderRadius: "50%", background: ACCENT, flexShrink: 0 }} />
+                  <h3 style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 300, fontSize: "clamp(1.45rem,2vw,2rem)", lineHeight: 1.05, color: NAVY, letterSpacing: "-0.025em", margin: 0 }}>
                     {projects[displayProject].name}
-                  </h2>
-
-                  {/* Full rich description */}
-                  <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 300, fontSize: "clamp(0.64rem,0.79vw,0.72rem)", lineHeight: 1.72, color: "rgba(2,10,37,0.52)", margin: "0 0 clamp(12px,1.7vh,16px) 0", maxWidth: "clamp(280px,36vw,480px)" }}>
-                    {projects[displayProject].fullDesc}
-                  </p>
-
-                  {/* Divider */}
-                  <div style={{ height: "1px", background: "rgba(2,10,37,0.08)", margin: "0 0 clamp(10px,1.4vh,13px) 0" }} />
-
-                  {/* Service tags */}
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: "clamp(14px,1.8vw,20px)", marginBottom: "clamp(10px,1.4vh,14px)" }}>
-                    {projects[displayProject].tags.map(tag => (
-                      <span key={tag} style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.68rem,0.84vw,0.76rem)", fontWeight: 500, color: NAVY }}>{tag}</span>
-                    ))}
-                  </div>
-
-                  {/* Meta chips + Maps button */}
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "clamp(8px,1.2vh,12px)" }}>
-                    <div style={{ display: "flex", gap: "clamp(14px,2vw,22px)", flexWrap: "wrap" }}>
-                      <MetaChip label={t.projects.metaKeys.type} value={projects[displayProject].type} />
-                      <MetaChip label={t.projects.metaKeys.location} value={projects[displayProject].location} />
-                      {projects[displayProject].budget && <MetaChip label={t.projects.metaKeys.budget} value={projects[displayProject].budget!} />}
-                      <MetaChip label={t.projects.metaKeys.year} value={projects[displayProject].year} />
-                    </div>
-                    <a
-                      href={projects[displayProject].mapsUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="proj-maps-btn"
-                      style={{ display: "inline-flex", alignItems: "center", gap: "7px", fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.52rem,0.65vw,0.59rem)", fontWeight: 500, letterSpacing: "0.07em", textTransform: "uppercase", color: NAVY, border: "1px solid rgba(2,10,37,0.22)", borderRadius: "3px", padding: "8px 14px", textDecoration: "none", transition: "background 0.22s ease, border-color 0.22s ease, color 0.22s ease", flexShrink: 0 }}
-                    >
-                      <svg width="11" height="11" viewBox="0 0 12 12" fill="none" style={{ flexShrink: 0 }}>
-                        <path d="M6 1C4.07 1 2.5 2.57 2.5 4.5c0 2.78 3.5 6.5 3.5 6.5s3.5-3.72 3.5-6.5C9.5 2.57 7.93 1 6 1zm0 4.75a1.25 1.25 0 110-2.5 1.25 1.25 0 010 2.5z" fill="currentColor"/>
-                      </svg>
-                      {t.projects.viewOnMaps}
-                    </a>
-                  </div>
-
+                  </h3>
                 </div>
 
-                {/* Bottom fade — premium bleed effect, text dissolves into section bg */}
-                <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "clamp(36px,5.5vh,52px)", background: `linear-gradient(to bottom, transparent, ${SECTION_BG})`, pointerEvents: "none" }} />
+                <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 400, fontSize: "clamp(0.82rem,0.92vw,0.9rem)", lineHeight: 1.6, color: "rgba(2,10,37,0.6)", margin: "0 0 clamp(16px,2vh,20px) 0" }}>
+                  {projects[displayProject].shortDesc}
+                </p>
+
+                <div style={{ height: "1px", background: "rgba(2,10,37,0.1)", margin: "0 0 clamp(14px,1.8vh,18px) 0" }} />
+
+                {/* Meta + Maps button */}
+                <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: "14px" }}>
+                  <div style={{ display: "flex", gap: "clamp(18px,2vw,26px)", flexWrap: "wrap" }}>
+                    <MetaChip label={t.projects.metaKeys.location} value={projects[displayProject].location} />
+                    <MetaChip label={t.projects.metaKeys.year} value={projects[displayProject].year} />
+                    {projects[displayProject].budget && <MetaChip label={t.projects.metaKeys.budget} value={projects[displayProject].budget!} />}
+                  </div>
+                  <a
+                    href={projects[displayProject].mapsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="proj-maps-btn"
+                    style={{ display: "inline-flex", alignItems: "center", gap: "7px", fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.6rem,0.72vw,0.66rem)", fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: NAVY, border: "1px solid rgba(2,10,37,0.25)", borderRadius: "100px", padding: "9px 16px", textDecoration: "none", transition: "background 0.22s ease, border-color 0.22s ease, color 0.22s ease", flexShrink: 0 }}
+                  >
+                    <svg width="11" height="11" viewBox="0 0 12 12" fill="none" style={{ flexShrink: 0 }}>
+                      <path d="M6 1C4.07 1 2.5 2.57 2.5 4.5c0 2.78 3.5 6.5 3.5 6.5s3.5-3.72 3.5-6.5C9.5 2.57 7.93 1 6 1zm0 4.75a1.25 1.25 0 110-2.5 1.25 1.25 0 010 2.5z" fill="currentColor"/>
+                    </svg>
+                    {t.projects.viewOnMaps}
+                  </a>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Right: scrollable portrait card list — 40% */}
-          <div style={{ flex: 1, minWidth: 0, padding: "clamp(40px,6vh,64px) clamp(24px,3.5vw,44px) 40vh" }}>
+          {/* ── Scrolling portrait cards — right side, drives the scroll height ── */}
+          <div style={{ gridColumn: 1, gridRow: 1, position: "relative", zIndex: 2, justifySelf: "end", width: "min(42%,540px)", padding: "clamp(100px,14vh,160px) clamp(24px,4vw,64px) 42vh 0", pointerEvents: "none" }}>
             {projects.map((proj, i) => (
               <div
                 key={proj.id}
                 ref={(el: HTMLDivElement | null) => { cardRefs.current[i] = el; }}
-                style={{ marginBottom: i < projects.length - 1 ? "clamp(20px,3vh,28px)" : 0 }}
+                style={{ marginBottom: i < projects.length - 1 ? "clamp(20px,3vh,28px)" : 0, pointerEvents: "auto" }}
               >
                 <ProjectCard proj={proj} metaKeys={t.projects.metaKeys} index={i} />
               </div>
@@ -925,12 +1150,9 @@ export default function LevelProPage() {
 
       {/* ── Projects mobile ── */}
       <section className="projects-mobile" style={{ background: "#f0eeea", paddingTop: "clamp(48px,7vh,72px)", paddingBottom: "clamp(48px,7vh,72px)" }}>
-        <div style={{ paddingLeft: "clamp(24px,5vw,48px)", paddingRight: "clamp(24px,5vw,48px)", marginBottom: "clamp(16px,2.5vh,24px)" }}>
-          <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 500, fontSize: "clamp(0.55rem,0.7vw,0.63rem)", letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(2,10,37,0.35)", margin: "0 0 clamp(8px,1.2vh,12px) 0" }}>{t.projects.label}</p>
-          <h2 style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 300, fontSize: "clamp(1.8rem,5vw,3rem)", lineHeight: 1.05, color: NAVY, letterSpacing: "-0.025em", margin: 0 }}>{t.projects.heading}</h2>
-        </div>
-        <div style={{ height: "clamp(200px,45vw,300px)", marginBottom: "clamp(24px,3.5vh,32px)", position: "relative" }}>
-          <LeafletMap activeIdx={activeProject} />
+        <div style={{ paddingLeft: "clamp(24px,5vw,48px)", paddingRight: "clamp(24px,5vw,48px)", marginBottom: "clamp(22px,3.5vh,32px)" }}>
+          <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 600, fontSize: "clamp(0.62rem,2.6vw,0.7rem)", letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(2,10,37,0.45)", margin: "0 0 clamp(8px,1.2vh,12px) 0" }}>{t.projects.label}</p>
+          <h2 style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 300, fontSize: "clamp(1.9rem,6.5vw,3rem)", lineHeight: 1.05, color: NAVY, letterSpacing: "-0.025em", margin: 0 }}>{t.projects.heading}</h2>
         </div>
         <div
           ref={mobileSliderRef}

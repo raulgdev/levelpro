@@ -22,10 +22,13 @@ export default function ContactPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
 
-  const handlePreloaderComplete = useCallback(() => {
+  const handlePreloaderCovered = useCallback(() => {
     if (pendingLocaleRef.current) { setLocale(pendingLocaleRef.current); pendingLocaleRef.current = null; }
-    setPreloaderVisible(false);
   }, [setLocale]);
+
+  const handlePreloaderComplete = useCallback(() => {
+    setPreloaderVisible(false);
+  }, []);
 
   const handleLocaleChange = useCallback((newLocale: typeof locale) => {
     if (newLocale === locale) return;
@@ -114,7 +117,7 @@ export default function ContactPage() {
         }
       ` }} />
 
-      {preloaderVisible && <Preloader key={preloaderKey} onComplete={handlePreloaderComplete} fast={isFastLoader} />}
+      {preloaderVisible && <Preloader key={preloaderKey} onComplete={handlePreloaderComplete} onCovered={handlePreloaderCovered} fast={isFastLoader} />}
       <NavBar pastHero={pastHero} locale={locale} onLocaleChange={handleLocaleChange} />
 
       {/* ─── HERO ─────────────────────────────────────────────────────────── */}
