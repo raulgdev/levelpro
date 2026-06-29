@@ -243,9 +243,9 @@ function HeroProjectsCard({ items, label, reduced }: { items: Array<{ name: stri
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "clamp(12px,1.5vw,16px)" }}>
             <span style={{ width: "7px", height: "7px", background: "rgba(255,255,255,0.9)", flexShrink: 0 }} />
-            <span style={{ fontFamily: "'General Sans','Inter',sans-serif", fontWeight: 600, fontSize: "clamp(0.58rem,0.7vw,0.66rem)", letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.82)" }}>{label}</span>
+            <span style={{ fontFamily: "'Inter',sans-serif", fontWeight: 600, fontSize: "clamp(0.58rem,0.7vw,0.66rem)", letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.82)" }}>{label}</span>
           </div>
-          <h3 style={{ fontFamily: "'General Sans','Inter',sans-serif", fontWeight: 600, fontSize: "clamp(1.1rem,1.45vw,1.4rem)", lineHeight: 1.28, color: "#ffffff", margin: 0, opacity: shown ? 1 : 0, transform: shown ? "translateY(0)" : "translateY(6px)", transition: reduced ? "none" : "opacity 0.34s ease, transform 0.44s cubic-bezier(0.22,1,0.36,1)" }}>{p.name}</h3>
+          <h3 style={{ fontFamily: "'Inter',sans-serif", fontWeight: 600, fontSize: "clamp(1.1rem,1.45vw,1.4rem)", lineHeight: 1.28, color: "#ffffff", margin: 0, opacity: shown ? 1 : 0, transform: shown ? "translateY(0)" : "translateY(6px)", transition: reduced ? "none" : "opacity 0.34s ease, transform 0.44s cubic-bezier(0.22,1,0.36,1)" }}>{p.name}</h3>
         </div>
         <div style={{ width: "clamp(78px,7.5vw,96px)", height: "clamp(66px,6.2vw,80px)", borderRadius: "10px", overflow: "hidden", flexShrink: 0, background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.14)", opacity: shown ? 1 : 0, transition: reduced ? "none" : "opacity 0.34s ease" }}>
           <img src={p.img} alt={p.name} loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
@@ -286,7 +286,7 @@ function HeroVideoCard({ src, label, desc, reduced }: { src: string; label: stri
 
   return (
     <div className="hero-glass" style={{ padding: "clamp(18px,1.7vw,24px)" }}>
-      <p style={{ fontFamily: "'General Sans','Inter',sans-serif", fontWeight: 500, fontSize: "clamp(0.86rem,1.02vw,0.98rem)", lineHeight: 1.5, color: "rgba(255,255,255,0.92)", margin: "0 0 clamp(14px,1.6vw,18px) 0" }}>{desc}</p>
+      <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 500, fontSize: "clamp(0.86rem,1.02vw,0.98rem)", lineHeight: 1.5, color: "rgba(255,255,255,0.92)", margin: "0 0 clamp(14px,1.6vw,18px) 0" }}>{desc}</p>
       <button type="button" onClick={() => setOpen(true)} aria-label={label} className="hero-vcard-btn" style={{ position: "relative", display: "block", width: "100%", borderRadius: "10px", overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)", padding: 0, cursor: "pointer", background: "rgba(255,255,255,0.06)" }}>
         {/* Static first-frame poster — preloaded only, never autoplaying */}
         <video muted playsInline preload="metadata" tabIndex={-1} aria-hidden="true" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", pointerEvents: "none" }}>
@@ -295,7 +295,7 @@ function HeroVideoCard({ src, label, desc, reduced }: { src: string; label: stri
         <span style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.04) 55%, transparent 100%)", pointerEvents: "none" }} />
         <span style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%,-50%)", display: "flex", alignItems: "center", gap: "9px", padding: "clamp(8px,0.9vw,11px) clamp(14px,1.4vw,19px)", borderRadius: "9px", background: "rgba(18,18,20,0.4)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.16)", pointerEvents: "none" }}>
           <svg width="11" height="13" viewBox="0 0 11 13" fill="none"><path d="M1 1l9 5.5-9 5.5V1z" fill="#ffffff" /></svg>
-          <span style={{ fontFamily: "'General Sans','Inter',sans-serif", fontWeight: 500, fontSize: "clamp(0.78rem,0.9vw,0.88rem)", letterSpacing: "0.01em", color: "#ffffff" }}>{label}</span>
+          <span style={{ fontFamily: "'Inter',sans-serif", fontWeight: 500, fontSize: "clamp(0.78rem,0.9vw,0.88rem)", letterSpacing: "0.01em", color: "#ffffff" }}>{label}</span>
         </span>
       </button>
 
@@ -777,7 +777,7 @@ export default function LevelProPage() {
         @keyframes svcFadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
         /* ── Hero content ── */
         .hero-content{padding:clamp(94px,14vh,150px) clamp(24px,5vw,72px) clamp(104px,16vh,166px);}
-        .hero-title{font-family:'General Sans','Inter',sans-serif;font-weight:500;font-size:clamp(2.8rem,6.8vw,6.4rem);line-height:1.0;color:#ffffff;margin:0;letter-spacing:-0.02em;}
+        .hero-title{font-family:'Titillium Web',sans-serif;font-weight:200;font-size:clamp(3rem,7.4vw,7rem);line-height:0.96;color:#ffffff;margin:0;letter-spacing:-0.03em;}
         .hero-main-row{display:flex;align-items:flex-end;justify-content:space-between;gap:clamp(28px,4.5vw,64px);}
         .hero-left{flex:1 1 auto;min-width:0;}
         .hero-cards{flex:0 0 auto;width:min(35vw,400px);display:flex;flex-direction:column;gap:clamp(14px,1.5vw,18px);}
@@ -786,7 +786,7 @@ export default function LevelProPage() {
         .hero-glass{background:rgba(38,38,41,0.56);backdrop-filter:blur(22px) saturate(115%);-webkit-backdrop-filter:blur(22px) saturate(115%);border:1px solid rgba(255,255,255,0.12);border-radius:18px;}
         /* ── Hero CTAs — static grey-glass buttons (no animation, no shadow) ── */
         .hero-cta-row{display:flex;flex-wrap:wrap;gap:clamp(10px,1.1vw,14px);margin-top:clamp(24px,3.4vh,40px);}
-        .hero-btn{font-family:'General Sans','Inter',sans-serif;font-size:clamp(0.82rem,0.98vw,0.94rem);font-weight:500;letter-spacing:0.01em;border-radius:10px;padding:clamp(14px,1.2vw,18px) clamp(26px,2.3vw,38px);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;white-space:nowrap;color:#ffffff;background:rgba(44,44,46,0.42);border:1px solid rgba(255,255,255,0.18);backdrop-filter:blur(16px) saturate(118%);-webkit-backdrop-filter:blur(16px) saturate(118%);}
+        .hero-btn{font-family:'Inter',sans-serif;font-size:clamp(0.82rem,0.98vw,0.94rem);font-weight:500;letter-spacing:0.01em;border-radius:10px;padding:clamp(14px,1.2vw,18px) clamp(26px,2.3vw,38px);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;white-space:nowrap;color:#ffffff;background:rgba(44,44,46,0.42);border:1px solid rgba(255,255,255,0.18);backdrop-filter:blur(16px) saturate(118%);-webkit-backdrop-filter:blur(16px) saturate(118%);}
         .hero-btn:hover{background:rgba(62,62,66,0.5);}
         /* ── Hero video card ── */
         .hero-vcard-btn{aspect-ratio:16/9;}
@@ -796,7 +796,7 @@ export default function LevelProPage() {
         .hero-loc-trackwrap{position:relative;width:100%;height:2px;border-radius:2px;}
         .hero-loc-track{position:absolute;inset:0;background:#ffffff;opacity:0.16;border-radius:2px;}
         .hero-loc-fill{position:absolute;left:0;top:0;bottom:0;width:0;background:#ffffff;opacity:0.95;border-radius:2px;}
-        .hero-loc-name{font-family:'General Sans','Inter',sans-serif;font-weight:500;font-size:clamp(0.9rem,1.25vw,1.12rem);letter-spacing:0.01em;color:#ffffff;}
+        .hero-loc-name{font-family:'Titillium Web',sans-serif;font-weight:300;font-size:clamp(0.9rem,1.25vw,1.15rem);letter-spacing:0.01em;color:#ffffff;}
         @media(max-width:900px){
           .hero-content{padding:clamp(82px,12vh,110px) clamp(24px,5vw,72px) clamp(96px,13vh,120px);justify-content:center!important;}
           .hero-main-row{flex-direction:column;align-items:stretch;gap:clamp(18px,3.5vw,26px);}
@@ -896,7 +896,10 @@ export default function LevelProPage() {
           </div>
           <div style={{ position:"absolute", inset:0, backgroundColor:"rgba(0,0,0,0.28)", pointerEvents:"none" }} />
           <div style={{ position:"absolute", inset:0, pointerEvents:"none", background:"linear-gradient(to bottom,rgba(0,0,0,0.32) 0%,transparent 30%,rgba(0,0,0,0.1) 70%,rgba(0,0,0,0.5) 100%)" }} />
-          <div ref={heroOverlayRef} style={{ position:"absolute", inset:0, backgroundColor:NAVY, opacity:0, willChange:"opacity", pointerEvents:"none" }} />
+          {/* Navy scroll-out wash — sits ABOVE the hero content (z:30) so it fades the
+              whole hero (video + title + cards + location bar) to navy uniformly. At
+              rest it's opacity:0, so it never affects the cards' backdrop-filter. */}
+          <div ref={heroOverlayRef} style={{ position:"absolute", inset:0, zIndex:30, backgroundColor:NAVY, opacity:0, willChange:"opacity", pointerEvents:"none" }} />
           {/* ── Hero content — title + CTAs (left), glass mini-cards (right) ── */}
           <div className="hero-content" style={{ position:"relative", zIndex:10, height:"100%", display:"flex", flexDirection:"column", justifyContent:"flex-end" }}>
             <div className="hero-main-row">

@@ -29,7 +29,6 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <style dangerouslySetInnerHTML={{ __html: `
-          @import url('https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&display=swap');
           :root {
             --lp-title-fs: clamp(2rem, 3.8vw, 3.8rem);
             --lp-title-ls: -0.03em;

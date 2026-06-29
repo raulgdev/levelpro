@@ -111,13 +111,13 @@ export function RevealText({ text, delayOffset = 0, style, as: Tag = "p" }: { te
 // page without depending on per-page <style> blocks. Light/dark is driven by a
 // [data-tone] attribute — "light" over the dark hero, "dark" over glass / overlay.
 const NAV_CSS = `
-.lpnav-logo{font-family:'General Sans','Inter',sans-serif;font-weight:600;font-size:clamp(0.9rem,1.2vw,1.05rem);letter-spacing:0.12em;text-transform:uppercase;text-decoration:none;transition:color 0.45s ease;}
+.lpnav-logo{font-family:'Titillium Web',sans-serif;font-weight:600;font-size:clamp(0.9rem,1.2vw,1.05rem);letter-spacing:0.12em;text-transform:uppercase;text-decoration:none;transition:color 0.45s ease;}
 .lpnav-links{display:flex;gap:clamp(22px,3vw,42px);align-items:center;}
-.lpnav-link{position:relative;font-family:'General Sans','Inter',sans-serif;font-size:clamp(0.7rem,0.84vw,0.78rem);font-weight:500;letter-spacing:0.01em;text-decoration:none;padding:4px 0;transition:color 0.3s ease;}
+.lpnav-link{position:relative;font-family:'Inter',sans-serif;font-size:clamp(0.68rem,0.82vw,0.75rem);font-weight:400;letter-spacing:0.04em;text-decoration:none;padding:4px 0;transition:color 0.3s ease;}
 .lpnav-link::after{content:'';position:absolute;left:0;bottom:-2px;height:1px;width:100%;transform:scaleX(0);transform-origin:left;transition:transform 0.4s cubic-bezier(0.22,1,0.36,1);}
 .lpnav-link:hover::after,.lpnav-link[aria-current="page"]::after{transform:scaleX(1);}
 .lpnav-right{display:flex;align-items:center;gap:clamp(10px,1.4vw,18px);}
-.lpnav-cta{font-family:'General Sans','Inter',sans-serif;font-size:clamp(0.65rem,0.8vw,0.72rem);font-weight:500;letter-spacing:0.06em;border-radius:100px;padding:9px 22px;cursor:pointer;white-space:nowrap;text-decoration:none;border:1px solid transparent;transition:background 0.45s cubic-bezier(0.4,0,0.2,1),color 0.4s ease,border-color 0.45s ease;}
+.lpnav-cta{font-family:'Inter',sans-serif;font-size:clamp(0.65rem,0.8vw,0.72rem);font-weight:500;letter-spacing:0.06em;border-radius:100px;padding:9px 22px;cursor:pointer;white-space:nowrap;text-decoration:none;border:1px solid transparent;transition:background 0.45s cubic-bezier(0.4,0,0.2,1),color 0.4s ease,border-color 0.45s ease;}
 
 .lpnav[data-tone="light"] .lpnav-logo{color:#ffffff;}
 .lpnav[data-tone="light"] .lpnav-link{color:rgba(255,255,255,0.7);}
@@ -140,7 +140,7 @@ const NAV_CSS = `
 .lpnav-pill{display:flex;align-items:center;gap:clamp(18px,2.2vw,34px);border-radius:100px;padding:clamp(9px,0.85vw,12px) clamp(20px,1.8vw,28px);border:1px solid transparent;transition:background 0.5s cubic-bezier(0.4,0,0.2,1),border-color 0.5s ease;}
 .lpnav[data-tone="light"] .lpnav-pill{background:rgba(44,44,46,0.4);border-color:rgba(255,255,255,0.16);backdrop-filter:blur(18px) saturate(120%);-webkit-backdrop-filter:blur(18px) saturate(120%);}
 .lpnav[data-tone="dark"] .lpnav-pill{background:rgba(255,255,255,0.66);border-color:rgba(2,10,37,0.08);backdrop-filter:blur(16px) saturate(150%);-webkit-backdrop-filter:blur(16px) saturate(150%);}
-.lpnav-contact{font-family:'General Sans','Inter',sans-serif;font-size:clamp(0.62rem,0.76vw,0.7rem);font-weight:600;letter-spacing:0.12em;text-transform:uppercase;border-radius:100px;padding:clamp(11px,1vw,14px) clamp(22px,1.9vw,30px);text-decoration:none;border:1px solid transparent;white-space:nowrap;transition:background 0.45s ease,color 0.4s ease,border-color 0.45s ease;}
+.lpnav-contact{font-family:'Inter',sans-serif;font-size:clamp(0.62rem,0.76vw,0.7rem);font-weight:600;letter-spacing:0.12em;text-transform:uppercase;border-radius:100px;padding:clamp(11px,1vw,14px) clamp(22px,1.9vw,30px);text-decoration:none;border:1px solid transparent;white-space:nowrap;transition:background 0.45s ease,color 0.4s ease,border-color 0.45s ease;}
 .lpnav[data-tone="light"] .lpnav-contact{background:#ffffff;color:${NAVY};border-color:#ffffff;}
 .lpnav[data-tone="light"] .lpnav-contact:hover{background:rgba(255,255,255,0.85);}
 .lpnav[data-tone="dark"] .lpnav-contact{background:#1e1e20;color:#ffffff;border-color:#1e1e20;}

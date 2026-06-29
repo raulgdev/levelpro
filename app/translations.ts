@@ -58,6 +58,10 @@ export interface Translation {
       steps: Array<{ num: string; title: string; desc: string }>;
     };
     cta: { label: string; heading: string; btn: string };
+    mission: { label: string; heading: string; body1: string; body2: string; btn: string };
+    tech: { label: string; heading: string };
+    stats: { label: string; items: Array<{ label: string }> };
+    locations: { label: string; heading: string; items: Array<{ name: string; desc: string }> };
   };
   aboutPage: {
     hero: {
@@ -270,9 +274,9 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
     servicesPage: {
       hero: {
         label: "Our Services",
-        headingLine1: "Comprehensive",
-        headingLine2: "concrete",
-        headingLine3: "solutions",
+        headingLine1: "Professional concrete",
+        headingLine2: "across the Costa Blanca",
+        headingLine3: "",
         tagline: "Specialized concrete services for every scale — from residential foundations to large commercial structures across the Costa Blanca.",
         scrollLabel: "Scroll",
       },
@@ -356,6 +360,35 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
         label: "Start a Project",
         heading: "Ready to discuss your concrete requirements?",
         btn: "Get in Touch",
+      },
+      mission: {
+        label: "Mission",
+        heading: "Your concrete partner on the Costa Blanca",
+        body1: "Level Pro delivers professional concrete solutions across the Costa Blanca, pairing experienced on-site teams with a modern, well-maintained fleet.",
+        body2: "From residential foundations to large commercial pours, we bring precision, reliability and clear communication to every stage of the build.",
+        btn: "Learn more",
+      },
+      tech: {
+        label: "Capabilities",
+        heading: "Specialized concrete services",
+      },
+      stats: {
+        label: "By the numbers",
+        items: [
+          { label: "Projects completed" },
+          { label: "Service locations" },
+          { label: "Years of experience" },
+          { label: "Rapid site mobilization" },
+        ],
+      },
+      locations: {
+        label: "Locations",
+        heading: "Operating across the Costa Blanca",
+        items: [
+          { name: "Benidorm", desc: "Our home base on the Costa Blanca — covering Benidorm, Altea and the surrounding coastline." },
+          { name: "Ibiza", desc: "Island projects served by the same fleet and crews, from residential builds to hospitality developments." },
+          { name: "Palma de Mallorca", desc: "Balearic coverage for commercial and residential concrete works across Mallorca." },
+        ],
       },
     },
     aboutPage: {
@@ -593,9 +626,9 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
     servicesPage: {
       hero: {
         label: "Unsere Leistungen",
-        headingLine1: "Umfassende",
-        headingLine2: "Beton-",
-        headingLine3: "lösungen",
+        headingLine1: "Professioneller Beton",
+        headingLine2: "an der Costa Blanca",
+        headingLine3: "",
         tagline: "Spezialisierte Betondienstleistungen für jede Größenordnung — von Wohnfundamenten bis zu großen Gewerbeobjekten an der Costa Blanca.",
         scrollLabel: "Scrollen",
       },
@@ -679,6 +712,35 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
         label: "Projekt starten",
         heading: "Bereit, Ihren Betonbedarf zu besprechen?",
         btn: "Kontakt aufnehmen",
+      },
+      mission: {
+        label: "Auftrag",
+        heading: "Ihr Betonpartner an der Costa Blanca",
+        body1: "Level Pro liefert professionelle Betonlösungen an der Costa Blanca und verbindet erfahrene Vor-Ort-Teams mit einer modernen, gepflegten Flotte.",
+        body2: "Von Wohnfundamenten bis zu großen Gewerbegüssen bringen wir Präzision, Zuverlässigkeit und klare Kommunikation in jede Bauphase.",
+        btn: "Mehr erfahren",
+      },
+      tech: {
+        label: "Leistungsspektrum",
+        heading: "Spezialisierte Betondienstleistungen",
+      },
+      stats: {
+        label: "In Zahlen",
+        items: [
+          { label: "Abgeschlossene Projekte" },
+          { label: "Standorte" },
+          { label: "Jahre Erfahrung" },
+          { label: "Schnelle Mobilisierung" },
+        ],
+      },
+      locations: {
+        label: "Standorte",
+        heading: "Im Einsatz an der Costa Blanca",
+        items: [
+          { name: "Benidorm", desc: "Unser Stützpunkt an der Costa Blanca — für Benidorm, Altea und die umliegende Küste." },
+          { name: "Ibiza", desc: "Inselprojekte mit derselben Flotte und denselben Teams, vom Wohnbau bis zur Hotellerie." },
+          { name: "Palma de Mallorca", desc: "Abdeckung der Balearen für gewerbliche und private Betonarbeiten auf ganz Mallorca." },
+        ],
       },
     },
     aboutPage: {
@@ -916,9 +978,9 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
     servicesPage: {
       hero: {
         label: "Nuestros Servicios",
-        headingLine1: "Soluciones",
-        headingLine2: "de hormigón",
-        headingLine3: "integrales",
+        headingLine1: "Hormigón profesional",
+        headingLine2: "en la Costa Blanca",
+        headingLine3: "",
         tagline: "Servicios especializados de hormigón a cualquier escala — desde cimentaciones residenciales hasta grandes estructuras comerciales en la Costa Blanca.",
         scrollLabel: "Scroll",
       },
@@ -1002,6 +1064,35 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
         label: "Iniciar un Proyecto",
         heading: "¿Listo para hablar sobre sus necesidades de hormigón?",
         btn: "Contáctenos",
+      },
+      mission: {
+        label: "Misión",
+        heading: "Su socio del hormigón en la Costa Blanca",
+        body1: "Level Pro ofrece soluciones profesionales de hormigón en la Costa Blanca, combinando equipos experimentados en obra con una flota moderna y bien mantenida.",
+        body2: "Desde cimentaciones residenciales hasta grandes vertidos comerciales, aportamos precisión, fiabilidad y comunicación clara en cada etapa de la obra.",
+        btn: "Saber más",
+      },
+      tech: {
+        label: "Capacidades",
+        heading: "Servicios especializados de hormigón",
+      },
+      stats: {
+        label: "En cifras",
+        items: [
+          { label: "Proyectos completados" },
+          { label: "Ubicaciones de servicio" },
+          { label: "Años de experiencia" },
+          { label: "Movilización rápida" },
+        ],
+      },
+      locations: {
+        label: "Ubicaciones",
+        heading: "Operando en toda la Costa Blanca",
+        items: [
+          { name: "Benidorm", desc: "Nuestra base en la Costa Blanca — cubriendo Benidorm, Altea y todo el litoral cercano." },
+          { name: "Ibiza", desc: "Proyectos en la isla atendidos con la misma flota y equipos, de obra residencial a desarrollos hoteleros." },
+          { name: "Palma de Mallorca", desc: "Cobertura balear para trabajos de hormigón comerciales y residenciales en toda Mallorca." },
+        ],
       },
     },
     aboutPage: {
