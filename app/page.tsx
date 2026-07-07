@@ -179,9 +179,9 @@ function MetaChip({ label, value }: { label: string; value: string }) {
 // ─── Project card ─────────────────────────────────────────────────────────────
 function ProjectCard({ proj, metaKeys, index }: { proj: ProjectData; metaKeys: { year: string; type: string; budget: string; location: string }; index: number }) {
   return (
-    <div style={{ background: "#ffffff", borderRadius: "12px", overflow: "hidden", border: "1px solid rgba(2,10,37,0.06)", boxShadow: "0 2px 16px rgba(2,10,37,0.07)" }}>
-      {/* Thumbnail — portrait / taller aspect ratio */}
-      <div style={{ position: "relative", height: "clamp(280px,44vh,480px)", overflow: "hidden" }}>
+    <div style={{ background: "#ffffff", borderRadius: "14px", overflow: "hidden", border: "1px solid rgba(2,10,37,0.06)", boxShadow: "0 2px 16px rgba(2,10,37,0.07)" }}>
+      {/* Thumbnail — wide / landscape aspect ratio */}
+      <div style={{ position: "relative", aspectRatio: "16 / 9", overflow: "hidden" }}>
         <img
           src={proj.img}
           alt={proj.name}
@@ -189,25 +189,23 @@ function ProjectCard({ proj, metaKeys, index }: { proj: ProjectData; metaKeys: {
         />
       </div>
       {/* Title */}
-      <div style={{ padding: "clamp(18px,2.4vw,26px) clamp(20px,2.6vw,28px) clamp(6px,0.9vw,8px)" }}>
-        <h3 style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 200, fontSize: "clamp(1.35rem,2.3vw,2.1rem)", lineHeight: 1.05, color: NAVY, margin: 0, letterSpacing: "-0.02em" }}>{proj.name}</h3>
+      <div style={{ padding: "clamp(14px,1.8vw,18px) clamp(18px,2.2vw,24px) clamp(4px,0.6vw,6px)" }}>
+        <h3 style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 200, fontSize: "clamp(1.15rem,1.75vw,1.55rem)", lineHeight: 1.08, color: NAVY, margin: 0, letterSpacing: "-0.02em" }}>{proj.name}</h3>
       </div>
-      {/* Full description — 3-4 rows */}
-      <div style={{ padding: "0 clamp(20px,2.6vw,28px) clamp(14px,1.8vw,18px)" }}>
-        <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 400, fontSize: "clamp(0.8rem,0.95vw,0.9rem)", lineHeight: 1.68, color: "rgba(2,10,37,0.62)", margin: 0 }}>{proj.fullDesc}</p>
+      {/* Description — clamped to 2 lines for a condensed teaser */}
+      <div style={{ padding: "0 clamp(18px,2.2vw,24px) clamp(10px,1.3vw,14px)" }}>
+        <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 400, fontSize: "clamp(0.76rem,0.88vw,0.85rem)", lineHeight: 1.55, color: "rgba(2,10,37,0.62)", margin: 0, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{proj.fullDesc}</p>
       </div>
       {/* Service tags — plain text list */}
-      <div style={{ padding: "0 clamp(20px,2.6vw,28px) clamp(16px,2.1vw,20px)" }}>
-        <div style={{ height: "1px", background: "rgba(2,10,37,0.06)", marginBottom: "clamp(10px,1.4vw,14px)" }} />
-        <p style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.6rem,0.72vw,0.66rem)", fontWeight: 600, letterSpacing: "0.16em", textTransform: "uppercase", color: "rgba(2,10,37,0.42)", margin: "0 0 clamp(8px,1vw,10px) 0" }}>Services</p>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "clamp(14px,1.8vw,20px)" }}>
+      <div style={{ padding: "0 clamp(18px,2.2vw,24px) clamp(12px,1.5vw,16px)" }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "clamp(10px,1.4vw,16px)" }}>
           {proj.tags.map(tag => (
-            <span key={tag} style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.78rem,0.9vw,0.85rem)", fontWeight: 500, color: NAVY }}>{tag}</span>
+            <span key={tag} style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.7rem,0.8vw,0.76rem)", fontWeight: 500, color: "rgba(2,10,37,0.55)" }}>{tag}</span>
           ))}
         </div>
       </div>
       {/* Metadata footer */}
-      <div style={{ borderTop: "1px solid rgba(2,10,37,0.07)", padding: "clamp(12px,1.6vw,16px) clamp(20px,2.6vw,28px)", display: "flex", gap: "clamp(18px,2.4vw,28px)", flexWrap: "wrap" }}>
+      <div style={{ borderTop: "1px solid rgba(2,10,37,0.07)", padding: "clamp(10px,1.3vw,13px) clamp(18px,2.2vw,24px)", display: "flex", gap: "clamp(16px,2vw,24px)", flexWrap: "wrap" }}>
         <MetaChip label={metaKeys.type} value={proj.type} />
         <MetaChip label={metaKeys.location} value={proj.location} />
         {proj.budget && <MetaChip label={metaKeys.budget} value={proj.budget} />}
@@ -523,6 +521,7 @@ export default function LevelProPage() {
   const heroOverlayRef = useRef<HTMLDivElement>(null);
   const heroLocTabsRef = useRef<HTMLDivElement>(null);
   const heroVideoWrapRef = useRef<HTMLDivElement>(null);
+  const heroLeftRef = useRef<HTMLDivElement>(null);
   // Location rotation — refs drive per-frame progress writes without React re-renders
   const activeLocationRef = useRef(0);
   const locVideoRefs = useRef<(HTMLVideoElement | null)[]>([]);
@@ -670,22 +669,27 @@ export default function LevelProPage() {
     const vhNow = window.innerHeight;
     const rawProgress = Math.max(0, Math.min(1, (vhNow - rect.top) / vhNow));
 
-    // Hero content (title / buttons / cards) stays STATIC. Putting a transform or
-    // will-change on their wrappers makes each a "backdrop root", which silently
-    // kills the glass backdrop-filter on the cards and buttons. So the scroll-out
-    // only drives the video dim + navy wash + location-bar fade — none of which are
-    // ancestors of the glass, so the blur keeps sampling the real video behind it.
-    let overlayOpacity = 0, videoBrightness = 1, exitOpacity = 1;
+    // The glass cards' wrapper (.hero-cards) must stay untransformed — putting a
+    // transform or will-change on an ancestor of the glass makes it a "backdrop
+    // root", which silently kills the backdrop-filter blur (it stops sampling the
+    // real video behind it). The title/CTA block and location bar have no
+    // backdrop-filter descendants, so they're free to translate on scroll-out.
+    let overlayOpacity = 0, videoBrightness = 1, exitOpacity = 1, contentTranslate = 0;
     if (window.scrollY > 0) {
       const ap = rawProgress <= DEADZONE ? 0 : (rawProgress - DEADZONE) / (1 - DEADZONE);
       overlayOpacity = Math.min(1, ap * 2.2);
       videoBrightness = Math.max(0.1, 1 - ap * 1.8);
       exitOpacity = Math.max(0, 1 - ap * 2.8);
+      contentTranslate = ap * -420;
     }
 
     if (heroOverlayRef.current) heroOverlayRef.current.style.opacity = String(overlayOpacity);
     if (heroVideoWrapRef.current) heroVideoWrapRef.current.style.filter = videoBrightness < 1 ? `brightness(${videoBrightness.toFixed(3)})` : "";
-    if (heroLocTabsRef.current) heroLocTabsRef.current.style.opacity = String(exitOpacity);
+    if (heroLocTabsRef.current) {
+      heroLocTabsRef.current.style.opacity = String(exitOpacity);
+      heroLocTabsRef.current.style.transform = contentTranslate ? `translateY(${(contentTranslate * 0.4).toFixed(1)}px)` : "";
+    }
+    if (heroLeftRef.current) heroLeftRef.current.style.transform = contentTranslate ? `translateY(${contentTranslate.toFixed(1)}px)` : "";
   }, []);
 
   useEffect(() => {
@@ -904,7 +908,7 @@ export default function LevelProPage() {
           <div className="hero-content" style={{ position:"relative", zIndex:10, height:"100%", display:"flex", flexDirection:"column", justifyContent:"flex-end" }}>
             <div className="hero-main-row">
               {/* Left */}
-              <div className="hero-left">
+              <div ref={heroLeftRef} className="hero-left" style={{ willChange: "transform" }}>
                 <div>
                   <h1 className="hero-title">
                     {t.hero.titleLine1}<br />
@@ -930,7 +934,7 @@ export default function LevelProPage() {
           <div
             ref={heroLocTabsRef}
             className="hero-loc"
-            style={{ position:"absolute", bottom:0, left:0, right:0, zIndex:20, willChange:"opacity" }}
+            style={{ position:"absolute", bottom:0, left:0, right:0, zIndex:20, willChange:"opacity, transform" }}
             onMouseEnter={() => { locHoverRef.current = true; }}
             onMouseLeave={() => { locHoverRef.current = false; }}
           >
@@ -1136,7 +1140,7 @@ export default function LevelProPage() {
           </div>
 
           {/* ── Scrolling portrait cards — right side, drives the scroll height ── */}
-          <div style={{ gridColumn: 1, gridRow: 1, position: "relative", zIndex: 2, justifySelf: "end", width: "min(42%,540px)", padding: "clamp(100px,14vh,160px) clamp(24px,4vw,64px) 42vh 0", pointerEvents: "none" }}>
+          <div style={{ gridColumn: 1, gridRow: 1, position: "relative", zIndex: 2, justifySelf: "end", width: "min(46%,620px)", padding: "clamp(100px,14vh,160px) clamp(24px,4vw,64px) 42vh 0", pointerEvents: "none" }}>
             {projects.map((proj, i) => (
               <div
                 key={proj.id}
@@ -1163,7 +1167,7 @@ export default function LevelProPage() {
           style={{ display: "flex", overflowX: "auto", scrollSnapType: "x mandatory", gap: "clamp(12px,3vw,16px)", paddingLeft: "clamp(24px,5vw,48px)", paddingRight: "clamp(24px,5vw,48px)", paddingBottom: "4px", scrollbarWidth: "none" }}
         >
           {projects.map((proj, i) => (
-            <div key={proj.id} style={{ flex: "0 0 82vw", maxWidth: "360px", scrollSnapAlign: "start" }}>
+            <div key={proj.id} style={{ flex: "0 0 86vw", maxWidth: "420px", scrollSnapAlign: "start" }}>
               <ProjectCard proj={proj} metaKeys={t.projects.metaKeys} index={i} />
             </div>
           ))}
