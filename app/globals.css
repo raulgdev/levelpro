@@ -5,14 +5,72 @@
   --background: #ffffff;
   --foreground: #171717;
 
-  /* LevelPro typography scale — edit here to update site-wide */
-  --lp-title-fs: clamp(2rem, 3.8vw, 3.8rem);
+  /* LevelPro typography scale — edit here to update site-wide.
+     (This is the ONLY place these tokens are declared — do not
+     re-declare them elsewhere, e.g. in layout.tsx, or the later
+     declaration wins the cascade and silently shadows this one.) */
+  --lp-title-fs: clamp(2rem, 3.8vw, 3.8rem);   /* H2 section titles: 32px -> 60.8px */
   --lp-title-ls: -0.03em;
+  --lp-h3-fs: clamp(1.15rem, 1.6vw, 1.5rem);   /* H3 card titles: 18.4px -> 24px */
+  --lp-subtitle-fs: clamp(1.125rem, 1.85vw, 1.375rem); /* lead/tagline: 18px -> 22px */
   --lp-label-fs: clamp(0.64rem, 0.74vw, 0.72rem);
   --lp-label-ls: 0.2em;
-  --lp-body-fs: clamp(0.8rem, 0.92vw, 0.9rem);
-  --lp-body-lh: 1.72;
+  --lp-body-fs: clamp(1rem, 0.85rem + 0.6vw, 1.0625rem); /* body: 16px mobile floor -> 17px desktop */
+  --lp-body-lh: 1.7;
+  /* Compact companion to body-fs for teaser copy inside dense, repeating
+     cards (project/material/service cards) — full body-fs reads oversized
+     once it's sitting in a tight card next to a title and tags. */
+  --lp-card-body-fs: clamp(0.875rem, 0.8rem + 0.3vw, 0.9375rem); /* 14px -> 15px */
+  --lp-card-body-lh: 1.55;
+  /* Project-card teaser description — ~17% under card-body-fs so the (now
+     larger) title carries the visual weight and the paragraph reads as
+     secondary copy. */
+  --lp-proj-desc-fs: clamp(0.72rem, 0.66rem + 0.25vw, 0.78rem);
+
+  /* High-contrast text colors — alpha-blends of the brand navy (#020A25)
+     tuned to land at the same lightness as a flat #374151 / #6B7280 would,
+     so copy stays legible without introducing an off-brand neutral gray.
+     --lp-text-body is THE description/body-copy color everywhere on the
+     site (cards, page intros, accordions, modals) — its alpha (0.68) is
+     calibrated so blending navy over white lands ~30 percentage points
+     lighter than navy's own lightness (~8% -> ~38%), i.e. "descriptions
+     read ~30% lighter than the title, always." Don't special-case a
+     lighter/darker variant per component — recalibrate here instead. */
+  --lp-text-body: rgba(2, 10, 37, 0.68);
+  --lp-text-meta: rgba(2, 10, 37, 0.65);
 }
+
+/* LevelPro border-radius token — one site-wide value (matches the header
+   nav pill) so every rounded rectangle reads identically. Declared via
+   @theme (not :root) because Tailwind v4 ships its own default --radius-*
+   scale for the rounded-{sm,md,lg,...} utilities — a plain :root override
+   loses that cascade fight. @theme is Tailwind's own override mechanism, so
+   this wins for both var(--radius) and any rounded-[var(--radius)] usage.
+   Circular elements (avatars, dots, icon-only round buttons) use
+   border-radius:50% directly and are untouched by this token; thin
+   functional bars (scrollbar thumbs, progress tracks, the burger icon's
+   lines) keep their own small radius since it's tied to their own
+   thickness, not to this scale.
+   --radius-sm is the same "squircle" character scaled down for short pill
+   controls (e.g. the ~30px-tall "View on Maps" buttons) — at that height
+   the full --radius (19.2px) exceeds half the control's height, so corners
+   meet in the middle and the button reads as a fully-rounded capsule
+   instead of the flat-edged rounded rectangle every other control shows. */
+@theme {
+  --radius: 1.2rem; /* 19.2px */
+  --radius-sm: 0.7rem; /* 11.2px */
+}
+
+/* "Small laptop" (13-14in range) = stock lg: (1024px+). A custom named
+   --breakpoint-laptop token was tried here first, but Tailwind v4 emitted its
+   generated utilities in a position that lost cascade ties against stock sm:/md:
+   at the same viewport width (e.g. sm:grid-cols-2 silently beat laptop:grid-cols-4
+   at 1024px). Stock lg: doesn't have that problem since Tailwind's built-in scale
+   is always emitted in ascending order — use lg: for anything at this breakpoint
+   instead of introducing another custom one. The 1024-1366px upper-bound tuning
+   (where needed) is handled via literal `@media(min-width:1024px) and
+   (max-width:1366px)` blocks inside each page's own <style> tag, which don't go
+   through Tailwind's generator and aren't affected by this. */
 
 @theme inline {
   --color-background: var(--background);
@@ -32,6 +90,29 @@ html {
   touch-action: manipulation;
   scroll-behavior: auto;
 }
+
+/* Shared button hover — diagonal navy wipe + white text + trailing-icon nudge.
+   Centralized here (not duplicated in each page's own <style> block) so every
+   button using it — across every route — matches the reference "Our Equipment"
+   button exactly. !important is required on color/border-color because target
+   buttons set those inline, which normal cascade specificity can't beat. */
+.btn-fill { position: relative; overflow: hidden; z-index: 1; transition: color 0.4s ease; }
+.btn-fill::before { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 0; background-color: #020A25; z-index: -1; clip-path: polygon(0 45%, 100% 0, 100% 100%, 0 100%); transition: height 0.4s cubic-bezier(0.65,0.05,0.36,1) 0.1s, clip-path 0.3s ease; }
+.btn-fill:hover { color: #ffffff !important; border-color: #020A25 !important; }
+.btn-fill:hover::before { height: 100%; clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); transition: height 0.45s cubic-bezier(0.65,0.05,0.36,1), clip-path 0.25s ease-out 0.2s; }
+.btn-fill-icon { display: inline-flex; align-items: center; margin-left: 8px; transition: transform 0.3s ease; }
+.btn-fill:hover .btn-fill-icon { transform: translate(3px, -3px); }
+
+/* Dark-backdrop variant — for .btn-fill buttons that already rest on a dark
+   section (Projects map panel, navy footer). The default wipe wants a light
+   resting style to invert into (navy fill + white text reads as a clear
+   light-to-dark flip); on a backdrop that's already dark, that same navy
+   fill blends into the surroundings instead of standing out. This swaps the
+   wipe to white with navy text so the hover still reads as a clear, visible
+   state on a dark background. Compound selector for specificity over the
+   base .btn-fill:hover rules below it in source order. */
+.btn-fill.btn-fill-light::before { background-color: #ffffff; }
+.btn-fill.btn-fill-light:hover { color: #020A25 !important; border-color: #ffffff !important; }
 
 body {
   background: var(--background);

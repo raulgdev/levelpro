@@ -3,16 +3,23 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import Lenis from "lenis";
 import { TRANSLATIONS } from "../translations";
-import { NAVY, ACCENT, useLocale, Preloader, NavBar, FooterCTA } from "../components/shared";
+import { NAVY, useLocale, Preloader, NavBar, FooterCTA } from "../components/shared";
 
-const HERO_IMG = "https://levelpro.es/wp-content/uploads/2026/05/1-copy.avif";
+// ─── Eyebrow — small square dot + uppercase label, same pattern as About/Services ────
+function Eyebrow({ children }: { children: React.ReactNode }) {
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: "10px" }}>
+      <span style={{ width: "6px", height: "6px", background: NAVY, flexShrink: 0 }} />
+      <span style={{ fontFamily: "'Inter',sans-serif", fontWeight: 600, fontSize: "clamp(0.58rem,0.7vw,0.64rem)", letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--lp-text-meta)" }}>{children}</span>
+    </span>
+  );
+}
 
 export default function ContactPage() {
   const [locale, setLocale] = useLocale();
   const t = TRANSLATIONS[locale];
   const cp = t.contactPage;
 
-  const [pastHero, setPastHero] = useState(false);
   const [preloaderVisible, setPreloaderVisible] = useState(true);
   const [preloaderKey, setPreloaderKey] = useState(0);
   const [isFastLoader, setIsFastLoader] = useState(false);
@@ -38,18 +45,14 @@ export default function ContactPage() {
     setPreloaderKey(k => k + 1);
   }, [locale]);
 
+  // Light-toned page from the very top (no dark hero) — nav stays "dark text"
+  // throughout, same convention as About/Services. Only the footer is navy.
   useEffect(() => {
     const lenis = new Lenis({ lerp: 0.12, smoothWheel: true });
     let id: number;
-    const check = () => {
-      const nowPast = window.scrollY > window.innerHeight * 0.75;
-      setPastHero(p => p === nowPast ? p : nowPast);
-    };
-    const raf = (time: number) => { lenis.raf(time); check(); id = requestAnimationFrame(raf); };
-    check();
+    const raf = (time: number) => { lenis.raf(time); id = requestAnimationFrame(raf); };
     id = requestAnimationFrame(raf);
-    window.addEventListener("resize", check, { passive: true });
-    return () => { cancelAnimationFrame(id); lenis.destroy(); window.removeEventListener("resize", check); };
+    return () => { cancelAnimationFrame(id); lenis.destroy(); };
   }, []);
 
   function validate() {
@@ -74,163 +77,142 @@ export default function ContactPage() {
     if (errors[field]) setErrors(prev => { const n = { ...prev }; delete n[field]; return n; });
   }
 
+  // Touch target: 14px vertical floor (was 12px) clears 44px tap height on mobile
+  // once combined with the 1.4 line-height, instead of landing just under it.
   const fieldBase: React.CSSProperties = {
     width: "100%",
     fontFamily: "'Inter',sans-serif",
-    fontSize: "clamp(0.76rem,0.92vw,0.84rem)",
+    fontSize: "var(--lp-body-fs)",
     fontWeight: 300,
     color: NAVY,
-    background: "#ffffff",
-    borderRadius: "3px",
-    padding: "clamp(12px,1.8vh,16px) 14px",
+    padding: "clamp(14px,1.8vh,16px) 14px",
     lineHeight: 1.4,
   };
+  const fieldClass = "bg-white rounded-[var(--radius)]";
 
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: `
-        @import url('https://fonts.googleapis.com/css2?family=Titillium+Web:ital,wght@0,200;0,300;0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&display=swap');
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
         html{scroll-behavior:auto;touch-action:manipulation;}
         html.lenis,html.lenis body{height:auto;}
         .lenis.lenis-smooth{scroll-behavior:auto!important;}
         .lenis.lenis-stopped{overflow:hidden;}
-        body{background-color:${NAVY};color:#fff;overflow-x:hidden;overscroll-behavior:none;-webkit-font-smoothing:antialiased;}
+        body{background-color:#ffffff;color:${NAVY};overflow-x:hidden;overscroll-behavior:none;-webkit-font-smoothing:antialiased;}
         ::-webkit-scrollbar{width:3px;}
-        ::-webkit-scrollbar-track{background:${NAVY};}
-        ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15);border-radius:2px;}
+        ::-webkit-scrollbar-track{background:#ffffff;}
+        ::-webkit-scrollbar-thumb{background:rgba(2,10,37,0.15);border-radius:2px;}
         a{text-decoration:none;}
         @keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
         @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
         .shared-nav-active{text-decoration:underline;text-underline-offset:4px;text-decoration-thickness:1px;}
         .shared-lang-active{text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px;}
         .contact-field{outline:none;transition:border-color 0.2s ease,box-shadow 0.2s ease;appearance:none;-webkit-appearance:none;}
-        .contact-field:focus{border-color:${ACCENT}!important;box-shadow:0 0 0 3px rgba(24,71,242,0.08);}
+        .contact-field:focus{border-color:${NAVY}!important;box-shadow:0 0 0 3px rgba(2,10,37,0.08);}
         .contact-field.field-error{border-color:rgba(200,40,40,0.55)!important;}
-        .contact-submit{cursor:pointer;transition:opacity 0.2s ease;}
-        .contact-submit:hover{opacity:0.82;}
-        @media(max-width:900px){
-          .hero-split{grid-template-columns:1fr!important;}
-          .hero-photo-col{display:none!important;}
-          .contact-grid{grid-template-columns:1fr!important;}
-          .nav-links-inner{display:none!important;}
+        /* Small-laptop band (1024-1366px): the two-column split gives the text
+           column only ~55% of the viewport, but its heading scales off the full
+           viewport width (vw unit) — without this it overshoots the column in
+           exactly the 13-14in laptop range. Pulls the vw coefficient back. */
+        @media(min-width:1024px) and (max-width:1366px){
+          .contact-hero-title{font-size:clamp(2.4rem,4.6vw,4.6rem)!important;}
         }
       ` }} />
 
       {preloaderVisible && <Preloader key={preloaderKey} onComplete={handlePreloaderComplete} onCovered={handlePreloaderCovered} fast={isFastLoader} />}
-      <NavBar pastHero={pastHero} locale={locale} onLocaleChange={handleLocaleChange} />
+      <NavBar locale={locale} onLocaleChange={handleLocaleChange} />
 
-      {/* ─── HERO ─────────────────────────────────────────────────────────── */}
-      <section className="hero-split" style={{ display: "grid", gridTemplateColumns: "55fr 45fr", height: "100vh", minHeight: "600px", overflow: "hidden" }}>
+      {/* ─── HERO — title, description and the contact form all live in this
+          one white section; nothing repeats below it except the navy footer ── */}
+      <section style={{ position: "relative", overflow: "hidden", backgroundColor: "#ffffff", minHeight: "clamp(640px,90vh,900px)", padding: "clamp(120px,15vh,168px) clamp(24px,5vw,72px) clamp(64px,9vh,96px)" }}>
+        {/* Soft navy glow, top-right — same decorative touch as About/Services */}
+        <div style={{ position: "absolute", top: "-12%", right: "-8%", width: "46%", aspectRatio: "1", background: "radial-gradient(circle, rgba(2,10,37,0.08) 0%, rgba(2,10,37,0.03) 45%, transparent 72%)", filter: "blur(10px)", pointerEvents: "none" }} />
 
-        {/* Left — navy panel */}
-        <div style={{ backgroundColor: NAVY, display: "flex", flexDirection: "column", justifyContent: "space-between", padding: "clamp(24px,4.5vw,64px)", paddingTop: "clamp(80px,10vw,120px)" }}>
+        <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-8 lg:gap-16 items-start" style={{ position: "relative", zIndex: 1 }}>
 
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-            <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 500, fontSize: "clamp(0.55rem,0.7vw,0.63rem)", letterSpacing: "0.22em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", animation: "fadeUp 0.8s ease 0.4s both" }}>
-              {cp.hero.label}
-            </p>
-            <span style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 200, fontSize: "clamp(3rem,5.5vw,5.5rem)", color: "rgba(255,255,255,0.05)", letterSpacing: "-0.04em", lineHeight: 1, userSelect: "none", animation: "fadeIn 1s ease 0.3s both" }}>05</span>
-          </div>
+          {/* ── Left: heading, tagline, contact details, quick facts ── */}
+          <div>
+            <div style={{ marginBottom: "clamp(20px,2.8vh,28px)", animation: "fadeUp 0.7s ease 0.1s both" }}>
+              <Eyebrow>{cp.hero.label}</Eyebrow>
+            </div>
 
-          <div style={{ animation: "fadeUp 0.9s ease 0.2s both" }}>
-            <h1 style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 200, fontSize: "clamp(3.2rem,6.5vw,8rem)", lineHeight: 0.93, color: "#fff", margin: 0, letterSpacing: "-0.03em" }}>
+            <h1 className="contact-hero-title" style={{ fontFamily: "'Inter',sans-serif", fontWeight: 200, fontSize: "clamp(2.6rem,5.2vw,5.6rem)", lineHeight: 1.0, color: NAVY, margin: "0 0 clamp(20px,2.8vh,28px) 0", letterSpacing: "-0.03em", animation: "fadeUp 0.9s ease 0.2s both" }}>
               {cp.hero.headingLine1}<br />
-              <span style={{ color: ACCENT }}>{cp.hero.headingLine2}</span><br />
+              <span style={{ color: "rgba(2,10,37,0.35)" }}>{cp.hero.headingLine2}</span><br />
               {cp.hero.headingLine3}
             </h1>
-          </div>
 
-          <div style={{ animation: "fadeUp 0.8s ease 0.5s both" }}>
-            <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 300, fontSize: "clamp(0.68rem,0.85vw,0.8rem)", lineHeight: 1.72, color: "rgba(255,255,255,0.4)", marginBottom: "clamp(20px,3vh,28px)", maxWidth: "400px" }}>
-              {cp.hero.tagline}
-            </p>
+            <div style={{ animation: "fadeUp 0.8s ease 0.4s both" }}>
+              <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 300, fontSize: "var(--lp-body-fs)", lineHeight: "var(--lp-body-lh)", color: "var(--lp-text-body)", margin: "0 0 clamp(36px,5vh,48px) 0", maxWidth: "400px" }}>
+                {cp.hero.tagline}
+              </p>
 
-            {/* Facts row */}
-            <div style={{ display: "flex", borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: "clamp(14px,2vh,20px)" }}>
-              <div style={{ paddingRight: "clamp(16px,2.5vw,32px)", flexShrink: 0 }}>
-                <span style={{ fontFamily: "'Inter',sans-serif", fontWeight: 400, fontSize: "clamp(0.75rem,1.1vw,1rem)", color: "#fff", display: "block", lineHeight: 1, marginBottom: "5px", letterSpacing: "0.01em" }}>Costa Blanca</span>
-                <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.5rem,0.6vw,0.56rem)", letterSpacing: "0.12em", textTransform: "uppercase" as const, color: "rgba(255,255,255,0.28)" }}>{cp.hero.factLabels[0]}</span>
+              {/* Contact details */}
+              <div style={{ borderTop: "1px solid rgba(2,10,37,0.1)", paddingTop: "clamp(28px,4vh,40px)", marginBottom: "clamp(28px,4vh,36px)" }}>
+                <div style={{ marginBottom: "clamp(14px,2vh,18px)" }}>
+                  <Eyebrow>{cp.info.label}</Eyebrow>
+                </div>
+
+                <h2 style={{ fontFamily: "'Inter',sans-serif", fontWeight: 300, fontSize: "var(--lp-h3-fs)", color: NAVY, letterSpacing: "-0.01em", margin: "0 0 clamp(20px,2.8vh,26px) 0", lineHeight: 1.2 }}>
+                  {cp.info.heading}
+                </h2>
+
+                <div className="flex flex-wrap" style={{ columnGap: "clamp(32px,4.5vw,56px)", rowGap: "clamp(18px,2.5vh,24px)", marginBottom: "clamp(18px,2.5vh,24px)" }}>
+                  <div>
+                    <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 500, fontSize: "clamp(0.52rem,0.64vw,0.58rem)", letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--lp-text-meta)", margin: "0 0 8px 0" }}>
+                      {cp.info.phone.label}
+                    </p>
+                    <a href={`tel:${cp.info.phone.val.replace(/\s/g, "")}`} style={{ fontFamily: "'Inter',sans-serif", fontWeight: 700, fontSize: "clamp(1.5rem,2.6vw,2.4rem)", color: NAVY, letterSpacing: "-0.02em", lineHeight: 1 }}>
+                      {cp.info.phone.val}
+                    </a>
+                  </div>
+                  <div>
+                    <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 500, fontSize: "clamp(0.52rem,0.64vw,0.58rem)", letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--lp-text-meta)", margin: "0 0 8px 0" }}>
+                      {cp.info.email.label}
+                    </p>
+                    <a href={`mailto:${cp.info.email.val}`} style={{ fontFamily: "'Inter',sans-serif", fontWeight: 700, fontSize: "clamp(1.3rem,2vw,1.8rem)", color: NAVY, letterSpacing: "-0.01em", lineHeight: 1 }}>
+                      {cp.info.email.val}
+                    </a>
+                  </div>
+                </div>
+
+                <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 400, fontSize: "var(--lp-body-fs)", lineHeight: "var(--lp-body-lh)", color: "var(--lp-text-body)", margin: 0, maxWidth: "440px" }}>
+                  {cp.info.note}
+                </p>
               </div>
-              <div style={{ width: "1px", background: "rgba(255,255,255,0.1)", alignSelf: "stretch", flexShrink: 0, marginRight: "clamp(16px,2.5vw,32px)" }} />
-              <div style={{ paddingRight: "clamp(16px,2.5vw,32px)", flexShrink: 0 }}>
-                <span style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 200, fontSize: "clamp(1.1rem,1.8vw,1.7rem)", color: "#fff", letterSpacing: "-0.02em", display: "block", lineHeight: 1, marginBottom: "5px" }}>{"< 24h"}</span>
-                <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.5rem,0.6vw,0.56rem)", letterSpacing: "0.12em", textTransform: "uppercase" as const, color: "rgba(255,255,255,0.28)" }}>{cp.hero.factLabels[1]}</span>
-              </div>
-              <div style={{ width: "1px", background: "rgba(255,255,255,0.1)", alignSelf: "stretch", flexShrink: 0, marginRight: "clamp(16px,2.5vw,32px)" }} />
-              <div style={{ flexShrink: 0 }}>
-                <span style={{ fontFamily: "'Inter',sans-serif", fontWeight: 400, fontSize: "clamp(0.75rem,1.1vw,1rem)", color: "#fff", display: "block", lineHeight: 1, marginBottom: "5px", letterSpacing: "0.01em" }}>Mon–Sat</span>
-                <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.5rem,0.6vw,0.56rem)", letterSpacing: "0.12em", textTransform: "uppercase" as const, color: "rgba(255,255,255,0.28)" }}>{cp.hero.factLabels[2]}</span>
+
+              {/* Quick facts — no rule; whitespace alone separates it from the block above */}
+              <div className="flex flex-wrap" style={{ rowGap: "12px" }}>
+                <div style={{ paddingRight: "clamp(16px,2.5vw,32px)", flexShrink: 0 }}>
+                  <span style={{ fontFamily: "'Inter',sans-serif", fontWeight: 400, fontSize: "clamp(0.75rem,1.1vw,1rem)", color: NAVY, display: "block", lineHeight: 1, marginBottom: "5px", letterSpacing: "0.01em" }}>Costa Blanca</span>
+                  <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.5rem,0.6vw,0.56rem)", letterSpacing: "0.12em", textTransform: "uppercase" as const, color: "var(--lp-text-meta)" }}>{cp.hero.factLabels[0]}</span>
+                </div>
+                <div style={{ width: "1px", background: "rgba(2,10,37,0.1)", alignSelf: "stretch", flexShrink: 0, marginRight: "clamp(16px,2.5vw,32px)" }} />
+                <div style={{ paddingRight: "clamp(16px,2.5vw,32px)", flexShrink: 0 }}>
+                  <span style={{ fontFamily: "'Inter',sans-serif", fontWeight: 200, fontSize: "clamp(1.1rem,1.8vw,1.7rem)", color: NAVY, letterSpacing: "-0.02em", display: "block", lineHeight: 1, marginBottom: "5px" }}>{"< 24h"}</span>
+                  <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.5rem,0.6vw,0.56rem)", letterSpacing: "0.12em", textTransform: "uppercase" as const, color: "var(--lp-text-meta)" }}>{cp.hero.factLabels[1]}</span>
+                </div>
+                <div style={{ width: "1px", background: "rgba(2,10,37,0.1)", alignSelf: "stretch", flexShrink: 0, marginRight: "clamp(16px,2.5vw,32px)" }} />
+                <div style={{ flexShrink: 0 }}>
+                  <span style={{ fontFamily: "'Inter',sans-serif", fontWeight: 400, fontSize: "clamp(0.75rem,1.1vw,1rem)", color: NAVY, display: "block", lineHeight: 1, marginBottom: "5px", letterSpacing: "0.01em" }}>Mon–Sat</span>
+                  <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.5rem,0.6vw,0.56rem)", letterSpacing: "0.12em", textTransform: "uppercase" as const, color: "var(--lp-text-meta)" }}>{cp.hero.factLabels[2]}</span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Right — photo */}
-        <div className="hero-photo-col" style={{ position: "relative", overflow: "hidden" }}>
-          <img src={HERO_IMG} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 40%", display: "block" }} />
-          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, rgba(2,10,37,0.5) 0%, transparent 40%)" }} />
-          <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "160px", background: "linear-gradient(to bottom, rgba(2,10,37,0.5) 0%, transparent 100%)" }} />
-        </div>
-      </section>
-
-      {/* ─── CONTACT BODY ─────────────────────────────────────────────────── */}
-      <section style={{ backgroundColor: "#ffffff", padding: "clamp(64px,10vh,112px) clamp(24px,5vw,72px)" }}>
-
-        {/* Section eyebrow */}
-        <div style={{ display: "flex", alignItems: "center", gap: "clamp(10px,1.4vw,16px)", marginBottom: "clamp(48px,7vh,80px)" }}>
-          <div style={{ width: "2px", height: "clamp(18px,2.5vh,24px)", background: ACCENT, flexShrink: 0 }} />
-          <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 500, fontSize: "clamp(0.55rem,0.7vw,0.63rem)", letterSpacing: "0.22em", textTransform: "uppercase" as const, color: "rgba(2,10,37,0.3)", margin: 0 }}>
-            {cp.info.label}
-          </p>
-        </div>
-
-        {/* Two-column grid */}
-        <div className="contact-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1.4fr", gap: "clamp(48px,8vw,120px)", alignItems: "start" }}>
-
-          {/* ── Info column ── */}
-          <div>
-            <h2 style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 300, fontSize: "var(--lp-title-fs)", lineHeight: 0.97, color: NAVY, letterSpacing: "var(--lp-title-ls)", margin: "0 0 clamp(36px,5.5vh,56px) 0" }}>
-              {cp.info.heading}
-            </h2>
-
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              {/* Phone */}
-              <div style={{ paddingBottom: "clamp(24px,3.5vh,36px)", borderBottom: "1px solid rgba(2,10,37,0.08)", marginBottom: "clamp(24px,3.5vh,36px)" }}>
-                <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 500, fontSize: "clamp(0.52rem,0.64vw,0.58rem)", letterSpacing: "0.2em", textTransform: "uppercase" as const, color: "rgba(2,10,37,0.32)", margin: "0 0 8px 0" }}>
-                  {cp.info.phone.label}
-                </p>
-                <a href={`tel:${cp.info.phone.val.replace(/\s/g, "")}`} style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 300, fontSize: "clamp(1.3rem,2.4vw,2.4rem)", color: NAVY, letterSpacing: "-0.02em", lineHeight: 1 }}>
-                  {cp.info.phone.val}
-                </a>
-              </div>
-
-              {/* Email */}
-              <div style={{ paddingBottom: "clamp(24px,3.5vh,36px)", borderBottom: "1px solid rgba(2,10,37,0.08)" }}>
-                <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 500, fontSize: "clamp(0.52rem,0.64vw,0.58rem)", letterSpacing: "0.2em", textTransform: "uppercase" as const, color: "rgba(2,10,37,0.32)", margin: "0 0 8px 0" }}>
-                  {cp.info.email.label}
-                </p>
-                <a href={`mailto:${cp.info.email.val}`} style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 300, fontSize: "clamp(1rem,1.8vw,1.8rem)", color: NAVY, letterSpacing: "-0.01em", lineHeight: 1 }}>
-                  {cp.info.email.val}
-                </a>
-              </div>
-            </div>
-
-            <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 300, fontSize: "clamp(0.68rem,0.82vw,0.76rem)", lineHeight: 1.82, color: "rgba(2,10,37,0.42)", marginTop: "clamp(28px,4vh,40px)", maxWidth: "340px" }}>
-              {cp.info.note}
-            </p>
-          </div>
-
-          {/* ── Form column ── */}
-          <div>
+          {/* ── Right: the form, unchanged — housed in a bordered white card so it
+              reads as a distinct panel against the white page ── */}
+          <div style={{ background: "#ffffff", border: "1px solid rgba(2,10,37,0.07)", borderRadius: "var(--radius)", padding: "clamp(32px,4.5vw,52px)", animation: "fadeUp 0.9s ease 0.3s both" }}>
             {submitted ? (
               /* Success state */
-              <div style={{ padding: "clamp(36px,5.5vh,56px) clamp(28px,4vw,44px)", border: `1px solid rgba(24,71,242,0.18)`, borderRadius: "3px", borderTop: `3px solid ${ACCENT}` }}>
-                <div style={{ width: "2px", height: "clamp(18px,2.5vh,24px)", background: ACCENT, marginBottom: "clamp(16px,2.2vh,22px)" }} />
-                <h3 style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 300, fontSize: "clamp(1.6rem,2.8vw,2.8rem)", color: NAVY, letterSpacing: "-0.025em", margin: "0 0 clamp(12px,1.8vh,18px) 0", lineHeight: 1 }}>
+              <div>
+                <div style={{ width: "2px", height: "clamp(18px,2.5vh,24px)", background: NAVY, marginBottom: "clamp(16px,2.2vh,22px)" }} />
+                <h3 style={{ fontFamily: "'Inter',sans-serif", fontWeight: 300, fontSize: "clamp(1.6rem,2.8vw,2.8rem)", color: NAVY, letterSpacing: "-0.025em", margin: "0 0 clamp(12px,1.8vh,18px) 0", lineHeight: 1 }}>
                   {cp.form.success.heading}
                 </h3>
-                <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 300, fontSize: "clamp(0.72rem,0.88vw,0.82rem)", lineHeight: 1.78, color: "rgba(2,10,37,0.5)", margin: 0 }}>
+                <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 300, fontSize: "var(--lp-body-fs)", lineHeight: "var(--lp-body-lh)", color: "var(--lp-text-body)", margin: 0 }}>
                   {cp.form.success.body}
                 </p>
               </div>
@@ -241,12 +223,12 @@ export default function ContactPage() {
 
                   {/* Full Name */}
                   <div>
-                    <label style={{ display: "block", fontFamily: "'Inter',sans-serif", fontWeight: 500, fontSize: "clamp(0.52rem,0.64vw,0.58rem)", letterSpacing: "0.18em", textTransform: "uppercase" as const, color: "rgba(2,10,37,0.4)", marginBottom: "8px" }}>
+                    <label style={{ display: "block", fontFamily: "'Inter',sans-serif", fontWeight: 500, fontSize: "clamp(0.52rem,0.64vw,0.58rem)", letterSpacing: "0.18em", textTransform: "uppercase" as const, color: "var(--lp-text-meta)", marginBottom: "8px" }}>
                       {cp.form.name.label}
                     </label>
                     <input
                       type="text"
-                      className={`contact-field${errors.name ? " field-error" : ""}`}
+                      className={`contact-field ${fieldClass}${errors.name ? " field-error" : ""}`}
                       value={form.name}
                       onChange={e => handleChange("name", e.target.value)}
                       placeholder={cp.form.name.placeholder}
@@ -257,12 +239,12 @@ export default function ContactPage() {
 
                   {/* Email */}
                   <div>
-                    <label style={{ display: "block", fontFamily: "'Inter',sans-serif", fontWeight: 500, fontSize: "clamp(0.52rem,0.64vw,0.58rem)", letterSpacing: "0.18em", textTransform: "uppercase" as const, color: "rgba(2,10,37,0.4)", marginBottom: "8px" }}>
+                    <label style={{ display: "block", fontFamily: "'Inter',sans-serif", fontWeight: 500, fontSize: "clamp(0.52rem,0.64vw,0.58rem)", letterSpacing: "0.18em", textTransform: "uppercase" as const, color: "var(--lp-text-meta)", marginBottom: "8px" }}>
                       {cp.form.email.label}
                     </label>
                     <input
                       type="email"
-                      className={`contact-field${errors.email ? " field-error" : ""}`}
+                      className={`contact-field ${fieldClass}${errors.email ? " field-error" : ""}`}
                       value={form.email}
                       onChange={e => handleChange("email", e.target.value)}
                       placeholder={cp.form.email.placeholder}
@@ -273,11 +255,11 @@ export default function ContactPage() {
 
                   {/* Message */}
                   <div>
-                    <label style={{ display: "block", fontFamily: "'Inter',sans-serif", fontWeight: 500, fontSize: "clamp(0.52rem,0.64vw,0.58rem)", letterSpacing: "0.18em", textTransform: "uppercase" as const, color: "rgba(2,10,37,0.4)", marginBottom: "8px" }}>
+                    <label style={{ display: "block", fontFamily: "'Inter',sans-serif", fontWeight: 500, fontSize: "clamp(0.52rem,0.64vw,0.58rem)", letterSpacing: "0.18em", textTransform: "uppercase" as const, color: "var(--lp-text-meta)", marginBottom: "8px" }}>
                       {cp.form.message.label}
                     </label>
                     <textarea
-                      className={`contact-field${errors.message ? " field-error" : ""}`}
+                      className={`contact-field ${fieldClass}${errors.message ? " field-error" : ""}`}
                       value={form.message}
                       onChange={e => handleChange("message", e.target.value)}
                       placeholder={cp.form.message.placeholder}
@@ -291,8 +273,8 @@ export default function ContactPage() {
                   <div>
                     <button
                       type="submit"
-                      className="contact-submit"
-                      style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.65rem,0.8vw,0.72rem)", fontWeight: 500, letterSpacing: "0.08em", color: "#ffffff", background: NAVY, border: "none", borderRadius: "3px", padding: "clamp(12px,1.8vh,16px) clamp(24px,3vw,36px)", display: "inline-flex", alignItems: "center", gap: "8px" }}>
+                      className="cursor-pointer transition-opacity duration-200 hover:opacity-[0.82] text-white bg-[#020A25] border-none rounded-[var(--radius)] inline-flex items-center gap-2"
+                      style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.65rem,0.8vw,0.72rem)", fontWeight: 500, letterSpacing: "0.08em", padding: "clamp(14px,1.8vh,16px) clamp(24px,3vw,36px)" }}>
                       {cp.form.submit} <span>→</span>
                     </button>
                   </div>

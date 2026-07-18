@@ -28,16 +28,6 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <style dangerouslySetInnerHTML={{ __html: `
-          :root {
-            --lp-title-fs: clamp(2rem, 3.8vw, 3.8rem);
-            --lp-title-ls: -0.03em;
-            --lp-label-fs: clamp(0.64rem, 0.74vw, 0.72rem);
-            --lp-label-ls: 0.2em;
-            --lp-body-fs: clamp(0.8rem, 0.92vw, 0.9rem);
-            --lp-body-lh: 1.72;
-          }
-        `}} />
         {children}
       </body>
     </html>

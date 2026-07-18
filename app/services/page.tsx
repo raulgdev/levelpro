@@ -4,127 +4,77 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import Lenis from "lenis";
 import { TRANSLATIONS } from "../translations";
-import { useLocale, Preloader, NavBar, FooterCTA } from "../components/shared";
+import { NAVY, useLocale, Preloader, NavBar, FooterCTA, RevealText, StatNum } from "../components/shared";
 
 const HERO_IMG = "https://levelpro.es/wp-content/uploads/2026/05/3.jpg";
-const TECH_IMG = "https://levelpro.es/wp-content/uploads/2026/05/1-copy.avif";
+const ALT_BG = "#faf9f7";
 
-// ─── Light palette (T1-inspired) — page-scoped, mirrors the NAVY/ACCENT pattern ──
-const BG_PRIMARY = "#FAFAF8";   // off-white, dominant background
-const BG_SECONDARY = "#F4F2EE"; // warm grey, alternating sections
-const BG_CARD = "#FFFFFF";      // solid cards
-const BG_CONTRAST = "#0A0A0A";  // black impact section
-const TEXT_PRIMARY = "#0A0A0A";
-const TEXT_MUTED = "#6B6B6B";
-const BORDER = "#E2E0DB";       // thin 1px borders
-const ACCENT_WARM = "#8A8275";  // cement/concrete tone for discreet accents
+// Same clip used on the homepage's service cards — one illustrative asset
+// reused everywhere, not a distinct video per service.
+const VIDEO_SRC =
+  "https://levelpro.venacydigital.com/wp-content/uploads/2026/04/333333benidorm-poniente-beach-aerial-flyover-mediterra-2026-02-24-23-51-33-utc.mp4";
 
-// Real Level Pro figures — language-neutral, paired with translated labels below.
-const STAT_VALUES = ["200+", "3", "9+", "24h"] as const;
+// Real Level Pro figures, in the same order as sp.stats.items below:
+// Projects completed / Service locations / Rapid site mobilization.
+const STAT_VALUES = [1500, 3, 24] as const;
+const STAT_SUFFIX = ["+", "", "h"] as const;
 
-// ─── SectionLabel — small square ▪ + uppercase tracked text ─────────────────────
-function SectionLabel({ children, dark = false }: { children: React.ReactNode; dark?: boolean }) {
+// ─── Eyebrow — small square dot + uppercase label, same pattern as About ────────
+function Eyebrow({ children }: { children: React.ReactNode }) {
   return (
-    <span style={{
-      display: "inline-flex", alignItems: "center", gap: "10px",
-      fontFamily: "'Inter',sans-serif", fontWeight: 600,
-      fontSize: "var(--lp-label-fs)", letterSpacing: "var(--lp-label-ls)",
-      textTransform: "uppercase",
-      color: dark ? "rgba(255,255,255,0.55)" : TEXT_MUTED,
-    }}>
-      <span style={{ width: "7px", height: "7px", background: dark ? "rgba(255,255,255,0.7)" : ACCENT_WARM, flexShrink: 0 }} />
-      {children}
+    <span style={{ display: "inline-flex", alignItems: "center", gap: "10px" }}>
+      <span style={{ width: "6px", height: "6px", background: NAVY, flexShrink: 0 }} />
+      <span style={{ fontFamily: "'Inter',sans-serif", fontWeight: 600, fontSize: "clamp(0.58rem,0.7vw,0.64rem)", letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--lp-text-meta)" }}>{children}</span>
     </span>
   );
 }
 
-// ─── FadeIn — subtle one-shot fade/translate on scroll (only sanctioned motion) ──
-function FadeIn({ children, delay = 0, style }: { children: React.ReactNode; delay?: number; style?: React.CSSProperties }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [shown, setShown] = useState(false);
-  useEffect(() => {
-    const el = ref.current; if (!el) return;
-    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setShown(true); obs.disconnect(); } }, { threshold: 0.12 });
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, []);
+// ─── ServicesScroll — sticky media panel + scrolling detail list. The panel is
+// a plain, static looping clip (same treatment as the equipment/mission photo
+// blocks elsewhere on the site — no overlay chrome) ──────────────────────────
+interface ServiceDetailItem { name: string; body: string; bullets: string[] }
+
+function ServicesScroll({ items }: { items: ServiceDetailItem[] }) {
   return (
-    <div ref={ref} style={{
-      ...style,
-      opacity: shown ? 1 : 0,
-      transform: shown ? "none" : "translateY(18px)",
-      transition: `opacity 0.7s ease ${delay}s, transform 0.7s cubic-bezier(0.22,1,0.36,1) ${delay}s`,
-    }}>
-      {children}
-    </div>
-  );
-}
+    <div className="svc-split">
+      <div className="svc-split-visual">
+        <div className="svc-visual-frame">
+          <video className="svc-visual-video" autoPlay muted loop playsInline aria-hidden>
+            <source src={VIDEO_SRC} type="video/mp4" />
+          </video>
+        </div>
+      </div>
 
-// ─── TechAccordion — single-open expandable list on the black contrast section ───
-function TechAccordion({ items }: {
-  items: Array<{ name: string; shortDesc: string; body: string; tags: string[]; bullets: string[] }>;
-}) {
-  const [open, setOpen] = useState(0);
+      <div className="svc-list">
+        {items.map((item, i) => (
+          <div key={item.name} className="svc-block">
+            {/* Mobile-only — .svc-split-visual isn't sticky once the layout
+                stacks below 840px, so each block carries its own video instead
+                of relying on that shared panel. */}
+            <div className="svc-block-mvisual" aria-hidden>
+              <video className="svc-block-mvisual-video" autoPlay muted loop playsInline preload="metadata">
+                <source src={VIDEO_SRC} type="video/mp4" />
+              </video>
+            </div>
 
-  return (
-    <div style={{ borderTop: "1px solid rgba(255,255,255,0.12)" }}>
-      {items.map((item, i) => {
-        const isOpen = open === i;
-        return (
-          <div key={i} style={{ borderBottom: "1px solid rgba(255,255,255,0.12)" }}>
-            <button
-              type="button"
-              onClick={() => setOpen(isOpen ? -1 : i)}
-              aria-expanded={isOpen}
-              style={{
-                width: "100%", display: "flex", alignItems: "center", gap: "clamp(16px,2.5vw,28px)",
-                background: "none", border: "none", cursor: "pointer", textAlign: "left",
-                padding: "clamp(20px,2.8vh,30px) 0", color: "#fff",
-              }}
-            >
-              <span style={{ fontFamily: "'Inter',sans-serif", fontWeight: 500, fontSize: "clamp(0.6rem,0.74vw,0.68rem)", letterSpacing: "0.14em", color: isOpen ? ACCENT_WARM : "rgba(255,255,255,0.3)", flexShrink: 0, transition: "color 0.3s ease", minWidth: "26px" }}>
-                0{i + 1}
-              </span>
-              <span style={{ flex: 1, fontFamily: "'Titillium Web',sans-serif", fontWeight: 300, fontSize: "clamp(1.4rem,2.8vw,2.4rem)", letterSpacing: "-0.02em", lineHeight: 1.1, color: isOpen ? "#fff" : "rgba(255,255,255,0.82)", transition: "color 0.3s ease" }}>
-                {item.name}
-              </span>
-              {/* +/− toggle: vertical bar collapses to a minus when open */}
-              <span style={{ position: "relative", width: "18px", height: "18px", flexShrink: 0, color: "rgba(255,255,255,0.85)" }} aria-hidden>
-                <span style={{ position: "absolute", top: "50%", left: 0, width: "100%", height: "1.5px", background: "currentColor", transform: "translateY(-50%)" }} />
-                <span style={{ position: "absolute", left: "50%", top: 0, width: "1.5px", height: "100%", background: "currentColor", transform: `translateX(-50%) scaleY(${isOpen ? 0 : 1})`, transition: "transform 0.4s cubic-bezier(0.4,0,0.2,1)" }} />
-              </span>
-            </button>
+            <div className="svc-block-head">
+              <span className="svc-block-index">0{i + 1}</span>
+              <h3 className="svc-block-name">{item.name}</h3>
+            </div>
 
-            <div style={{
-              maxHeight: isOpen ? "640px" : "0",
-              overflow: "hidden",
-              opacity: isOpen ? 1 : 0,
-              transition: `max-height ${isOpen ? "0.6s" : "0.4s"} cubic-bezier(0.4,0,0.2,1), opacity ${isOpen ? "0.45s ease 0.12s" : "0.2s ease"}`,
-            }}>
-              <div style={{ paddingBottom: "clamp(26px,3.6vh,38px)", paddingLeft: "clamp(42px,4.5vw,54px)", maxWidth: "640px" }}>
-                <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 300, fontSize: "clamp(0.8rem,0.95vw,0.9rem)", lineHeight: 1.8, color: "rgba(255,255,255,0.6)", margin: "0 0 clamp(18px,2.6vh,24px) 0" }}>
-                  {item.body}
-                </p>
-                <ul style={{ listStyle: "none", margin: "0 0 clamp(20px,2.8vh,26px) 0", padding: 0, display: "flex", flexDirection: "column", gap: "10px" }}>
-                  {item.bullets.map((b, bi) => (
-                    <li key={bi} style={{ display: "flex", alignItems: "flex-start", gap: "12px", fontFamily: "'Inter',sans-serif", fontWeight: 300, fontSize: "clamp(0.72rem,0.88vw,0.82rem)", color: "rgba(255,255,255,0.5)", lineHeight: 1.6 }}>
-                      <span style={{ width: "5px", height: "5px", background: ACCENT_WARM, flexShrink: 0, marginTop: "7px" }} />
-                      {b}
-                    </li>
-                  ))}
-                </ul>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-                  {item.tags.map(tag => (
-                    <span key={tag} style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.58rem,0.72vw,0.65rem)", color: "rgba(255,255,255,0.7)", border: "1px solid rgba(255,255,255,0.18)", borderRadius: "40px", padding: "5px 14px", letterSpacing: "0.02em" }}>
-                      {tag}
-                    </span>
-                  ))}
+            <p className="svc-block-body">{item.body}</p>
+
+            <div className="svc-specs">
+              {item.bullets.map((b, bi) => (
+                <div key={bi} className="svc-spec">
+                  <span className="svc-spec-mark" aria-hidden />
+                  <span className="svc-spec-text">{b}</span>
                 </div>
-              </div>
+              ))}
             </div>
           </div>
-        );
-      })}
+        ))}
+      </div>
     </div>
   );
 }
@@ -134,10 +84,6 @@ export default function ServicesPage() {
   const [locale, setLocale] = useLocale();
   const t = TRANSLATIONS[locale];
   const sp = t.servicesPage;
-
-  const [pastHero, setPastHero] = useState(false);
-  const lenisRef = useRef<Lenis | null>(null);
-  const missionRef = useRef<HTMLElement>(null);
 
   const [preloaderVisible, setPreloaderVisible] = useState(true);
   const [preloaderKey, setPreloaderKey] = useState(0);
@@ -160,199 +106,223 @@ export default function ServicesPage() {
     setPreloaderKey(k => k + 1);
   }, [locale]);
 
+  // Light-toned page from the very top (no dark hero) — nav stays "dark text" throughout.
   useEffect(() => {
     const lenis = new Lenis({ lerp: 0.12, smoothWheel: true });
-    lenisRef.current = lenis;
     let id: number;
-    const check = () => {
-      const nowPast = window.scrollY > window.innerHeight * 0.75;
-      setPastHero(p => p === nowPast ? p : nowPast);
-    };
-    const raf = (time: number) => { lenis.raf(time); check(); id = requestAnimationFrame(raf); };
-    check();
+    const raf = (time: number) => { lenis.raf(time); id = requestAnimationFrame(raf); };
     id = requestAnimationFrame(raf);
-    window.addEventListener("resize", check, { passive: true });
-    return () => { cancelAnimationFrame(id); lenis.destroy(); lenisRef.current = null; window.removeEventListener("resize", check); };
-  }, []);
-
-  const scrollToMission = useCallback(() => {
-    if (missionRef.current) lenisRef.current?.scrollTo(missionRef.current);
+    return () => { cancelAnimationFrame(id); lenis.destroy(); };
   }, []);
 
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: `
-        @import url('https://fonts.googleapis.com/css2?family=Titillium+Web:ital,wght@0,200;0,300;0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
         html{scroll-behavior:auto;touch-action:manipulation;}
         html.lenis,html.lenis body{height:auto;}
         .lenis.lenis-smooth{scroll-behavior:auto!important;}
         .lenis.lenis-stopped{overflow:hidden;}
-        body{background-color:${BG_PRIMARY};color:${TEXT_PRIMARY};overflow-x:hidden;overscroll-behavior:none;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;}
+        body{background-color:#ffffff;color:${NAVY};overflow-x:hidden;overscroll-behavior:none;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;}
         ::-webkit-scrollbar{width:3px;}
-        ::-webkit-scrollbar-track{background:${BG_PRIMARY};}
-        ::-webkit-scrollbar-thumb{background:rgba(10,10,10,0.18);border-radius:2px;}
+        ::-webkit-scrollbar-track{background:#ffffff;}
+        ::-webkit-scrollbar-thumb{background:rgba(2,10,37,0.15);border-radius:2px;}
         a{text-decoration:none;}
         @keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
         @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
-        @media(max-width:900px){
-          .mission-grid{grid-template-columns:1fr!important;}
-          .tech-grid{grid-template-columns:1fr!important;}
-          .process-grid{grid-template-columns:1fr 1fr!important;}
-          .locations-grid{grid-template-columns:1fr!important;}
-          .tech-img{display:none!important;}
+        @keyframes fadeBlurReveal{0%{opacity:0;filter:blur(10px);transform:translateY(12px);}100%{opacity:1;filter:blur(0);transform:translateY(0);}}
+
+        /* ── Services split-scroll — sticky media panel + spec list. Deliberately
+           built from the same pieces used elsewhere on the site rather than a
+           one-off look: the equipment-page media card (rounded corners, no chrome),
+           the homepage service-card tab switcher (plain text, bold+navy when
+           active), the Locations-card index style, and the equipment page's
+           bordered bullet grid. ── */
+        .svc-split{display:grid;grid-template-columns:minmax(320px,2fr) minmax(0,3fr);gap:clamp(56px,7vw,120px);align-items:start;padding:0 clamp(24px,5vw,72px);}
+
+        .svc-split-visual{position:sticky;top:clamp(96px,13vh,132px);height:max(420px,calc(100vh - clamp(96px,13vh,132px) * 2));}
+        .svc-visual-frame{position:relative;height:100%;width:100%;border-radius:var(--radius);overflow:hidden;background:rgba(2,10,37,0.06);}
+        .svc-visual-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;}
+
+        .svc-list{display:flex;flex-direction:column;border-top:1px solid rgba(2,10,37,0.08);}
+        .svc-block{padding:clamp(56px,9vh,96px) 0;}
+        .svc-block+.svc-block{border-top:1px solid rgba(2,10,37,0.08);}
+
+        .svc-block-head{display:flex;align-items:flex-end;gap:clamp(14px,1.8vw,20px);margin-bottom:clamp(20px,2.8vh,26px);}
+        .svc-block-index{font-family:'Inter',sans-serif;font-weight:500;font-size:clamp(0.62rem,0.76vw,0.7rem);letter-spacing:0.14em;color:var(--lp-text-meta);padding-bottom:clamp(8px,1.2vh,12px);}
+        .svc-block-name{font-family:'Inter',sans-serif;font-weight:300;font-size:clamp(1.9rem,3.4vw,2.9rem);color:${NAVY};letter-spacing:-0.02em;line-height:1.08;margin:0;}
+
+        .svc-block-body{font-family:'Inter',sans-serif;font-weight:400;font-size:var(--lp-subtitle-fs);line-height:1.6;color:var(--lp-text-body);max-width:58ch;margin:0 0 clamp(28px,3.6vh,36px) 0;}
+
+        .svc-specs{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;max-width:680px;}
+        .svc-spec{display:flex;align-items:flex-start;gap:11px;background:rgba(2,10,37,0.025);border:1px solid rgba(2,10,37,0.08);border-radius:var(--radius-sm);padding:clamp(14px,1.6vw,17px) clamp(16px,1.8vw,18px);transition:background 0.25s ease,border-color 0.25s ease;}
+        .svc-spec:hover{background:rgba(2,10,37,0.05);border-color:rgba(2,10,37,0.14);}
+        .svc-spec-mark{width:5px;height:5px;background:${NAVY};flex-shrink:0;margin-top:7px;}
+        .svc-spec-text{font-family:'Inter',sans-serif;font-weight:500;font-size:clamp(0.82rem,0.88vw,0.89rem);line-height:1.4;color:${NAVY};}
+
+        .svc-block-mvisual{display:none;}
+        @media(max-width:840px){
+          .svc-split{grid-template-columns:1fr;padding:0 clamp(20px,5vw,32px);}
+          /* The sticky sidebar isn't sticky once the layout stacks, so it's
+             dropped here in favour of the per-block video below instead of
+             shipping a visual that would just sit there doing nothing. */
+          .svc-split-visual{display:none;}
+          .svc-block{padding:clamp(36px,7vh,48px) 0;}
+          .svc-block-body,.svc-specs{max-width:none;}
+          .svc-block-mvisual{display:block;position:relative;height:clamp(200px,58vw,260px);border-radius:var(--radius);overflow:hidden;background:rgba(2,10,37,0.06);margin-bottom:clamp(22px,4.5vh,30px);}
+          .svc-block-mvisual-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;}
         }
-        @media(max-width:560px){
-          .process-grid{grid-template-columns:1fr!important;}
-          .stats-grid{grid-template-columns:1fr 1fr!important;}
+
+        /* ── Stats row — same divided count-up row used on About/Home ── */
+        .stats-row{display:flex;}
+        .stat-block{flex:1;min-width:0;padding:clamp(32px,4.5vw,60px) clamp(20px,3vw,48px);border-left:1px solid rgba(2,10,37,0.08);position:relative;}
+        .stat-block:first-child{border-left:none;padding-left:0;}
+        .stat-val{font-family:'Inter',sans-serif;font-weight:200;font-size:clamp(3rem,6vw,5.5rem);color:${NAVY};letter-spacing:-0.03em;line-height:1;margin:0 0 clamp(8px,1.2vh,14px) 0;}
+        .stat-label{font-family:'Inter',sans-serif;font-size:clamp(0.74rem,0.85vw,0.8rem);color:var(--lp-text-meta);letter-spacing:0.01em;line-height:1.5;}
+        @media(max-width:640px){
+          .stat-block{padding:clamp(20px,5vw,32px) 0!important;border-left:none!important;border-top:1px solid rgba(2,10,37,0.08)!important;}
+          .stat-block:first-child{border-top:none!important;padding-top:0!important;}
+          .stats-row{flex-direction:column!important;}
         }
       ` }} />
 
       {preloaderVisible && <Preloader key={preloaderKey} onComplete={handlePreloaderComplete} onCovered={handlePreloaderCovered} fast={isFastLoader} />}
-      <NavBar pastHero={pastHero} locale={locale} onLocaleChange={handleLocaleChange} />
+      <NavBar locale={locale} onLocaleChange={handleLocaleChange} />
 
-      {/* ── Hero — full-bleed concrete photo, subtle dark overlay ── */}
-      <section style={{ position: "relative", height: "100vh", minHeight: "600px", display: "flex", flexDirection: "column", overflow: "hidden", backgroundColor: BG_CONTRAST }}>
-        <div style={{ position: "absolute", inset: 0 }}>
-          <img src={HERO_IMG} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 55%" }} />
-          <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.28)" }} />
-          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, transparent 32%, transparent 52%, rgba(0,0,0,0.72) 100%)" }} />
+      {/* ─── HERO: spacious white intro, same pattern as About ─────────────── */}
+      <section style={{ position: "relative", minHeight: "clamp(620px,86vh,860px)", overflow: "hidden", backgroundColor: "#ffffff" }}>
+        <div style={{ position: "absolute", top: "-12%", right: "-8%", width: "46%", aspectRatio: "1", background: `radial-gradient(circle, rgba(2,10,37,0.08) 0%, rgba(2,10,37,0.03) 45%, transparent 72%)`, filter: "blur(10px)", pointerEvents: "none" }} />
+
+        <div style={{ position: "relative", zIndex: 1, padding: "clamp(120px,15vh,168px) clamp(24px,5vw,72px) 0" }}>
+          <div style={{ animation: "fadeUp 0.7s ease 0.1s both", marginBottom: "clamp(20px,2.8vh,28px)" }}>
+            <Eyebrow>{sp.hero.label}</Eyebrow>
+          </div>
+          <h1 style={{ fontFamily: "'Inter',sans-serif", fontWeight: 200, fontSize: "clamp(2.6rem,6.2vw,6.2rem)", lineHeight: 1.0, color: NAVY, margin: 0, letterSpacing: "-0.03em", maxWidth: "900px", animation: "fadeUp 0.8s ease 0.2s both" }}>
+            {sp.hero.headingLine1}<br />
+            <span style={{ color: "rgba(2,10,37,0.35)" }}>{sp.hero.headingLine2}</span><br />
+            {sp.hero.headingLine3}
+          </h1>
         </div>
 
-        <div style={{ position: "relative", zIndex: 1, flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", padding: "clamp(24px,5vw,72px)", paddingTop: "clamp(96px,11vw,140px)" }}>
-          {/* Top label */}
-          <div style={{ animation: "fadeUp 0.8s cubic-bezier(0.4,0,0.2,1) 0.4s both" }}>
-            <SectionLabel dark>{sp.hero.label}</SectionLabel>
+        <div style={{ position: "absolute", left: 0, right: 0, bottom: "clamp(32px,5vh,56px)", zIndex: 1, display: "flex", justifyContent: "space-between", alignItems: "flex-end", padding: "0 clamp(24px,5vw,72px)", gap: "24px" }}>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", animation: "fadeIn 1s ease 0.6s both" }}>
+            <span style={{ width: "1px", height: "22px", background: "rgba(2,10,37,0.22)" }} />
+            <span style={{ writingMode: "vertical-rl", transform: "rotate(180deg)", fontFamily: "'Inter',sans-serif", fontWeight: 500, fontSize: "0.6rem", letterSpacing: "0.16em", textTransform: "uppercase", color: "rgba(2,10,37,0.4)" }}>{sp.hero.scrollLabel}</span>
           </div>
-
-          {/* Bottom — heading + tagline + Discover */}
-          <div style={{ animation: "fadeUp 0.9s cubic-bezier(0.4,0,0.2,1) 0.3s both" }}>
-            <h1 style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 300, fontSize: "clamp(2.8rem,7.2vw,7rem)", lineHeight: 1.0, color: "#ffffff", margin: 0, letterSpacing: "-0.03em" }}>
-              {sp.hero.headingLine1}<br />
-              <span style={{ color: "rgba(255,255,255,0.5)" }}>{sp.hero.headingLine2}</span>
-            </h1>
-            <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 300, fontSize: "clamp(0.78rem,0.95vw,0.9rem)", lineHeight: 1.65, color: "rgba(255,255,255,0.6)", margin: "clamp(22px,3vh,32px) 0 clamp(24px,3.2vh,34px) 0", maxWidth: "clamp(280px,42vw,500px)" }}>
-              {sp.hero.tagline}
-            </p>
-            <button
-              type="button"
-              onClick={scrollToMission}
-              style={{ display: "inline-flex", alignItems: "center", gap: "12px", fontFamily: "'Inter',sans-serif", fontWeight: 500, fontSize: "clamp(0.68rem,0.82vw,0.75rem)", letterSpacing: "0.06em", color: "#fff", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.4)", borderRadius: "100px", padding: "12px 26px", cursor: "pointer", backdropFilter: "blur(6px)", WebkitBackdropFilter: "blur(6px)" }}
-            >
-              {sp.mission.btn}
-              <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 2v9M2 6.5l4.5 4.5L11 6.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            </button>
-          </div>
+          <p className="hidden lg:block" style={{ fontFamily: "'Inter',sans-serif", fontSize: "var(--lp-subtitle-fs)", lineHeight: 1.5, maxWidth: "460px", textAlign: "right", margin: 0, animation: "fadeUp 0.8s ease 0.5s both" }}>
+            {(() => {
+              const parts = sp.hero.tagline.split(" — ");
+              const [lead, rest] = parts.length === 2 ? parts : [sp.hero.tagline, ""];
+              return (
+                <>
+                  <span style={{ color: NAVY, fontWeight: 500 }}>{lead}</span>{" "}
+                  {rest && <span style={{ color: "var(--lp-text-meta)" }}>— {rest}</span>}
+                </>
+              );
+            })()}
+          </p>
         </div>
       </section>
 
-      {/* ── Mission ── */}
-      <section ref={missionRef} style={{ backgroundColor: BG_PRIMARY, padding: "clamp(72px,11vh,140px) clamp(24px,5vw,72px)" }}>
-        <FadeIn>
-          <div style={{ marginBottom: "clamp(36px,5.5vh,60px)" }}>
-            <SectionLabel>{sp.mission.label}</SectionLabel>
+      {/* ─── SERVICES: intro statement + the sticky split-scroll list ──────── */}
+      <section style={{ backgroundColor: "#ffffff", padding: "clamp(72px,11vh,128px) 0 clamp(24px,4vh,40px)" }}>
+        <div style={{ padding: "0 clamp(24px,5vw,72px)" }}>
+          <div style={{ marginBottom: "clamp(20px,2.8vh,28px)" }}>
+            <Eyebrow>{sp.tech.label}</Eyebrow>
           </div>
-          <div className="mission-grid" style={{ display: "grid", gridTemplateColumns: "minmax(0,1.1fr) minmax(0,1fr)", gap: "clamp(32px,5vw,80px)", alignItems: "start" }}>
-            <h2 style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 300, fontSize: "var(--lp-title-fs)", lineHeight: 1.05, color: TEXT_PRIMARY, letterSpacing: "var(--lp-title-ls)", margin: 0 }}>
-              {sp.mission.heading}
-            </h2>
-            <div>
-              <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 300, fontSize: "var(--lp-body-fs)", lineHeight: "var(--lp-body-lh)", color: TEXT_MUTED, margin: "0 0 clamp(16px,2.4vh,22px) 0" }}>
+          <RevealText as="h2" text={sp.tech.heading} style={{ fontFamily: "'Inter',sans-serif", fontWeight: 300, fontSize: "var(--lp-title-fs)", lineHeight: 1.05, color: NAVY, letterSpacing: "var(--lp-title-ls)", maxWidth: "720px", margin: "0 0 clamp(20px,2.8vh,26px) 0" }} />
+          <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 400, fontSize: "var(--lp-body-fs)", lineHeight: "var(--lp-body-lh)", color: "var(--lp-text-body)", maxWidth: "620px", margin: 0 }}>
+            {sp.tech.intro}
+          </p>
+        </div>
+
+        <div style={{ marginTop: "clamp(40px,6vh,64px)" }}>
+          <ServicesScroll items={sp.detail.items} />
+        </div>
+      </section>
+
+      {/* ─── Mission — statement + photo, link to About ─────────────────────── */}
+      <section style={{ backgroundColor: ALT_BG, padding: "clamp(72px,11vh,128px) clamp(24px,5vw,72px)" }}>
+        <div className="grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr] gap-8 lg:gap-16 items-center">
+          <div className="order-2 lg:order-1">
+            <div style={{ marginBottom: "clamp(20px,2.8vh,28px)" }}>
+              <Eyebrow>{sp.mission.label}</Eyebrow>
+            </div>
+            <RevealText as="h2" text={sp.mission.heading} style={{ fontFamily: "'Inter',sans-serif", fontWeight: 300, fontSize: "var(--lp-title-fs)", lineHeight: 1.08, color: NAVY, letterSpacing: "var(--lp-title-ls)", margin: "0 0 clamp(24px,3.4vh,32px) 0" }} />
+            <div style={{ display: "flex", flexDirection: "column", gap: "clamp(14px,2.2vh,22px)", marginBottom: "clamp(26px,3.5vh,34px)" }}>
+              <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 400, fontSize: "var(--lp-body-fs)", lineHeight: "var(--lp-body-lh)", color: "var(--lp-text-body)", margin: 0 }}>
                 {sp.mission.body1}
               </p>
-              <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 300, fontSize: "var(--lp-body-fs)", lineHeight: "var(--lp-body-lh)", color: TEXT_MUTED, margin: "0 0 clamp(26px,3.5vh,34px) 0" }}>
+              <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 400, fontSize: "var(--lp-body-fs)", lineHeight: "var(--lp-body-lh)", color: "var(--lp-text-body)", margin: 0 }}>
                 {sp.mission.body2}
               </p>
-              <Link href="/about" style={{ display: "inline-flex", alignItems: "center", gap: "10px", fontFamily: "'Inter',sans-serif", fontWeight: 500, fontSize: "clamp(0.68rem,0.82vw,0.75rem)", letterSpacing: "0.04em", color: TEXT_PRIMARY, borderBottom: `1px solid ${TEXT_PRIMARY}`, paddingBottom: "3px" }}>
-                {sp.mission.btn} <span aria-hidden>→</span>
-              </Link>
             </div>
+            <Link href="/about" className="inline-flex items-center gap-[9px] hover:gap-[13px] border-b border-[rgba(2,10,37,0.3)] hover:border-[#020A25] pb-1 transition-all duration-300" style={{ fontFamily: "'Inter',sans-serif", fontWeight: 500, fontSize: "clamp(0.72rem,0.86vw,0.8rem)", letterSpacing: "0.02em", color: NAVY }}>
+              {sp.mission.btn} <span aria-hidden>→</span>
+            </Link>
           </div>
-        </FadeIn>
+          <div style={{ borderRadius: "var(--radius)", overflow: "hidden", height: "clamp(340px,46vh,500px)" }}>
+            <img src={HERO_IMG} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 55%", display: "block" }} />
+          </div>
+        </div>
       </section>
 
-      {/* ── Technology — black contrast section, image + expandable list ── */}
-      <section style={{ backgroundColor: BG_CONTRAST, padding: "clamp(72px,11vh,140px) clamp(24px,5vw,72px)" }}>
-        <div style={{ marginBottom: "clamp(40px,6vh,72px)" }}>
+      {/* ── Process — Our Approach, 4-step cards ── */}
+      <section style={{ backgroundColor: "#ffffff", padding: "clamp(72px,11vh,128px) clamp(24px,5vw,72px)" }}>
+        <div style={{ marginBottom: "clamp(40px,6vh,64px)" }}>
           <div style={{ marginBottom: "clamp(16px,2.4vh,24px)" }}>
-            <SectionLabel dark>{sp.tech.label}</SectionLabel>
+            <Eyebrow>{sp.process.label}</Eyebrow>
           </div>
-          <h2 style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 300, fontSize: "var(--lp-title-fs)", lineHeight: 0.98, color: "#ffffff", letterSpacing: "var(--lp-title-ls)", margin: 0 }}>
-            {sp.tech.heading}
-          </h2>
+          <RevealText as="h2" text={sp.process.heading} style={{ fontFamily: "'Inter',sans-serif", fontWeight: 300, fontSize: "var(--lp-title-fs)", lineHeight: 0.98, color: NAVY, letterSpacing: "var(--lp-title-ls)", margin: 0 }} />
         </div>
 
-        <div className="tech-grid" style={{ display: "grid", gridTemplateColumns: "minmax(0,0.85fr) minmax(0,1.15fr)", gap: "clamp(32px,4.5vw,72px)", alignItems: "start" }}>
-          <div className="tech-img" style={{ borderRadius: "24px", overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)", position: "sticky", top: "clamp(80px,10vh,120px)", aspectRatio: "4 / 5" }}>
-            <img src={TECH_IMG} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-          </div>
-          <TechAccordion items={sp.detail.items} />
-        </div>
-      </section>
-
-      {/* ── Process — warm grey, solid cards ── */}
-      <section style={{ backgroundColor: BG_SECONDARY, padding: "clamp(72px,11vh,140px) clamp(24px,5vw,72px)" }}>
-        <FadeIn>
-          <div style={{ marginBottom: "clamp(40px,6vh,72px)" }}>
-            <div style={{ marginBottom: "clamp(16px,2.4vh,24px)" }}>
-              <SectionLabel>{sp.process.label}</SectionLabel>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5">
+          {sp.process.steps.map((step, i) => (
+            <div key={i} className="bg-white border border-[rgba(2,10,37,0.1)] rounded-[var(--radius)] flex flex-col" style={{ padding: "clamp(26px,3vw,38px)", minHeight: "clamp(200px,24vh,260px)" }}>
+              <span style={{ fontFamily: "'Inter',sans-serif", fontWeight: 300, fontSize: "clamp(2.2rem,3.6vw,3.4rem)", color: NAVY, opacity: 0.28, letterSpacing: "-0.03em", lineHeight: 1, marginBottom: "auto" }}>{step.num}</span>
+              <h3 style={{ fontFamily: "'Inter',sans-serif", fontWeight: 400, fontSize: "var(--lp-h3-fs)", color: NAVY, margin: "clamp(20px,3vh,30px) 0 clamp(10px,1.5vh,14px) 0", letterSpacing: "-0.01em" }}>{step.title}</h3>
+              <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 400, fontSize: "var(--lp-body-fs)", lineHeight: "var(--lp-body-lh)", color: "var(--lp-text-body)", margin: 0 }}>{step.desc}</p>
             </div>
-            <h2 style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 300, fontSize: "var(--lp-title-fs)", lineHeight: 0.98, color: TEXT_PRIMARY, letterSpacing: "var(--lp-title-ls)", margin: 0 }}>
-              {sp.process.heading}
-            </h2>
-          </div>
-
-          <div className="process-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: "clamp(12px,1.4vw,20px)" }}>
-            {sp.process.steps.map((step, i) => (
-              <div key={i} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: "24px", padding: "clamp(26px,3vw,38px)", display: "flex", flexDirection: "column", minHeight: "clamp(200px,24vh,260px)" }}>
-                <span style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 300, fontSize: "clamp(2.2rem,3.6vw,3.4rem)", color: ACCENT_WARM, opacity: 0.45, letterSpacing: "-0.03em", lineHeight: 1, marginBottom: "auto" }}>{step.num}</span>
-                <h3 style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 400, fontSize: "clamp(1.05rem,1.4vw,1.3rem)", color: TEXT_PRIMARY, margin: "clamp(20px,3vh,30px) 0 clamp(10px,1.5vh,14px) 0", letterSpacing: "-0.01em" }}>{step.title}</h3>
-                <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 300, fontSize: "clamp(0.72rem,0.88vw,0.82rem)", lineHeight: 1.65, color: TEXT_MUTED, margin: 0 }}>{step.desc}</p>
-              </div>
-            ))}
-          </div>
-        </FadeIn>
+          ))}
+        </div>
       </section>
 
-      {/* ── Stats — huge focal numbers ── */}
-      <section style={{ backgroundColor: BG_PRIMARY, padding: "clamp(64px,9vh,110px) clamp(24px,5vw,72px)" }}>
-        <FadeIn>
-          <div style={{ marginBottom: "clamp(32px,4.5vh,52px)" }}>
-            <SectionLabel>{sp.stats.label}</SectionLabel>
-          </div>
-          <div className="stats-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", borderTop: `1px solid ${BORDER}` }}>
-            {STAT_VALUES.map((val, i) => (
-              <div key={i} style={{ padding: "clamp(28px,4vh,48px) clamp(16px,2vw,32px) clamp(20px,3vh,32px) 0", borderRight: i < 3 ? `1px solid ${BORDER}` : "none", paddingLeft: i === 0 ? 0 : "clamp(16px,2vw,32px)" }}>
-                <div style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 300, fontSize: "clamp(3rem,6.5vw,6rem)", color: TEXT_PRIMARY, letterSpacing: "-0.04em", lineHeight: 1, marginBottom: "clamp(12px,1.8vh,18px)", whiteSpace: "nowrap" }}>{val}</div>
-                <p style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.66rem,0.82vw,0.74rem)", fontWeight: 400, color: TEXT_MUTED, letterSpacing: "0.02em", margin: 0, lineHeight: 1.4 }}>{sp.stats.items[i].label}</p>
+      {/* ── Stats — same divided count-up row as About/Home ── */}
+      <section style={{ backgroundColor: ALT_BG, padding: "clamp(56px,8vh,90px) clamp(24px,5vw,72px)" }}>
+        <div style={{ marginBottom: "clamp(32px,4.5vh,52px)" }}>
+          <Eyebrow>{sp.stats.label}</Eyebrow>
+        </div>
+        <div className="stats-row" style={{ borderTop: "1px solid rgba(2,10,37,0.08)" }}>
+          {STAT_VALUES.map((val, i) => (
+            <div key={i} className="stat-block">
+              <div className="stat-val">
+                <StatNum value={val} suffix={STAT_SUFFIX[i]} delay={i * 100} />
               </div>
-            ))}
-          </div>
-        </FadeIn>
+              <p className="stat-label">{sp.stats.items[i].label}</p>
+            </div>
+          ))}
+        </div>
       </section>
 
       {/* ── Locations — light minimal cards ── */}
-      <section style={{ backgroundColor: BG_SECONDARY, padding: "clamp(72px,11vh,140px) clamp(24px,5vw,72px)" }}>
-        <FadeIn>
-          <div style={{ marginBottom: "clamp(40px,6vh,72px)" }}>
-            <div style={{ marginBottom: "clamp(16px,2.4vh,24px)" }}>
-              <SectionLabel>{sp.locations.label}</SectionLabel>
-            </div>
-            <h2 style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 300, fontSize: "var(--lp-title-fs)", lineHeight: 0.98, color: TEXT_PRIMARY, letterSpacing: "var(--lp-title-ls)", margin: 0 }}>
-              {sp.locations.heading}
-            </h2>
+      <section style={{ backgroundColor: "#ffffff", padding: "clamp(72px,11vh,128px) clamp(24px,5vw,72px)" }}>
+        <div style={{ marginBottom: "clamp(40px,6vh,64px)" }}>
+          <div style={{ marginBottom: "clamp(16px,2.4vh,24px)" }}>
+            <Eyebrow>{sp.locations.label}</Eyebrow>
           </div>
+          <RevealText as="h2" text={sp.locations.heading} style={{ fontFamily: "'Inter',sans-serif", fontWeight: 300, fontSize: "var(--lp-title-fs)", lineHeight: 0.98, color: NAVY, letterSpacing: "var(--lp-title-ls)", margin: 0 }} />
+        </div>
 
-          <div className="locations-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "clamp(12px,1.4vw,20px)" }}>
-            {sp.locations.items.map((loc, i) => (
-              <div key={i} style={{ background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: "24px", padding: "clamp(28px,3vw,42px)", display: "flex", flexDirection: "column", minHeight: "clamp(220px,26vh,280px)" }}>
-                <span style={{ fontFamily: "'Inter',sans-serif", fontWeight: 500, fontSize: "clamp(0.6rem,0.74vw,0.68rem)", letterSpacing: "0.14em", color: ACCENT_WARM }}>0{i + 1}</span>
-                <h3 style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 400, fontSize: "clamp(1.5rem,2.4vw,2.1rem)", color: TEXT_PRIMARY, margin: "clamp(20px,3vh,28px) 0 clamp(12px,1.8vh,16px) 0", letterSpacing: "-0.02em", marginTop: "auto" }}>{loc.name}</h3>
-                <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 300, fontSize: "clamp(0.74rem,0.9vw,0.84rem)", lineHeight: 1.65, color: TEXT_MUTED, margin: 0 }}>{loc.desc}</p>
-              </div>
-            ))}
-          </div>
-        </FadeIn>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
+          {sp.locations.items.map((loc, i) => (
+            <div key={i} className="bg-white border border-[rgba(2,10,37,0.1)] rounded-[var(--radius)] flex flex-col" style={{ padding: "clamp(28px,3vw,42px)", minHeight: "clamp(220px,26vh,280px)" }}>
+              <span style={{ fontFamily: "'Inter',sans-serif", fontWeight: 500, fontSize: "clamp(0.6rem,0.74vw,0.68rem)", letterSpacing: "0.14em", color: "var(--lp-text-meta)" }}>0{i + 1}</span>
+              <h3 style={{ fontFamily: "'Inter',sans-serif", fontWeight: 400, fontSize: "clamp(1.5rem,2.4vw,2.1rem)", color: NAVY, margin: "clamp(20px,3vh,28px) 0 clamp(12px,1.8vh,16px) 0", letterSpacing: "-0.02em", marginTop: "auto" }}>{loc.name}</h3>
+              <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 400, fontSize: "var(--lp-body-fs)", lineHeight: "var(--lp-body-lh)", color: "var(--lp-text-body)", margin: 0 }}>{loc.desc}</p>
+            </div>
+          ))}
+        </div>
       </section>
 
       {/* ── CTA + Footer — the only navy on the page ── */}

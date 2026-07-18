@@ -1,24 +1,29 @@
 "use client";
 
 import { useRef, useEffect, useState, useCallback, useSyncExternalStore, Fragment } from "react";
-import { createPortal } from "react-dom";
 import Link from "next/link";
 import Lenis from "lenis";
 import { Locale, TRANSLATIONS } from "./translations";
-import { useLocale, NavBar } from "./components/shared";
+import { useLocale, NavBar, StatNum } from "./components/shared";
 
 const NAV_ROUTES = ["/services", "/projects", "/equipment", "/about", "/contact"];
 
 const NAVY = "#020A25";
-const ACCENT = "#1847F2";
-const SECTION_BG = "#f0eeea";
+// Dark-mode background for the homepage's desktop Projects/map section only —
+// deliberately gray, not NAVY: kept strictly black/gray/white (no blue cast),
+// dark gray as the dominant tone, per explicit request. Its mobile counterpart
+// (no map there) keeps its own separate light literal, untouched.
+const SECTION_BG = "#1a1a1a";
 const VIDEO_SRC =
   "https://levelpro.venacydigital.com/wp-content/uploads/2026/04/333333benidorm-poniente-beach-aerial-flyover-mediterra-2026-02-24-23-51-33-utc.mp4";
 
-// One <video> per location, in the same order as t.hero.locations. All three
-// currently point to the single real asset in the repo; drop distinct per-location
-// URLs in here and the rotation/progress sync keeps working unchanged.
-const LOCATION_VIDEOS = [VIDEO_SRC, VIDEO_SRC, VIDEO_SRC];
+// One <video> per location, in the same order as t.hero.locations
+// (Palma de Mallorca / Ibiza / Benidorm).
+const LOCATION_VIDEOS = [
+  "https://ik.imagekit.io/xmubxlzch/palma%20de%20mallorca%20-%20optimizat.mp4",
+  "https://ik.imagekit.io/xmubxlzch/ibiza-optimizat.mp4",
+  "https://ik.imagekit.io/qcovrq0fx/benidorm-optimizat-final.mp4",
+];
 
 const DEADZONE = 0.03;
 // Each location's hero video plays for this long (ms) before auto-advancing.
@@ -29,9 +34,13 @@ const PROJ_IMG = "https://levelpro.es/wp-content/uploads/2026/05/1-copy.avif";
 // Same asset for every card, mirroring the single shared media on desktop.
 const SVC_IMG = "https://levelpro.es/wp-content/uploads/2026/05/1-copy.avif";
 const PROJECTS_STATIC = [
-  { id: 1, name: "Hotel Rosamar",            location: "Benidorm", year: "2020", budget: "€3M"   as string|undefined, img: PROJ_IMG, pin: { lat: 38.5411, lng: -0.1225 }, mapsUrl: "https://maps.google.com/?q=38.5411,-0.1225" },
-  { id: 2, name: "Nomad Hotel Cala Finestrat 1", location: "Benidorm", year: "2020", budget: undefined as string|undefined, img: PROJ_IMG, pin: { lat: 38.5345, lng: -0.1305 }, mapsUrl: "https://maps.google.com/?q=38.5345,-0.1305" },
-  { id: 3, name: "Residential Complex Altea", location: "Altea",    year: "2021", budget: "€1.8M" as string|undefined, img: PROJ_IMG, pin: { lat: 38.5980, lng: -0.0572 }, mapsUrl: "https://maps.google.com/?q=38.5980,-0.0572" },
+  { id: 1, name: "Nomad Hotel Cala Finestrat", location: "Finestrat", year: "2020", img: PROJ_IMG, pin: { lat: 38.5261921, lng: -0.1635926 }, mapsUrl: "https://maps.app.goo.gl/J3FCKjeoeuHgYPeu7" },
+  { id: 2, name: "Alibuilding Benidorm", location: "Benidorm", year: "2026", img: "https://levelpro.es/wp-content/uploads/2026/07/ali-building-benidorm-2-scaled.avif", pin: { lat: 38.5328296, lng: -0.16296 }, mapsUrl: "https://maps.app.goo.gl/7fbSfX37m8nmgbzx6" },
+  { id: 3, name: "Monver Tower Benidorm", location: "Benidorm", year: "2026", img: "https://levelpro.es/wp-content/uploads/2026/07/monver-tower-benidorm-scaled.avif", pin: { lat: 38.5358366, lng: -0.1124111 }, mapsUrl: "https://maps.app.goo.gl/hmaXBsbMdroebJg88" },
+  { id: 4, name: "Poseidon Playas de Benidorm", location: "Benidorm", year: "2026", img: "https://levelpro.es/wp-content/uploads/2026/07/Poseidon-Playas-de-Benidorm-scaled.avif", pin: { lat: 38.5378413, lng: -0.1469662 }, mapsUrl: "https://maps.app.goo.gl/6WD3wDruLYYnpzCdA" },
+  { id: 5, name: "Port Benidorm Hotel", location: "Benidorm", year: "2026", img: "https://levelpro.es/wp-content/uploads/2026/07/Port-Benidorm-Hotel.avif", pin: { lat: 38.5340091, lng: -0.1065199 }, mapsUrl: "https://maps.app.goo.gl/kXVd6tVsLRSq2wqd7" },
+  { id: 6, name: "Hotel Rosamar", location: "Benidorm", year: "2020", img: "https://levelpro.es/wp-content/uploads/2026/07/Hotel-rosamar-scaled.avif", pin: { lat: 38.5378884, lng: -0.1106753 }, mapsUrl: "https://maps.app.goo.gl/BAsG6ERmK29fqD7F9" },
+  { id: 7, name: "Novotel Valencia Lavant", location: "Valencia", year: "2026", img: "https://levelpro.es/wp-content/uploads/2026/07/Novotel-Valencia-Lavant--scaled.avif", pin: { lat: 39.4798142, lng: -0.3911179 }, mapsUrl: "https://maps.app.goo.gl/Tyyy1P9s6FV6ARsH8" },
 ];
 
 const SERVICES_ICONS = [
@@ -42,10 +51,17 @@ const SERVICES_ICONS = [
     <circle cx="14" cy="22" r="2.5" stroke="currentColor" strokeWidth="1.5"/>
     <path d="M4 12V8a2 2 0 012-2h4a2 2 0 012 2v4" stroke="currentColor" strokeWidth="1.5"/>
   </svg>,
-  <svg key="place" width="28" height="28" viewBox="0 0 28 28" fill="none">
-    <path d="M6 20L14 6l8 14H6z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
-    <path d="M14 13v5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-    <circle cx="14" cy="20" r="1.5" fill="currentColor"/>
+  <svg key="mortar" width="28" height="28" viewBox="0 0 28 28" fill="none">
+    <path d="M8 5l3 3.5L14 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M11 4v9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+    <path d="M3 22h22" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+    <rect x="7" y="16.5" width="14" height="3.5" rx="1.2" stroke="currentColor" strokeWidth="1.5"/>
+    <circle cx="14" cy="18.25" r="1" fill="currentColor"/>
+  </svg>,
+  <svg key="trowel" width="28" height="28" viewBox="0 0 28 28" fill="none">
+    <rect x="3" y="15" width="15" height="6.5" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
+    <path d="M12 15V9.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+    <path d="M9.5 9.5h5a2 2 0 002-2v0a2 2 0 00-2-2h-1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
   </svg>,
   <svg key="shot" width="28" height="28" viewBox="0 0 28 28" fill="none">
     <path d="M4 14c0-5.5 4.5-10 10-10s10 4.5 10 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
@@ -54,12 +70,11 @@ const SERVICES_ICONS = [
     <path d="M14 14l-3 1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
     <path d="M14 14l1.5 -3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
   </svg>,
-  <svg key="found" width="28" height="28" viewBox="0 0 28 28" fill="none">
-    <path d="M4 22h20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-    <path d="M8 22V10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-    <path d="M20 22V10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-    <path d="M5 10h18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-    <path d="M8 10l3-4h6l3 4" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
+  <svg key="slope" width="28" height="28" viewBox="0 0 28 28" fill="none">
+    <path d="M3 22h22" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+    <path d="M3 22V12L21 22" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
+    <path d="M7 19.5l10-5.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+    <circle cx="17" cy="14" r="1.4" fill="currentColor"/>
   </svg>,
 ];
 
@@ -116,7 +131,7 @@ function Preloader({ onComplete, onCovered, fast = false }: { onComplete: () => 
       <div style={{ position:"absolute", left:0, right:0, top:0, height:"50%", backgroundColor:NAVY, transform: exiting ? "translateY(-100%)" : "translateY(0)", transition: exiting ? `transform ${exitDur}s cubic-bezier(0.76,0,0.24,1)` : "none", willChange:"transform" }} />
       <div style={{ position:"absolute", left:0, right:0, bottom:0, height:"50%", backgroundColor:NAVY, transform: exiting ? "translateY(100%)" : "translateY(0)", transition: exiting ? `transform ${exitDur}s cubic-bezier(0.76,0,0.24,1)` : "none", willChange:"transform" }} />
       <div style={{ position:"absolute", inset:0, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:"clamp(14px,2.2vh,24px)", opacity: exiting ? 0 : 1, transition: exiting ? "opacity 0.22s ease" : "none" }}>
-        <div style={{ fontFamily:"'Titillium Web',sans-serif", fontWeight:600, fontSize:"clamp(0.88rem,1.15vw,1rem)", letterSpacing:"0.28em", textTransform:"uppercase", color:"#ffffff", animation:"preloaderFadeUp 0.55s cubic-bezier(0.4,0,0.2,1) both" }}>Level Pro</div>
+        <div style={{ fontFamily:"'Inter',sans-serif", fontWeight:600, fontSize:"clamp(0.88rem,1.15vw,1rem)", letterSpacing:"0.28em", textTransform:"uppercase", color:"#ffffff", animation:"preloaderFadeUp 0.55s cubic-bezier(0.4,0,0.2,1) both" }}>Level Pro</div>
         <div style={{ width:"clamp(130px,18vw,200px)", height:"1px", background:"rgba(255,255,255,0.07)", position:"relative", overflow:"hidden", animation:"preloaderFadeUp 0.55s cubic-bezier(0.4,0,0.2,1) 0.08s both" }}>
           <div style={{ position:"absolute", inset:0, width:`${progress}%`, background:"rgba(255,255,255,0.75)", transition:"width 0.07s linear" }} />
         </div>
@@ -147,7 +162,18 @@ function RevealText({ text, delayOffset=0, style, as: Tag="p" }: { text:string; 
     <Tag ref={ref as unknown as React.RefObject<HTMLParagraphElement>} style={style}>
       {words.map((word, i) => (
         <Fragment key={i}>
-          <span style={{ display:"inline-block", opacity:0, animation: triggered ? `fadeBlurReveal 0.9s cubic-bezier(0.25,0.46,0.45,0.94) ${(delayOffset+i)*0.05}s both` : "none" }}>{word}</span>
+          <span
+            style={{ display:"inline-block", opacity:0, animation: triggered ? `fadeBlurReveal 0.9s cubic-bezier(0.25,0.46,0.45,0.94) ${(delayOffset+i)*0.05}s both` : "none" }}
+            onAnimationEnd={(e) => {
+              const el = e.currentTarget;
+              el.style.animation = "none";
+              el.style.opacity = "1";
+              el.style.filter = "none";
+              el.style.transform = "none";
+            }}
+          >
+            {word}
+          </span>
           {i < words.length-1 && " "}
         </Fragment>
       ))}
@@ -155,176 +181,83 @@ function RevealText({ text, delayOffset=0, style, as: Tag="p" }: { text:string; 
   );
 }
 
-// ─── Count-up ─────────────────────────────────────────────────────────────────
-function runCountUp(target:number, duration:number, setter:(n:number)=>void, delay=0) {
-  const go = () => { let t0:number|null=null; const step=(ts:number)=>{ if(t0===null)t0=ts; const p=Math.min((ts-t0)/duration,1); setter(Math.round((1-Math.pow(1-p,3))*target)); if(p<1)requestAnimationFrame(step); }; requestAnimationFrame(step); };
-  delay>0 ? setTimeout(go,delay) : go();
-}
-function StatNum({ value, suffix="", delay=0 }:{ value:number; suffix?:string; delay?:number }) {
-  const ref = useRef<HTMLDivElement>(null); const [count,setCount]=useState(0);
-  useEffect(()=>{ const el=ref.current; if(!el)return; const obs=new IntersectionObserver(([e])=>{ if(!e.isIntersecting)return; obs.disconnect(); runCountUp(value,2000,setCount,delay); },{threshold:0.2}); obs.observe(el); return()=>obs.disconnect(); },[value,delay]);
-  return <span ref={ref} style={{ fontVariantNumeric:"tabular-nums" }}>{count}{suffix}</span>;
-}
-
 // ─── Meta chip ────────────────────────────────────────────────────────────────
-function MetaChip({ label, value }: { label: string; value: string }) {
+// dark: used on the homepage's desktop Projects/map panel + cards (dark glass
+// over the dark map); omitted everywhere else (light cards on a light section).
+function MetaChip({ label, value, dark }: { label: string; value: string; dark?: boolean }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-      <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.6rem,0.72vw,0.66rem)", fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(2,10,37,0.5)" }}>{label}</span>
-      <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.8rem,0.92vw,0.88rem)", fontWeight: 500, color: NAVY }}>{value}</span>
+      <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.6rem,0.72vw,0.66rem)", fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: dark ? "rgba(255,255,255,0.5)" : "var(--lp-text-meta)" }}>{label}</span>
+      <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.8rem,0.92vw,0.88rem)", fontWeight: 500, color: dark ? "#ffffff" : NAVY }}>{value}</span>
     </div>
   );
 }
 
 // ─── Project card ─────────────────────────────────────────────────────────────
-function ProjectCard({ proj, metaKeys, index }: { proj: ProjectData; metaKeys: { year: string; type: string; budget: string; location: string }; index: number }) {
+// Frosted-glass treatment mirrors the map sidebar: translucent blurred fill,
+// accent dot on the title, pill tags/badges, and the same "View on Maps"
+// pill button used in the sidebar.
+// dark: the homepage's desktop version (over the dark map) passes this; the
+// mobile slider below (light section, no map) doesn't, and keeps the
+// original light-glass look untouched.
+function ProjectCard({ proj, metaKeys, index, viewOnMapsLabel, dark }: { proj: ProjectData; metaKeys: { year: string; type: string; budget: string; location: string }; index: number; viewOnMapsLabel: string; dark?: boolean }) {
   return (
-    <div style={{ background: "#ffffff", borderRadius: "14px", overflow: "hidden", border: "1px solid rgba(2,10,37,0.06)", boxShadow: "0 2px 16px rgba(2,10,37,0.07)" }}>
+    <div style={{
+      background: dark ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.82)",
+      backdropFilter: dark ? "blur(24px) saturate(160%)" : "blur(20px) saturate(140%)",
+      WebkitBackdropFilter: dark ? "blur(24px) saturate(160%)" : "blur(20px) saturate(140%)",
+      borderRadius: "var(--radius)", overflow: "hidden",
+      border: dark ? "1px solid rgba(255,255,255,0.14)" : "1px solid rgba(255,255,255,0.7)",
+      boxShadow: dark ? "none" : "0 16px 50px rgba(2,10,37,0.12)",
+    }}>
       {/* Thumbnail — wide / landscape aspect ratio */}
-      <div style={{ position: "relative", aspectRatio: "16 / 9", overflow: "hidden" }}>
+      <div style={{ position: "relative", aspectRatio: "3 / 2", overflow: "hidden" }}>
         <img
           src={proj.img}
           alt={proj.name}
           style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 30%", display: "block" }}
         />
       </div>
-      {/* Title */}
-      <div style={{ padding: "clamp(14px,1.8vw,18px) clamp(18px,2.2vw,24px) clamp(4px,0.6vw,6px)" }}>
-        <h3 style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 200, fontSize: "clamp(1.15rem,1.75vw,1.55rem)", lineHeight: 1.08, color: NAVY, margin: 0, letterSpacing: "-0.02em" }}>{proj.name}</h3>
+      {/* Title — accent dot + heading, matching the Services card's Inter treatment */}
+      <div style={{ padding: "clamp(14px,1.8vw,18px) clamp(18px,2.2vw,24px) clamp(4px,0.6vw,6px)", display: "flex", alignItems: "center", gap: "9px" }}>
+        <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: dark ? "#ffffff" : NAVY, flexShrink: 0 }} />
+        <h3 style={{ fontFamily: "'Inter',sans-serif", fontWeight: 500, fontSize: "var(--lp-h3-fs)", lineHeight: 1.3, color: dark ? "#ffffff" : NAVY, margin: 0 }}>{proj.name}</h3>
       </div>
       {/* Description — clamped to 2 lines for a condensed teaser */}
       <div style={{ padding: "0 clamp(18px,2.2vw,24px) clamp(10px,1.3vw,14px)" }}>
-        <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 400, fontSize: "clamp(0.76rem,0.88vw,0.85rem)", lineHeight: 1.55, color: "rgba(2,10,37,0.62)", margin: 0, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{proj.fullDesc}</p>
+        <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 400, fontSize: "var(--lp-proj-desc-fs)", lineHeight: "var(--lp-card-body-lh)", color: dark ? "rgba(255,255,255,0.65)" : "var(--lp-text-body)", margin: 0, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{proj.fullDesc}</p>
       </div>
-      {/* Service tags — plain text list */}
-      <div style={{ padding: "0 clamp(18px,2.2vw,24px) clamp(12px,1.5vw,16px)" }}>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: "clamp(10px,1.4vw,16px)" }}>
-          {proj.tags.map(tag => (
-            <span key={tag} style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.7rem,0.8vw,0.76rem)", fontWeight: 500, color: "rgba(2,10,37,0.55)" }}>{tag}</span>
-          ))}
+      {/* Metadata + Maps CTA footer */}
+      <div style={{ borderTop: dark ? "1px solid rgba(255,255,255,0.12)" : "1px solid rgba(2,10,37,0.08)", padding: "clamp(12px,1.5vw,15px) clamp(18px,2.2vw,24px)", display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: "14px", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: "clamp(14px,1.8vw,20px)", flexWrap: "wrap" }}>
+          <MetaChip label={metaKeys.type} value={proj.type} dark={dark} />
+          <MetaChip label={metaKeys.location} value={proj.location} dark={dark} />
+          <MetaChip label={metaKeys.year} value={proj.year} dark={dark} />
         </div>
-      </div>
-      {/* Metadata footer */}
-      <div style={{ borderTop: "1px solid rgba(2,10,37,0.07)", padding: "clamp(10px,1.3vw,13px) clamp(18px,2.2vw,24px)", display: "flex", gap: "clamp(16px,2vw,24px)", flexWrap: "wrap" }}>
-        <MetaChip label={metaKeys.type} value={proj.type} />
-        <MetaChip label={metaKeys.location} value={proj.location} />
-        {proj.budget && <MetaChip label={metaKeys.budget} value={proj.budget} />}
-        <MetaChip label={metaKeys.year} value={proj.year} />
-      </div>
-    </div>
-  );
-}
-
-// ─── Hero glass mini-card: auto-rotating projects ─────────────────────────────
-function HeroProjectsCard({ items, label, reduced }: { items: Array<{ name: string; location: string; year: string; img: string }>; label: string; reduced: boolean }) {
-  const [idx, setIdx] = useState(0);
-  const [shown, setShown] = useState(true);
-
-  useEffect(() => {
-    if (items.length <= 1) return;
-    if (reduced) {
-      const id = setInterval(() => setIdx(i => (i + 1) % items.length), 5200);
-      return () => clearInterval(id);
-    }
-    let swap: ReturnType<typeof setTimeout> | undefined;
-    const id = setInterval(() => {
-      setShown(false);
-      swap = setTimeout(() => { setIdx(i => (i + 1) % items.length); setShown(true); }, 360);
-    }, 4200);
-    return () => { clearInterval(id); if (swap) clearTimeout(swap); };
-  }, [items.length, reduced]);
-
-  const p = items[idx];
-  return (
-    <div className="hero-glass" style={{ padding: "clamp(15px,1.45vw,20px)" }}>
-      <div style={{ display: "flex", alignItems: "flex-start", gap: "clamp(14px,1.6vw,20px)" }}>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "clamp(12px,1.5vw,16px)" }}>
-            <span style={{ width: "7px", height: "7px", background: "rgba(255,255,255,0.9)", flexShrink: 0 }} />
-            <span style={{ fontFamily: "'Inter',sans-serif", fontWeight: 600, fontSize: "clamp(0.58rem,0.7vw,0.66rem)", letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.82)" }}>{label}</span>
-          </div>
-          <h3 style={{ fontFamily: "'Inter',sans-serif", fontWeight: 600, fontSize: "clamp(1.1rem,1.45vw,1.4rem)", lineHeight: 1.28, color: "#ffffff", margin: 0, opacity: shown ? 1 : 0, transform: shown ? "translateY(0)" : "translateY(6px)", transition: reduced ? "none" : "opacity 0.34s ease, transform 0.44s cubic-bezier(0.22,1,0.36,1)" }}>{p.name}</h3>
-        </div>
-        <div style={{ width: "clamp(78px,7.5vw,96px)", height: "clamp(66px,6.2vw,80px)", borderRadius: "10px", overflow: "hidden", flexShrink: 0, background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.14)", opacity: shown ? 1 : 0, transition: reduced ? "none" : "opacity 0.34s ease" }}>
-          <img src={p.img} alt={p.name} loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── Hero glass mini-card: "See in Action" — static poster, plays in a modal ───
-// Per spec: the thumbnail does NOT autoplay. Clicking the play button opens a modal
-// (dark backdrop + close button) where the clip plays; closing pauses it. Reduced
-// motion skips the modal fade. All listeners + the scroll lock are cleaned up.
-function HeroVideoCard({ src, label, desc, reduced }: { src: string; label: string; desc: string; reduced: boolean }) {
-  const [open, setOpen] = useState(false);
-  const modalVideoRef = useRef<HTMLVideoElement>(null);
-
-  const close = useCallback(() => {
-    const v = modalVideoRef.current;
-    if (v) v.pause();
-    setOpen(false);
-  }, []);
-
-  useEffect(() => {
-    if (!open) return;
-    const v = modalVideoRef.current;
-    if (v) { try { v.currentTime = 0; } catch {} const r = v.play(); if (r && typeof r.catch === "function") r.catch(() => {}); }
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") close(); };
-    window.addEventListener("keydown", onKey);
-    const html = document.documentElement, body = document.body;
-    const prevHtml = html.style.overflow, prevBody = body.style.overflow;
-    html.style.overflow = "hidden"; body.style.overflow = "hidden";
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      html.style.overflow = prevHtml; body.style.overflow = prevBody;
-    };
-  }, [open, close]);
-
-  return (
-    <div className="hero-glass" style={{ padding: "clamp(18px,1.7vw,24px)" }}>
-      <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 500, fontSize: "clamp(0.86rem,1.02vw,0.98rem)", lineHeight: 1.5, color: "rgba(255,255,255,0.92)", margin: "0 0 clamp(14px,1.6vw,18px) 0" }}>{desc}</p>
-      <button type="button" onClick={() => setOpen(true)} aria-label={label} className="hero-vcard-btn" style={{ position: "relative", display: "block", width: "100%", borderRadius: "10px", overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)", padding: 0, cursor: "pointer", background: "rgba(255,255,255,0.06)" }}>
-        {/* Static first-frame poster — preloaded only, never autoplaying */}
-        <video muted playsInline preload="metadata" tabIndex={-1} aria-hidden="true" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", pointerEvents: "none" }}>
-          <source src={`${src}#t=0.5`} type="video/mp4" />
-        </video>
-        <span style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.04) 55%, transparent 100%)", pointerEvents: "none" }} />
-        <span style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%,-50%)", display: "flex", alignItems: "center", gap: "9px", padding: "clamp(8px,0.9vw,11px) clamp(14px,1.4vw,19px)", borderRadius: "9px", background: "rgba(18,18,20,0.4)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.16)", pointerEvents: "none" }}>
-          <svg width="11" height="13" viewBox="0 0 11 13" fill="none"><path d="M1 1l9 5.5-9 5.5V1z" fill="#ffffff" /></svg>
-          <span style={{ fontFamily: "'Inter',sans-serif", fontWeight: 500, fontSize: "clamp(0.78rem,0.9vw,0.88rem)", letterSpacing: "0.01em", color: "#ffffff" }}>{label}</span>
-        </span>
-      </button>
-
-      {open && createPortal(
-        <div
-          role="dialog" aria-modal="true" aria-label={label}
-          onClick={close}
-          style={{ position: "fixed", inset: 0, zIndex: 9998, background: "rgba(0,0,0,0.92)", display: "flex", alignItems: "center", justifyContent: "center", padding: "clamp(16px,4vw,56px)", animation: reduced ? "none" : "heroModalIn 0.22s ease both" }}
+        <a
+          href={proj.mapsUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={dark ? "proj-maps-btn btn-fill btn-fill-light" : "proj-maps-btn btn-fill"}
+          style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.58rem,0.68vw,0.63rem)", fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: dark ? "#ffffff" : NAVY, border: dark ? "1px solid rgba(255,255,255,0.3)" : "1px solid rgba(2,10,37,0.25)", borderRadius: "var(--radius-sm)", padding: "8px 14px", textDecoration: "none", flexShrink: 0 }}
         >
-          <button type="button" onClick={close} aria-label="Close" style={{ position: "absolute", top: "clamp(16px,3vh,28px)", right: "clamp(16px,3vw,28px)", width: "44px", height: "44px", display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.25)", borderRadius: "50%", cursor: "pointer", color: "#ffffff" }}>
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>
-          </button>
-          <div onClick={(e) => e.stopPropagation()} style={{ width: "min(100%, 1100px)", aspectRatio: "16 / 9", maxHeight: "82vh", borderRadius: "12px", overflow: "hidden", background: "#000000" }}>
-            <video ref={modalVideoRef} controls playsInline style={{ width: "100%", height: "100%", objectFit: "contain", display: "block", background: "#000000" }}>
-              <source src={src} type="video/mp4" />
-            </video>
-          </div>
-        </div>,
-        document.body
-      )}
+          <svg width="10" height="10" viewBox="0 0 12 12" fill="none" style={{ flexShrink: 0 }}>
+            <path d="M6 1C4.07 1 2.5 2.57 2.5 4.5c0 2.78 3.5 6.5 3.5 6.5s3.5-3.72 3.5-6.5C9.5 2.57 7.93 1 6 1zm0 4.75a1.25 1.25 0 110-2.5 1.25 1.25 0 010 2.5z" fill="currentColor"/>
+          </svg>
+          {viewOnMapsLabel}
+        </a>
+      </div>
     </div>
   );
 }
+
 
 // NavBar + LangSwitcher now live in ./components/shared (single source of truth,
 // with the responsive hamburger menu). Imported above.
 
 // ─── Service slide card ───────────────────────────────────────────────────────
-interface ServiceItem { name:string; detail:string; shortDesc:string; tagDescs:string[]; bullets:string[]; icon:React.ReactNode }
-function SvcSlideCard({ svc, isActive, tags, onHover, onClick }: { svc:ServiceItem; isActive:boolean; tags:string[]; onHover:()=>void; onClick:()=>void }) {
-  const [activeTag, setActiveTag] = useState(0);
+interface ServiceItem { name:string; detail:string; shortDesc:string; bullets:string[]; icon:React.ReactNode }
+function SvcSlideCard({ svc, isActive, onHover, onClick }: { svc:ServiceItem; isActive:boolean; onHover:()=>void; onClick:()=>void }) {
   return (
     <div
       onMouseEnter={onHover}
@@ -332,7 +265,7 @@ function SvcSlideCard({ svc, isActive, tags, onHover, onClick }: { svc:ServiceIt
       style={{
         flex: isActive ? "2.5 1 0" : "1 1 0",
         minWidth: 0,
-        borderRadius: "18px",
+        borderRadius: "var(--radius)",
         cursor: "pointer",
         overflow: "hidden",
         display: "flex",
@@ -340,7 +273,7 @@ function SvcSlideCard({ svc, isActive, tags, onHover, onClick }: { svc:ServiceIt
         height: "clamp(220px,28vh,300px)",
         background: isActive ? "#ffffff" : NAVY,
         boxShadow: isActive ? "0 8px 40px rgba(2,10,37,0.16)" : "none",
-        transition: "flex 0.55s cubic-bezier(0.4,0,0.2,1), box-shadow 0.45s ease, background 0.4s ease",
+        transition: "flex 0.45s cubic-bezier(0.16,1,0.3,1), box-shadow 0.4s ease, background 0.35s ease",
       }}
     >
       <div style={{ flex:1, minHeight:0, position:"relative", display:"flex", flexDirection:"column" }}>
@@ -358,13 +291,28 @@ function SvcSlideCard({ svc, isActive, tags, onHover, onClick }: { svc:ServiceIt
           pointerEvents: isActive ? "none" : "auto",
         }}>
           <div style={{ color:"rgba(255,255,255,0.38)" }}>{svc.icon}</div>
-          <div>
-            <p style={{ fontFamily:"'Titillium Web',sans-serif", fontWeight:300, fontSize:"clamp(1.05rem,1.35vw,1.22rem)", color:"rgba(255,255,255,0.92)", margin:"0 0 6px 0", lineHeight:1.2 }}>{svc.name}</p>
-            <p style={{ fontFamily:"'Inter',sans-serif", fontWeight:400, fontSize:"clamp(0.75rem,0.86vw,0.82rem)", color:"rgba(255,255,255,0.58)", margin:0, lineHeight:1.55 }}>{svc.shortDesc}</p>
+          {/* Fixed width, same "curtain" logic as the active layer above: this
+              card's own outer width animates (flex 2.5<->1) whenever ANY card
+              in the strip becomes active/inactive, so text sized at width:100%
+              here would visibly reflow/rewrap in real time during that 0.45s
+              transition. Sizing it to the resting (inactive-share) width
+              instead means it never reflows — the outer card's own
+              overflow:hidden just clips it a little tighter on the rare
+              narrow-viewport case where this runs wider than the available
+              space mid-transition. */}
+          <div style={{ width:"clamp(90px,9vw,200px)", flexShrink:0, alignSelf:"flex-start" }}>
+            <p style={{ fontFamily:"'Inter',sans-serif", fontWeight:300, fontSize:"var(--lp-h3-fs)", color:"rgba(255,255,255,0.92)", margin:"0 0 6px 0", lineHeight:1.2 }}>{svc.name}</p>
+            <p style={{ fontFamily:"'Inter',sans-serif", fontWeight:400, fontSize:"clamp(0.75rem,0.86vw,0.82rem)", color:"rgba(255,255,255,0.58)", margin:0, lineHeight:1.55, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:3, WebkitBoxOrient:"vertical" }}>{svc.shortDesc}</p>
           </div>
         </div>
 
-        {/* Active layer */}
+        {/* Active layer — the text column below has a FIXED width (not flex:1),
+            so it never reflows as the card's own width animates: growing the
+            card just reveals more of it through this layer's overflow:hidden,
+            like a curtain opening, rather than causing it to rewrap. That means
+            the whole layer reveals as one fluid, near-instant motion — no more
+            waiting on the resize — reusing the blur+rise language from
+            RevealText/fadeBlurReveal elsewhere on the site. */}
         <div style={{
           flex: 1,
           minHeight: 0,
@@ -377,51 +325,33 @@ function SvcSlideCard({ svc, isActive, tags, onHover, onClick }: { svc:ServiceIt
           flexDirection: "row",
           gap: "clamp(16px,2vw,24px)",
           opacity: isActive ? 1 : 0,
-          transform: isActive ? "translateY(0)" : "translateY(8px)",
+          transform: isActive ? "translateY(0)" : "translateY(10px)",
+          filter: isActive ? "blur(0px)" : "blur(8px)",
           transition: isActive
-            ? "opacity 0.28s ease 0.1s, transform 0.38s cubic-bezier(0.22,1,0.36,1) 0.1s"
-            : "opacity 0.12s ease, transform 0.12s ease",
+            ? "opacity 0.36s cubic-bezier(0.16,1,0.3,1) 0.04s, transform 0.42s cubic-bezier(0.16,1,0.3,1) 0.04s, filter 0.36s cubic-bezier(0.16,1,0.3,1) 0.04s"
+            : "opacity 0.14s ease, transform 0.14s ease, filter 0.14s ease",
           pointerEvents: isActive ? "auto" : "none",
         }}>
-          {/* Left: text content — extra top/bottom padding to reach full card inset */}
-          <div style={{ flex:1, minWidth:0, minHeight:0, display:"flex", flexDirection:"column", paddingTop:"calc(clamp(22px,2.8vw,30px) - 12px)", paddingBottom:"calc(clamp(22px,2.8vw,30px) - 12px)" }}>
+          {/* Left: text content — fixed width, flexShrink:0, so it always lays
+              out at full size regardless of the card's current animated width */}
+          <div style={{ width:"clamp(220px,20vw,320px)", flexShrink:0, minHeight:0, display:"flex", flexDirection:"column", paddingTop:"calc(clamp(22px,2.8vw,30px) - 12px)", paddingBottom:"calc(clamp(22px,2.8vw,30px) - 12px)" }}>
             <div style={{ color:"rgba(2,10,37,0.45)", marginBottom:"clamp(10px,1.4vh,14px)", flexShrink:0 }}>{svc.icon}</div>
-            <h3 style={{ fontFamily:"'Inter',sans-serif", fontWeight:600, fontSize:"clamp(0.88rem,1.08vw,0.98rem)", color:NAVY, margin:"0 0 clamp(5px,0.7vh,7px) 0", lineHeight:1.3, flexShrink:0 }}>
+            <h3 style={{ fontFamily:"'Inter',sans-serif", fontWeight:500, fontSize:"var(--lp-h3-fs)", color:NAVY, margin:"0 0 clamp(5px,0.7vh,7px) 0", lineHeight:1.3, flexShrink:0 }}>
               {svc.name}
             </h3>
-            <p style={{ fontFamily:"'Inter',sans-serif", fontSize:"clamp(0.78rem,0.92vw,0.85rem)", lineHeight:1.62, color:"rgba(2,10,37,0.62)", margin:0, flex:1, minHeight:0, overflow:"hidden" }}>
-              {svc.tagDescs[activeTag]}
+            <p style={{ fontFamily:"'Inter',sans-serif", fontSize:"var(--lp-card-body-fs)", lineHeight:"var(--lp-card-body-lh)", color:"var(--lp-text-body)", margin:0, flex:1, minHeight:0, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical" }}>
+              {svc.detail}
             </p>
-            {/* Divider + tag toggles */}
-            <div style={{ flexShrink:0 }}>
-              <div style={{ height:"1px", background:"rgba(2,10,37,0.08)", margin:"clamp(10px,1.4vh,16px) 0 clamp(8px,1.1vh,12px)" }} />
-              <div style={{ display:"flex", gap:"clamp(10px,1.4vw,18px)", flexWrap:"wrap", alignItems:"center" }}>
-                {tags.map((tag, i) => (
-                  <button
-                    key={tag}
-                    onClick={e => { e.stopPropagation(); setActiveTag(i); }}
-                    style={{
-                      fontFamily:"'Inter',sans-serif",
-                      fontSize:"clamp(0.72rem,0.88vw,0.8rem)",
-                      fontWeight: i===activeTag ? 700 : 400,
-                      color: i===activeTag ? NAVY : "rgba(2,10,37,0.45)",
-                      background:"none", border:"none", padding:0, cursor:"pointer",
-                      transition:"color 0.2s ease, font-weight 0.2s ease",
-                    }}
-                  >
-                    {i===activeTag ? `›${tag}` : tag}
-                  </button>
-                ))}
-              </div>
-            </div>
           </div>
 
-          {/* Right: video */}
+          {/* Right: video — fills whatever width is left after the fixed-width
+              text column, instead of a fixed square, so it no longer leaves a
+              gap of empty card once the text column stopped growing with it. */}
           <div style={{
-            flexShrink: 0,
+            flex: 1,
+            minWidth: 0,
             alignSelf: "stretch",
-            aspectRatio: "1/1",
-            borderRadius: "14px",
+            borderRadius: "var(--radius)",
             overflow: "hidden",
             background: "rgba(2,10,37,0.06)",
           }}>
@@ -439,35 +369,32 @@ function SvcSlideCard({ svc, isActive, tags, onHover, onClick }: { svc:ServiceIt
 }
 
 // ─── Service card — mobile/tablet (mirrors the desktop expanded card; photo, no video) ──
-function SvcMobileCard({ svc, tags }: { svc:ServiceItem; tags:string[] }) {
-  const [activeTag, setActiveTag] = useState(0);
+function SvcMobileCard({ svc }: { svc:ServiceItem }) {
   return (
     <div className="svc-m-card">
       <div className="svc-m-media">
         <img src={SVC_IMG} alt={svc.name} loading="lazy" />
       </div>
       <div className="svc-m-body">
-        <div className="svc-m-icon">{svc.icon}</div>
         <h3 className="svc-m-name">{svc.name}</h3>
-        <p className="svc-m-desc">{svc.tagDescs[activeTag]}</p>
-        <div className="svc-m-divider" />
-        <div className="svc-m-tags">
-          {tags.map((tag, i) => (
-            <button
-              key={tag}
-              onClick={() => setActiveTag(i)}
-              className={i === activeTag ? "svc-m-tag svc-m-tag--active" : "svc-m-tag"}
-            >
-              {i === activeTag ? `›${tag}` : tag}
-            </button>
-          ))}
-        </div>
+        <p className="svc-m-desc">{svc.detail}</p>
       </div>
     </div>
   );
 }
 
 // ─── Leaflet map ──────────────────────────────────────────────────────────────
+// Pin markup is created ONCE per marker and never swapped via setIcon() again —
+// setIcon() replaces the whole DOM node, which is why the old version's
+// "transition" on the icon HTML never actually animated (a freshly-mounted
+// element has no previous state to transition from). Instead each active/
+// inactive change toggles a class on the SAME persistent node via
+// marker.getElement(), so the CSS transition genuinely runs. The dot sits
+// centered inside a fixed 20x20 anchor box so it can grow/shrink without any
+// of Leaflet's iconAnchor math changing mid-transition (which would otherwise
+// make the pin visibly drift off its true coordinate while resizing).
+const mapPinHtml = (active: boolean) => `<div class="lp-map-pin-wrap"><div class="lp-map-pin${active ? " is-active" : ""}"></div></div>`;
+
 function LeafletMap({ activeIdx }: { activeIdx:number }) {
   const containerRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -475,8 +402,10 @@ function LeafletMap({ activeIdx }: { activeIdx:number }) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const markersRef = useRef<any[]>([]);
   const initializedRef = useRef(false);
-
-  const makePin = (active:boolean) => `<div style="width:${active?20:12}px;height:${active?20:12}px;background:${active?NAVY:"rgba(2,10,37,0.3)"};border:${active?"3px":"2px"} solid #fff;border-radius:50%;box-shadow:0 ${active?"5px 16px rgba(0,0,0,0.38)":"2px 8px rgba(0,0,0,0.18)"};transition:all 0.4s cubic-bezier(0.4,0,0.2,1);"></div>`;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const benidormBoundsRef = useRef<any>(null);
+  const regionRef = useRef<"benidorm"|"valencia">("benidorm");
+  const flyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (initializedRef.current || !containerRef.current) return;
@@ -484,12 +413,40 @@ function LeafletMap({ activeIdx }: { activeIdx:number }) {
     import("leaflet").then(L => {
       if (!alive||!containerRef.current) return;
       const map = L.map(containerRef.current,{ zoomControl:false,dragging:false,doubleClickZoom:false,scrollWheelZoom:false,touchZoom:false,keyboard:false,attributionControl:true });
-      L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",{ attribution:"&copy; <a href='https://carto.com' target='_blank'>CARTO</a>",subdomains:"abcd",maxZoom:20 }).addTo(map);
+      L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",{ attribution:"&copy; <a href='https://carto.com' target='_blank'>CARTO</a>",subdomains:"abcd",maxZoom:20 }).addTo(map);
       PROJECTS_STATIC.forEach((proj,i) => {
-        const icon=L.divIcon({ className:"", html:makePin(i===0), iconSize:[i===0?20:12,i===0?20:12], iconAnchor:[i===0?10:6,i===0?10:6] });
-        markersRef.current.push(L.marker([proj.pin.lat,proj.pin.lng],{ icon,interactive:false }).addTo(map));
+        // Initial active/inactive state is baked straight into the icon HTML
+        // (rather than set via getElement() right after addTo()) — Leaflet
+        // hasn't necessarily finished attaching the icon to the DOM in the
+        // same tick, so a classList write here could silently no-op. Same
+        // reasoning for zIndexOffset below: several Benidorm-area pins sit
+        // only a few pixels apart at this zoom, so the active one needs to
+        // be guaranteed on top from the very first paint.
+        const icon = L.divIcon({ className:"", html:mapPinHtml(i===0), iconSize:[20,20], iconAnchor:[10,10] });
+        const marker = L.marker([proj.pin.lat,proj.pin.lng],{ icon, interactive:false, zIndexOffset: i===0 ? 1000 : 0 }).addTo(map);
+        markersRef.current.push(marker);
       });
-      map.setView([PROJECTS_STATIC[0].pin.lat,PROJECTS_STATIC[0].pin.lng],13);
+      // Two fixed views: a close-up on the Benidorm/Finestrat cluster (every
+      // project but one) and a close-up on the lone Valencia project. The
+      // camera only ever moves between these two, and only when the active
+      // project actually crosses from one into the other — see the
+      // activeIdx effect below. fitBounds() reads the container's current
+      // pixel size to pick its zoom, which silently breaks if that size is
+      // still 0 at this exact tick (e.g. layout not settled yet) — retry on
+      // the next frame instead of risking that.
+      const benidormBounds = L.latLngBounds(
+        PROJECTS_STATIC.filter(p => p.location !== "Valencia").map(p => [p.pin.lat, p.pin.lng] as [number, number])
+      );
+      benidormBoundsRef.current = benidormBounds;
+      const settle = () => {
+        if (!alive || !containerRef.current) return;
+        if (containerRef.current.offsetWidth === 0 || containerRef.current.offsetHeight === 0) {
+          requestAnimationFrame(settle);
+          return;
+        }
+        map.fitBounds(benidormBounds, { padding: [60, 60], animate: false });
+      };
+      settle();
       mapRef.current=map;
     });
     return ()=>{ alive=false; if(mapRef.current){mapRef.current.remove();mapRef.current=null;} markersRef.current=[]; initializedRef.current=false; };
@@ -497,16 +454,45 @@ function LeafletMap({ activeIdx }: { activeIdx:number }) {
   },[]);
 
   useEffect(() => {
-    if (!mapRef.current) return;
-    import("leaflet").then(L => {
-      markersRef.current.forEach((m,i)=>{ const active=i===activeIdx; m.setIcon(L.divIcon({ className:"",html:makePin(active),iconSize:[active?20:12,active?20:12],iconAnchor:[active?10:6,active?10:6] })); });
-      const {lat,lng}=PROJECTS_STATIC[activeIdx].pin;
-      mapRef.current.flyTo([lat,lng],13,{ animate:true,duration:0.9 });
+    const map = mapRef.current;
+    if (!map) return;
+    // The highlighted pin (and its z-index) always follows the active
+    // project — that part is instant, never debounced.
+    markersRef.current.forEach((m,i)=>{
+      const isActive = i===activeIdx;
+      m.getElement()?.querySelector(".lp-map-pin")?.classList.toggle("is-active", isActive);
+      m.setZIndexOffset(isActive ? 1000 : 0);
     });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    if (flyTimerRef.current) clearTimeout(flyTimerRef.current);
+    const newRegion = PROJECTS_STATIC[activeIdx].location === "Valencia" ? "valencia" : "benidorm";
+    // Staying within the same cluster (the common case — most scroll steps
+    // move between two Benidorm-area projects) leaves the camera exactly
+    // where it is, matching every other project switch.
+    if (newRegion === regionRef.current) return;
+    // Debounced so scrolling quickly back and forth across the Benidorm/
+    // Valencia boundary settles on one flight instead of stacking several.
+    flyTimerRef.current = setTimeout(() => {
+      // Guards against React re-invoking this effect for the same commit
+      // (dev-only, but cheap to guard regardless) — without it, two flyTo
+      // calls fired back to back can fight each other and net zero movement.
+      if (regionRef.current === newRegion) return;
+      regionRef.current = newRegion;
+      if (newRegion === "valencia") {
+        const { lat, lng } = PROJECTS_STATIC[activeIdx].pin;
+        const distMeters = map.distance(map.getCenter(), { lat, lng });
+        const duration = Math.min(2.3, Math.max(1, 0.75 + distMeters / 85000));
+        map.flyTo([lat, lng], 13, { animate: true, duration, easeLinearity: 0.15 });
+      } else if (benidormBoundsRef.current) {
+        const distMeters = map.distance(map.getCenter(), benidormBoundsRef.current.getCenter());
+        const duration = Math.min(2.3, Math.max(1, 0.75 + distMeters / 85000));
+        map.flyToBounds(benidormBoundsRef.current, { padding: [60, 60], animate: true, duration });
+      }
+    }, 150);
+    return () => { if (flyTimerRef.current) clearTimeout(flyTimerRef.current); };
   },[activeIdx]);
 
-  return <div ref={containerRef} style={{ width:"100%", height:"100%" }} />;
+  return <div ref={containerRef} className="lp-map-dark" style={{ width:"100%", height:"100%" }} />;
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -574,11 +560,10 @@ export default function LevelProPage() {
     name: t.services.items[i].name,
     detail: t.services.items[i].detail,
     shortDesc: t.services.items[i].shortDesc,
-    tagDescs: t.services.items[i].tagDescs,
     bullets: t.services.items[i].bullets,
   }));
 
-  const [pastHero, setPastHero] = useState(false);
+  const [logoFloating, setLogoFloating] = useState(true);
   const [activeProject, setActiveProject] = useState(0);
   const [displayProject, setDisplayProject] = useState(0);
   const [sidebarVisible, setSidebarVisible] = useState(true);
@@ -669,11 +654,12 @@ export default function LevelProPage() {
     const vhNow = window.innerHeight;
     const rawProgress = Math.max(0, Math.min(1, (vhNow - rect.top) / vhNow));
 
-    // The glass cards' wrapper (.hero-cards) must stay untransformed — putting a
-    // transform or will-change on an ancestor of the glass makes it a "backdrop
-    // root", which silently kills the backdrop-filter blur (it stops sampling the
-    // real video behind it). The title/CTA block and location bar have no
-    // backdrop-filter descendants, so they're free to translate on scroll-out.
+    // Logo re-enters the navbar only once the navy sub-hero band (this same
+    // `about` element) has fully scrolled past — reusing this rect avoids a
+    // second layout read on top of the exit-parallax math below.
+    const logoShouldFloat = rect.bottom > 0;
+    setLogoFloating(f => (f === logoShouldFloat ? f : logoShouldFloat));
+
     let overlayOpacity = 0, videoBrightness = 1, exitOpacity = 1, contentTranslate = 0;
     if (window.scrollY > 0) {
       const ap = rawProgress <= DEADZONE ? 0 : (rawProgress - DEADZONE) / (1 - DEADZONE);
@@ -689,7 +675,8 @@ export default function LevelProPage() {
       heroLocTabsRef.current.style.opacity = String(exitOpacity);
       heroLocTabsRef.current.style.transform = contentTranslate ? `translateY(${(contentTranslate * 0.4).toFixed(1)}px)` : "";
     }
-    if (heroLeftRef.current) heroLeftRef.current.style.transform = contentTranslate ? `translateY(${contentTranslate.toFixed(1)}px)` : "";
+    const cardTranslate = contentTranslate ? `translateY(${contentTranslate.toFixed(1)}px)` : "";
+    if (heroLeftRef.current) heroLeftRef.current.style.transform = cardTranslate;
   }, []);
 
   useEffect(() => {
@@ -699,16 +686,12 @@ export default function LevelProPage() {
     const raf = (time: number) => {
       lenis.raf(time);
       computeAnim();
-      const nowPast = window.scrollY > window.innerHeight * 0.75;
-      setPastHero(p => p === nowPast ? p : nowPast);
       id = requestAnimationFrame(raf);
     };
     computeAnim();
     id = requestAnimationFrame(raf);
     const onResize = () => {
       computeAnim();
-      const nowPast = window.scrollY > window.innerHeight * 0.75;
-      setPastHero(p => p === nowPast ? p : nowPast);
     };
     window.addEventListener("resize", onResize, { passive: true });
     return () => {
@@ -741,6 +724,7 @@ export default function LevelProPage() {
     if (!slider) return;
     const onScroll = () => {
       const cardWidth = slider.scrollWidth / PROJECTS_STATIC.length;
+      if (!cardWidth) return; // slider is display:none (desktop) — nothing to compute yet
       setActiveProject(Math.min(PROJECTS_STATIC.length - 1, Math.max(0, Math.round(slider.scrollLeft / cardWidth))));
     };
     slider.addEventListener("scroll", onScroll, { passive: true });
@@ -762,7 +746,7 @@ export default function LevelProPage() {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html:`
-        @import url('https://fonts.googleapis.com/css2?family=Titillium+Web:ital,wght@0,200;0,300;0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&display=swap');
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
         html{scroll-behavior:auto;touch-action:manipulation;}
         html.lenis,html.lenis body{height:auto;}
@@ -777,64 +761,62 @@ export default function LevelProPage() {
         @keyframes fadeBlurReveal{0%{opacity:0;filter:blur(10px);transform:translateY(12px);}100%{opacity:1;filter:blur(0);transform:translateY(0);}}
         @keyframes kenBurns{0%{transform:scale(1);}100%{transform:scale(1.07);}}
         @keyframes preloaderFadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
-        @keyframes heroModalIn{from{opacity:0;}to{opacity:1;}}
         @keyframes svcFadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
         /* ── Hero content ── */
         .hero-content{padding:clamp(94px,14vh,150px) clamp(24px,5vw,72px) clamp(104px,16vh,166px);}
-        .hero-title{font-family:'Titillium Web',sans-serif;font-weight:200;font-size:clamp(3rem,7.4vw,7rem);line-height:0.96;color:#ffffff;margin:0;letter-spacing:-0.03em;}
+        .hero-title{font-family:'Inter',sans-serif;font-weight:200;font-size:clamp(3rem,7.4vw,7rem);line-height:0.96;color:#ffffff;margin:0;letter-spacing:-0.03em;}
         .hero-main-row{display:flex;align-items:flex-end;justify-content:space-between;gap:clamp(28px,4.5vw,64px);}
         .hero-left{flex:1 1 auto;min-width:0;}
-        .hero-cards{flex:0 0 auto;width:min(35vw,400px);display:flex;flex-direction:column;gap:clamp(14px,1.5vw,18px);}
-        /* Frosted GREY glass over the hero video — translucent neutral fill + real
-           backdrop blur + a thin fine border. No navy fill, no shadow. */
-        .hero-glass{background:rgba(38,38,41,0.56);backdrop-filter:blur(22px) saturate(115%);-webkit-backdrop-filter:blur(22px) saturate(115%);border:1px solid rgba(255,255,255,0.12);border-radius:18px;}
         /* ── Hero CTAs — static grey-glass buttons (no animation, no shadow) ── */
         .hero-cta-row{display:flex;flex-wrap:wrap;gap:clamp(10px,1.1vw,14px);margin-top:clamp(24px,3.4vh,40px);}
-        .hero-btn{font-family:'Inter',sans-serif;font-size:clamp(0.82rem,0.98vw,0.94rem);font-weight:500;letter-spacing:0.01em;border-radius:10px;padding:clamp(14px,1.2vw,18px) clamp(26px,2.3vw,38px);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;white-space:nowrap;color:#ffffff;background:rgba(44,44,46,0.42);border:1px solid rgba(255,255,255,0.18);backdrop-filter:blur(16px) saturate(118%);-webkit-backdrop-filter:blur(16px) saturate(118%);}
+        .hero-btn{font-family:'Inter',sans-serif;font-size:clamp(0.82rem,0.98vw,0.94rem);font-weight:500;letter-spacing:0.01em;border-radius:var(--radius);padding:clamp(14px,1.2vw,18px) clamp(26px,2.3vw,38px);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;white-space:nowrap;color:#ffffff;background:rgba(44,44,46,0.42);backdrop-filter:blur(16px) saturate(118%);-webkit-backdrop-filter:blur(16px) saturate(118%);}
         .hero-btn:hover{background:rgba(62,62,66,0.5);}
-        /* ── Hero video card ── */
-        .hero-vcard-btn{aspect-ratio:16/9;}
         /* ── Location switcher ── */
         .hero-loc{display:flex;gap:clamp(18px,3vw,48px);padding:0 clamp(24px,5vw,72px) clamp(22px,3.2vh,34px);}
-        .hero-loc-item{flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:clamp(9px,1.1vh,13px);background:none;border:none;padding:0;cursor:pointer;text-align:left;}
+        .hero-loc-item{flex:1 1 0;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:clamp(9px,1.1vh,13px);background:none;border:none;padding:6px 0;cursor:pointer;text-align:left;min-height:44px;}
         .hero-loc-trackwrap{position:relative;width:100%;height:2px;border-radius:2px;}
         .hero-loc-track{position:absolute;inset:0;background:#ffffff;opacity:0.16;border-radius:2px;}
         .hero-loc-fill{position:absolute;left:0;top:0;bottom:0;width:0;background:#ffffff;opacity:0.95;border-radius:2px;}
-        .hero-loc-name{font-family:'Titillium Web',sans-serif;font-weight:300;font-size:clamp(0.9rem,1.25vw,1.15rem);letter-spacing:0.01em;color:#ffffff;}
+        .hero-loc-name{font-family:'Inter',sans-serif;font-weight:300;font-size:clamp(0.9rem,1.25vw,1.15rem);letter-spacing:0.01em;color:#ffffff;}
         @media(max-width:900px){
           .hero-content{padding:clamp(82px,12vh,110px) clamp(24px,5vw,72px) clamp(96px,13vh,120px);justify-content:center!important;}
           .hero-main-row{flex-direction:column;align-items:stretch;gap:clamp(18px,3.5vw,26px);}
           .hero-title{font-size:clamp(2.5rem,9vw,3.4rem);}
-          .hero-cards{width:100%;flex-direction:row;}
-          .hero-cards>*{flex:1 1 0;min-width:0;}
         }
         @media(max-width:600px){
-          .hero-cards{flex-direction:column;}
-          .hero-cards>*{flex:none;}
           .hero-loc{gap:clamp(10px,3vw,18px);}
           .hero-loc-name{font-size:clamp(0.72rem,3.3vw,0.92rem);}
         }
+        /* Laptop band (1024-1600px) for the "who we are" teaser line under the hero:
+           its max-width is normally clamp(320px,72vw,900px), which sits near its
+           900px ceiling through this whole range — at laptop widths that's a long
+           enough line, at 1.12 leading, to read as both too-wide and cramped.
+           Narrower cap + looser leading here keep the measure readable. Font-size is
+           also capped lower than its native 3rem ceiling: the fixed-height (31vh)
+           container above has no slack for both a taller line-height AND the full
+           3rem size at once without the text pushing into the Services section below
+           (verified empirically — 1.2 leading at the native size overlaps the next
+           section by up to ~80px near 1600px). All three values were tuned together
+           so the block clears the next section at every width in this band. Mobile/
+           tablet (still on the vw-scaled clamp + original 1.12/3rem) and real
+           desktops (back to the 900px/3rem ceiling above 1600px) are unaffected. */
+        @media(min-width:1024px) and (max-width:1600px){
+          .hero-about-content p:last-child{max-width:720px!important;line-height:1.2!important;font-size:clamp(1.5rem,2.4vw,2.4rem)!important;}
+        }
         .stat-block{flex:1;min-width:0;padding:clamp(32px,4.5vw,60px) clamp(20px,3vw,48px);border-left:1px solid rgba(2,10,37,0.08);position:relative;}
         .stat-block:first-child{border-left:none;padding-left:0;}
-        .stat-val{font-family:'Titillium Web',sans-serif;font-weight:200;font-size:clamp(3rem,6vw,5.5rem);color:${NAVY};letter-spacing:-0.03em;line-height:1;margin:0 0 clamp(8px,1.2vh,14px) 0;}
-        .stat-label{font-family:'Inter',sans-serif;font-size:clamp(0.74rem,0.85vw,0.8rem);color:rgba(2,10,37,0.52);letter-spacing:0.01em;line-height:1.5;}
-        .stat-rule{position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(to right,${ACCENT},transparent);opacity:0;transition:opacity 0.5s ease;}
+        .stat-val{font-family:'Inter',sans-serif;font-weight:200;font-size:clamp(3rem,6vw,5.5rem);color:${NAVY};letter-spacing:-0.03em;line-height:1;margin:0 0 clamp(8px,1.2vh,14px) 0;}
+        .stat-label{font-family:'Inter',sans-serif;font-size:clamp(0.74rem,0.85vw,0.8rem);color:var(--lp-text-meta);letter-spacing:0.01em;line-height:1.5;}
+        .stat-rule{position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(to right,${NAVY},transparent);opacity:0;transition:opacity 0.5s ease;}
         .stat-block:hover .stat-rule{opacity:1;}
         .mat-grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(12px,1.5vw,20px);margin-top:clamp(40px,5.5vh,64px);}
-        .mat-card{background:#f0eeeb;border-radius:12px;padding:clamp(24px,3vw,40px);min-height:clamp(220px,28vh,300px);display:flex;flex-direction:column;justify-content:space-between;transition:background 0.35s ease;}
+        .mat-card{background:#f0eeeb;border-radius:var(--radius);padding:clamp(24px,3vw,40px);min-height:clamp(220px,28vh,300px);display:flex;flex-direction:column;justify-content:space-between;transition:background 0.35s ease;}
         .mat-card:hover{background:#e8e6e2;}
-        .mat-icon-wrap{width:40px;height:40px;border-radius:8px;background:rgba(2,10,37,0.07);display:flex;align-items:center;justify-content:center;color:rgba(2,10,37,0.5);}
-        .mat-card-title{font-family:'Titillium Web',sans-serif;font-weight:400;font-size:clamp(1rem,1.3vw,1.2rem);color:${NAVY};margin:0 0 clamp(8px,1.2vh,12px) 0;line-height:1.3;}
-        .mat-card-desc{font-family:'Inter',sans-serif;font-size:clamp(0.8rem,0.92vw,0.88rem);line-height:1.62;color:rgba(2,10,37,0.6);margin:0;}
+        .mat-icon-wrap{width:40px;height:40px;border-radius:var(--radius);background:rgba(2,10,37,0.07);display:flex;align-items:center;justify-content:center;color:rgba(2,10,37,0.5);}
+        .mat-card-title{font-family:'Inter',sans-serif;font-weight:400;font-size:var(--lp-h3-fs);color:${NAVY};margin:0 0 clamp(8px,1.2vh,12px) 0;line-height:1.3;}
+        .mat-card-desc{font-family:'Inter',sans-serif;font-size:var(--lp-card-body-fs);line-height:var(--lp-card-body-lh);color:var(--lp-text-body);margin:0;}
         /* Projects */
-        .proj-maps-btn:hover{background:${NAVY}!important;border-color:${NAVY}!important;color:#ffffff!important;}
-        .btn-fill{position:relative!important;overflow:hidden!important;z-index:1;transition:color 0.4s ease!important;}
-        .btn-fill::before{content:''!important;position:absolute!important;bottom:0!important;left:0!important;width:100%!important;height:0!important;background-color:${NAVY}!important;z-index:-1!important;clip-path:polygon(0 45%,100% 0,100% 100%,0 100%);transition:height 0.4s cubic-bezier(0.65,0.05,0.36,1) 0.1s,clip-path 0.3s ease!important;}
-        .btn-fill:hover{color:#ffffff!important;}
-        .btn-fill:hover::before{height:100%!important;clip-path:polygon(0 0,100% 0,100% 100%,0 100%);transition:height 0.45s cubic-bezier(0.65,0.05,0.36,1),clip-path 0.25s ease-out 0.2s!important;}
-        .btn-fill-icon{display:inline-flex!important;align-items:center!important;margin-left:8px!important;transition:transform 0.3s ease!important;}
-        .btn-fill:hover .btn-fill-icon{transform:translate(3px,-3px)!important;}
-        .footer-cta-btn{font-family:'Inter',sans-serif;font-size:clamp(0.65rem,0.82vw,0.74rem);font-weight:500;letter-spacing:0.08em;color:${NAVY};background:#ffffff;border:1px solid rgba(2,10,37,0.12);border-radius:3px;padding:12px 28px;cursor:pointer;}
+        .footer-cta-btn{font-family:'Inter',sans-serif;font-size:clamp(0.65rem,0.82vw,0.74rem);font-weight:500;letter-spacing:0.08em;color:${NAVY};background:#ffffff;border:1px solid rgba(2,10,37,0.12);border-radius:var(--radius);padding:12px 28px;cursor:pointer;}
         @media(max-width:640px){
           .stat-block{padding:clamp(20px,5vw,32px) 0!important;border-left:none!important;border-top:1px solid rgba(2,10,37,0.08)!important;}
           .stat-block:first-child{border-top:none!important;padding-top:0!important;}
@@ -845,17 +827,12 @@ export default function LevelProPage() {
         .svc-strip{display:flex;}
         .svc-stack{display:none;}
         .svc-controls{display:flex;}
-        .svc-m-card{background:#ffffff;border:1px solid rgba(2,10,37,0.08);border-radius:18px;overflow:hidden;box-shadow:0 6px 30px rgba(2,10,37,0.08);display:flex;flex-direction:column;}
+        .svc-m-card{background:#ffffff;border:1px solid rgba(2,10,37,0.08);border-radius:var(--radius);overflow:hidden;box-shadow:0 6px 30px rgba(2,10,37,0.08);display:flex;flex-direction:column;}
         .svc-m-media{width:100%;height:clamp(190px,52vw,260px);background:rgba(2,10,37,0.06);overflow:hidden;flex-shrink:0;}
         .svc-m-media img{width:100%;height:100%;object-fit:cover;display:block;}
         .svc-m-body{padding:clamp(22px,5.5vw,30px);display:flex;flex-direction:column;}
-        .svc-m-icon{color:rgba(2,10,37,0.45);margin-bottom:clamp(12px,3vw,16px);}
-        .svc-m-name{font-family:'Inter',sans-serif;font-weight:600;font-size:clamp(1.05rem,4vw,1.2rem);color:${NAVY};margin:0 0 clamp(8px,2vw,11px) 0;line-height:1.3;}
-        .svc-m-desc{font-family:'Inter',sans-serif;font-weight:400;font-size:clamp(0.86rem,3.4vw,0.94rem);line-height:1.6;color:rgba(2,10,37,0.62);margin:0;}
-        .svc-m-divider{height:1px;background:rgba(2,10,37,0.1);margin:clamp(16px,3.8vw,20px) 0 clamp(12px,2.6vw,15px);}
-        .svc-m-tags{display:flex;gap:clamp(14px,3.6vw,20px);flex-wrap:wrap;align-items:center;}
-        .svc-m-tag{font-family:'Inter',sans-serif;font-size:clamp(0.8rem,3.2vw,0.88rem);font-weight:400;color:rgba(2,10,37,0.45);background:none;border:none;padding:0;cursor:pointer;transition:color 0.2s ease;}
-        .svc-m-tag--active{font-weight:700;color:${NAVY};}
+        .svc-m-name{font-family:'Inter',sans-serif;font-weight:500;font-size:var(--lp-h3-fs);color:${NAVY};margin:0 0 clamp(8px,2vw,11px) 0;line-height:1.3;}
+        .svc-m-desc{font-family:'Inter',sans-serif;font-weight:400;font-size:var(--lp-card-body-fs);line-height:var(--lp-card-body-lh);color:var(--lp-text-body);margin:0;}
         @media(max-width:900px){
           .svc-strip{display:none!important;}
           .svc-controls{display:none!important;}
@@ -867,6 +844,17 @@ export default function LevelProPage() {
           .svc-m-media{width:42%;height:auto;align-self:stretch;}
           .svc-m-body{width:58%;justify-content:center;}
         }
+        /* Map pin — a fixed 20x20 anchor box keeps Leaflet's iconAnchor math
+           stable while the inner dot grows/shrinks on activation, so the
+           transition never drifts off its true coordinate mid-animation. */
+        .lp-map-pin-wrap{width:20px;height:20px;display:flex;align-items:center;justify-content:center;}
+        .lp-map-pin{width:12px;height:12px;border-radius:50%;background:rgba(255,255,255,0.2);border:1.5px solid rgba(255,255,255,0.5);transition:width 0.4s cubic-bezier(0.4,0,0.2,1),height 0.4s cubic-bezier(0.4,0,0.2,1),background 0.4s cubic-bezier(0.4,0,0.2,1),border-width 0.4s cubic-bezier(0.4,0,0.2,1),border-color 0.4s cubic-bezier(0.4,0,0.2,1),box-shadow 0.4s cubic-bezier(0.4,0,0.2,1);}
+        .lp-map-pin.is-active{width:20px;height:20px;background:#ffffff;border-width:3px;border-color:#ffffff;box-shadow:0 0 0 5px rgba(255,255,255,0.25),0 2px 10px rgba(0,0,0,0.5);}
+        /* Leaflet's own container background defaults to a light gray (#ddd),
+           which shows through as an ugly white flash whenever a tile hasn't
+           loaded yet. Override to the section's own dark tone so any gap
+           blends in instead of flashing. */
+        .lp-map-dark.leaflet-container{background:${SECTION_BG};}
         .projects-desktop{display:block;}
         .projects-mobile{display:none;}
         .proj-mobile-slider{-webkit-overflow-scrolling:touch;overscroll-behavior:none;}
@@ -881,7 +869,7 @@ export default function LevelProPage() {
         <Preloader key={preloaderKey} onComplete={handlePreloaderComplete} onCovered={handlePreloaderCovered} fast={isFastLoader} />
       )}
 
-      <NavBar pastHero={pastHero} locale={locale} onLocaleChange={handleLocaleChange} />
+      <NavBar locale={locale} onLocaleChange={handleLocaleChange} logoFloating={logoFloating} />
 
       {/* ── Hero ── */}
       <div style={{ position:"relative", height:"145vh", backgroundColor:NAVY }}>
@@ -912,20 +900,14 @@ export default function LevelProPage() {
                 <div>
                   <h1 className="hero-title">
                     {t.hero.titleLine1}<br />
-                    {t.hero.titleLine2}<br />
-                    {t.hero.titleLine3}
+                    {t.hero.titleLine2}
+                    {t.hero.titleLine3 && <><br />{t.hero.titleLine3}</>}
                   </h1>
                 </div>
                 <div className="hero-cta-row">
                   <Link href="/projects" className="hero-btn">{t.hero.ctaSecondary}</Link>
                   <Link href="/contact" className="hero-btn">{t.hero.ctaPrimary}</Link>
                 </div>
-              </div>
-
-              {/* Right — stacked glass mini-cards (move below the title on mobile) */}
-              <div className="hero-cards">
-                <HeroProjectsCard items={projects} label={t.projects.label} reduced={prefersReducedMotion} />
-                <HeroVideoCard src={VIDEO_SRC} label={t.hero.watchLabel} desc={t.hero.watchDesc} reduced={prefersReducedMotion} />
               </div>
             </div>
           </div>
@@ -954,9 +936,9 @@ export default function LevelProPage() {
         </section>
         <div ref={aboutRef} style={{ position:"absolute", top:"100vh", left:0, right:0, height:"45vh", zIndex:2 }}>
           <div style={{ height:"14vh", background:`linear-gradient(to bottom,transparent,${NAVY})`, pointerEvents:"none" }} />
-          <div style={{ height:"31vh", backgroundColor:NAVY, display:"flex", flexDirection:"column", justifyContent:"flex-start", padding:"clamp(24px,3.5vh,40px) clamp(24px,5vw,72px) clamp(20px,3vh,36px)" }}>
+          <div className="hero-about-content" style={{ height:"31vh", backgroundColor:NAVY, display:"flex", flexDirection:"column", justifyContent:"flex-start", padding:"clamp(24px,3.5vh,40px) clamp(24px,5vw,72px) clamp(20px,3vh,36px)" }}>
             <RevealText text={t.about.label} style={{ fontFamily:"'Inter',sans-serif", fontWeight:400, fontSize:"clamp(0.6rem,0.8vw,0.7rem)", letterSpacing:"0.2em", textTransform:"uppercase", color:"rgba(255,255,255,0.35)", margin:"0 0 clamp(16px,2.5vh,28px) 0" }} />
-            <RevealText text={t.about.body} delayOffset={3} style={{ fontFamily:"'Titillium Web',sans-serif", fontWeight:200, fontSize:"clamp(1.5rem,3.2vw,3rem)", lineHeight:1.12, color:"rgba(255,255,255,0.9)", margin:0, maxWidth:"clamp(320px,72vw,900px)", letterSpacing:"-0.02em" }} />
+            <RevealText text={t.about.body} delayOffset={3} style={{ fontFamily:"'Inter',sans-serif", fontWeight:200, fontSize:"clamp(1.5rem,3.2vw,3rem)", lineHeight:1.12, color:"rgba(255,255,255,0.9)", margin:0, maxWidth:"clamp(320px,72vw,900px)", letterSpacing:"-0.02em" }} />
           </div>
         </div>
       </div>
@@ -965,8 +947,8 @@ export default function LevelProPage() {
       <section style={{ background:"#ffffff", padding:"clamp(56px,7vh,80px) clamp(24px,5vw,72px)", borderTop:"1px solid rgba(2,10,37,0.05)" }}>
         {/* Heading */}
         <div style={{ marginBottom:"clamp(24px,3.2vh,38px)" }}>
-          <p style={{ fontFamily:"'Inter',sans-serif", fontWeight:600, fontSize:"var(--lp-label-fs)", letterSpacing:"var(--lp-label-ls)", textTransform:"uppercase", color:"rgba(2,10,37,0.46)", margin:"0 0 clamp(12px,1.8vh,18px) 0" }}>{t.services.label}</p>
-          <h2 style={{ fontFamily:"'Titillium Web',sans-serif", fontWeight:300, fontSize:"var(--lp-title-fs)", lineHeight:0.95, color:NAVY, margin:0, letterSpacing:"var(--lp-title-ls)" }}>
+          <p style={{ fontFamily:"'Inter',sans-serif", fontWeight:600, fontSize:"var(--lp-label-fs)", letterSpacing:"var(--lp-label-ls)", textTransform:"uppercase", color:"var(--lp-text-meta)", margin:"0 0 clamp(12px,1.8vh,18px) 0" }}>{t.services.label}</p>
+          <h2 style={{ fontFamily:"'Inter',sans-serif", fontWeight:300, fontSize:"var(--lp-title-fs)", lineHeight:0.95, color:NAVY, margin:0, letterSpacing:"var(--lp-title-ls)" }}>
             {t.services.headingLine1}<br />{t.services.headingLine2}
           </h2>
         </div>
@@ -978,7 +960,6 @@ export default function LevelProPage() {
               key={svc.name}
               svc={svc}
               isActive={i===activeSvc}
-              tags={t.services.tags}
               onHover={() => setActiveSvc(i)}
               onClick={() => setActiveSvc(i)}
             />
@@ -988,7 +969,7 @@ export default function LevelProPage() {
         {/* Card stack — mobile / tablet: desktop-style cards, one below another, photo not video */}
         <div className="svc-stack">
           {services.map((svc) => (
-            <SvcMobileCard key={svc.name} svc={svc} tags={t.services.tags} />
+            <SvcMobileCard key={svc.name} svc={svc} />
           ))}
         </div>
 
@@ -1004,7 +985,7 @@ export default function LevelProPage() {
               const disabled = dir==="prev" ? activeSvc===0 : activeSvc===services.length-1;
               return (
                 <button key={dir} onClick={() => setActiveSvc(p => dir==="prev" ? Math.max(0,p-1) : Math.min(services.length-1,p+1))} disabled={disabled}
-                  style={{ width:"46px", height:"46px", display:"flex", alignItems:"center", justifyContent:"center", background:disabled?"transparent":"rgba(2,10,37,0.06)", border:`1.5px solid ${disabled?"rgba(2,10,37,0.1)":"rgba(2,10,37,0.22)"}`, borderRadius:"50%", cursor:disabled?"default":"pointer", color:disabled?"rgba(2,10,37,0.2)":NAVY, flexShrink:0, opacity:disabled?0.35:1 }}>
+                  style={{ width:"46px", height:"46px", display:"flex", alignItems:"center", justifyContent:"center", background:disabled?"transparent":"rgba(2,10,37,0.06)", border:`1.5px solid ${disabled?"rgba(2,10,37,0.1)":"rgba(2,10,37,0.22)"}`, borderRadius:"var(--radius)", cursor:disabled?"default":"pointer", color:disabled?"rgba(2,10,37,0.2)":NAVY, flexShrink:0, opacity:disabled?0.35:1 }}>
                   <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
                     {dir==="prev"
                       ? <path d="M8.5 2L4 6.5l4.5 4.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
@@ -1017,21 +998,45 @@ export default function LevelProPage() {
         </div>
       </section>
 
+      {/* ── Services CTA — a compact coda to Services, not a new section: same
+          white background as the block above with no border between them
+          (so it reads as a continuation), just an inner rule marking it off
+          before the button. The border-top on Stats below is what actually
+          separates this from what comes next. ── */}
+      <section style={{ background:"#ffffff", padding:"0 clamp(24px,5vw,72px) clamp(40px,5.5vh,64px)" }}>
+        <div style={{
+          display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:"clamp(20px,3vw,32px)",
+          borderTop:"1px solid rgba(2,10,37,0.08)", paddingTop:"clamp(28px,4vh,40px)",
+        }}>
+          <div style={{ maxWidth:"560px" }}>
+            <h3 style={{ fontFamily:"'Inter',sans-serif", fontWeight:300, fontSize:"clamp(1.3rem,2vw,1.7rem)", lineHeight:1.25, color:NAVY, margin:"0 0 8px 0", letterSpacing:"-0.01em" }}>
+              {t.servicesCta.heading}
+            </h3>
+            <p style={{ fontFamily:"'Inter',sans-serif", fontWeight:400, fontSize:"var(--lp-body-fs)", lineHeight:"var(--lp-body-lh)", color:"var(--lp-text-body)", margin:0 }}>
+              {t.servicesCta.body}
+            </p>
+          </div>
+          <Link href="/contact" className="btn-fill" style={{ fontFamily:"'Inter',sans-serif", fontSize:"clamp(0.65rem,0.82vw,0.74rem)", fontWeight:500, letterSpacing:"0.08em", textTransform:"uppercase", color:"#ffffff", background:NAVY, border:`1px solid ${NAVY}`, borderRadius:"var(--radius)", padding:"14px 28px", cursor:"pointer", display:"inline-flex", alignItems:"center", gap:"8px", flexShrink:0, textDecoration:"none" }}>
+            {t.servicesCta.btn} <span className="btn-fill-icon">→</span>
+          </Link>
+        </div>
+      </section>
+
       {/* ── Stats ── */}
       <section style={{ backgroundColor:"#ffffff", padding:"clamp(56px,7vh,80px) clamp(24px,5vw,72px)", borderTop:"1px solid rgba(2,10,37,0.05)" }}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:"clamp(24px,4vw,48px)", flexWrap:"wrap", marginBottom:"clamp(40px,6vh,72px)" }}>
           <div style={{ flex:"0 0 auto" }}>
-            <p style={{ fontFamily:"'Inter',sans-serif", fontWeight:600, fontSize:"var(--lp-label-fs)", letterSpacing:"var(--lp-label-ls)", textTransform:"uppercase", color:"rgba(2,10,37,0.46)", margin:"0 0 clamp(12px,1.8vh,18px) 0" }}>{t.stats.label}</p>
-            <RevealText as="h2" text={t.stats.heading} style={{ fontFamily:"'Titillium Web',sans-serif", fontWeight:300, fontSize:"var(--lp-title-fs)", lineHeight:1.08, color:NAVY, letterSpacing:"var(--lp-title-ls)", maxWidth:"clamp(300px,48vw,600px)", margin:0 }} />
+            <p style={{ fontFamily:"'Inter',sans-serif", fontWeight:600, fontSize:"var(--lp-label-fs)", letterSpacing:"var(--lp-label-ls)", textTransform:"uppercase", color:"var(--lp-text-meta)", margin:"0 0 clamp(12px,1.8vh,18px) 0" }}>{t.stats.label}</p>
+            <RevealText as="h2" text={t.stats.heading} style={{ fontFamily:"'Inter',sans-serif", fontWeight:300, fontSize:"var(--lp-title-fs)", lineHeight:1.08, color:NAVY, letterSpacing:"var(--lp-title-ls)", maxWidth:"clamp(300px,48vw,600px)", margin:0 }} />
           </div>
           <div style={{ display:"flex", flexDirection:"column", justifyContent:"flex-end", gap:"clamp(10px,1.5vh,16px)", alignSelf:"flex-end" }}>
-            <button className="btn-fill" style={{ fontFamily:"'Inter',sans-serif", fontSize:"clamp(0.62rem,0.78vw,0.7rem)", fontWeight:500, letterSpacing:"0.06em", color:NAVY, background:"transparent", border:`1px solid ${NAVY}`, borderRadius:"3px", padding:"11px 24px", cursor:"pointer", display:"flex", alignItems:"center", gap:"8px" }}>
+            <Link href="/equipment" className="btn-fill" style={{ fontFamily:"'Inter',sans-serif", fontSize:"clamp(0.62rem,0.78vw,0.7rem)", fontWeight:500, letterSpacing:"0.06em", color:NAVY, background:"transparent", border:`1px solid ${NAVY}`, borderRadius:"var(--radius)", padding:"11px 24px", cursor:"pointer", display:"flex", alignItems:"center", gap:"8px", width:"fit-content" }}>
               {t.stats.equipmentBtn} <span className="btn-fill-icon">→</span>
-            </button>
+            </Link>
           </div>
         </div>
         <div className="stats-row" style={{ display:"flex", borderTop:"1px solid rgba(2,10,37,0.08)" }}>
-          {[{val:40,suffix:"–70",unit:"m³/h"},{val:200,suffix:"+",unit:""},{val:24,suffix:"h",unit:""},{val:9,suffix:"+",unit:""}].map((s,i)=>(
+          {[{val:40,suffix:"–70",unit:"m³/h"},{val:1500,suffix:"+",unit:""},{val:24,suffix:"h",unit:""}].map((s,i)=>(
             <div key={i} className="stat-block">
               <div className="stat-rule" />
               <div className="stat-val"><StatNum value={s.val} suffix={s.suffix} delay={i*100} />{s.unit&&<span style={{ fontFamily:"'Inter',sans-serif", fontSize:"clamp(0.6rem,0.8vw,0.72rem)", fontWeight:400, color:"rgba(2,10,37,0.3)", letterSpacing:"0.08em", marginLeft:"4px" }}>{s.unit}</span>}</div>
@@ -1044,8 +1049,8 @@ export default function LevelProPage() {
       {/* ── Materials ── */}
       <section style={{ backgroundColor:"#ffffff", padding:"clamp(56px,7vh,80px) clamp(24px,5vw,72px)", borderTop:"1px solid rgba(2,10,37,0.05)" }}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", flexWrap:"wrap", gap:"clamp(16px,2.5vw,28px)" }}>
-          <RevealText as="h2" text={t.materials.heading} style={{ fontFamily:"'Titillium Web',sans-serif", fontWeight:300, fontSize:"var(--lp-title-fs)", lineHeight:1.1, color:NAVY, letterSpacing:"var(--lp-title-ls)", maxWidth:"clamp(300px,52vw,620px)", margin:0 }} />
-          <p style={{ fontFamily:"'Inter',sans-serif", fontWeight:400, fontSize:"clamp(0.82rem,0.98vw,0.92rem)", lineHeight:1.68, color:"rgba(2,10,37,0.6)", maxWidth:"340px", alignSelf:"flex-end", margin:0 }}>{t.materials.tagline}</p>
+          <RevealText as="h2" text={t.materials.heading} style={{ fontFamily:"'Inter',sans-serif", fontWeight:300, fontSize:"var(--lp-title-fs)", lineHeight:1.1, color:NAVY, letterSpacing:"var(--lp-title-ls)", maxWidth:"clamp(300px,52vw,620px)", margin:0 }} />
+          <p style={{ fontFamily:"'Inter',sans-serif", fontWeight:400, fontSize:"var(--lp-body-fs)", lineHeight:"var(--lp-body-lh)", color:"var(--lp-text-body)", maxWidth:"340px", alignSelf:"flex-end", margin:0 }}>{t.materials.tagline}</p>
         </div>
         <div className="mat-grid">
           {t.materials.cards.map(({title,desc},i)=>(
@@ -1065,37 +1070,40 @@ export default function LevelProPage() {
           {/* ── Full-width sticky map layer ── */}
           <div style={{ gridColumn: 1, gridRow: 1, position: "sticky", top: 0, height: "100vh", overflow: "hidden", zIndex: 1 }}>
 
-            {/* Map — isolated stacking context so Leaflet's internal z-indexes (200/400/600) stay below the overlays */}
-            <div style={{ position: "absolute", inset: 0, isolation: "isolate" }}>
+            {/* Map — isolated stacking context so Leaflet's internal z-indexes (200/400/600) stay below the overlays.
+                grayscale(1) strips any residual color from the CARTO tiles themselves (e.g. water bodies rendering
+                with a faint blue cast) so the map stays strictly black/gray/white, matching the rest of the section. */}
+            <div style={{ position: "absolute", inset: 0, isolation: "isolate", filter: "grayscale(1)" }}>
               {isDesktop && <LeafletMap activeIdx={activeProject} />}
             </div>
 
-            {/* Left + bottom scrims — keep the floating overlays legible over the light map */}
-            <div style={{ position: "absolute", inset: 0, pointerEvents: "none", background: `linear-gradient(105deg, ${SECTION_BG} 0%, rgba(240,238,234,0.6) 18%, rgba(240,238,234,0) 46%)` }} />
-            <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: "42%", pointerEvents: "none", background: `linear-gradient(to top, ${SECTION_BG} 4%, rgba(240,238,234,0) 100%)` }} />
+            {/* Left + bottom scrims — keep the floating overlays legible over the dark map */}
+            <div style={{ position: "absolute", inset: 0, pointerEvents: "none", background: `linear-gradient(105deg, ${SECTION_BG} 0%, rgba(26,26,26,0.75) 18%, rgba(26,26,26,0) 46%)` }} />
+            <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: "42%", pointerEvents: "none", background: `linear-gradient(to top, ${SECTION_BG} 4%, rgba(26,26,26,0) 100%)` }} />
 
             {/* Section heading — pinned top-left */}
             <div style={{ position: "absolute", top: "clamp(98px,13vh,150px)", left: "clamp(24px,4vw,64px)", maxWidth: "min(42%,460px)", zIndex: 4 }}>
-              <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 600, fontSize: "clamp(0.66rem,0.82vw,0.74rem)", letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(2,10,37,0.5)", margin: "0 0 clamp(12px,1.6vh,18px) 0" }}>{t.projects.label}</p>
-              <h2 style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 300, fontSize: "clamp(1.9rem,3vw,3rem)", lineHeight: 1.04, color: NAVY, letterSpacing: "-0.025em", margin: 0 }}>{t.projects.heading}</h2>
+              <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 600, fontSize: "clamp(0.66rem,0.82vw,0.74rem)", letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.55)", margin: "0 0 clamp(12px,1.6vh,18px) 0" }}>{t.projects.label}</p>
+              <h2 style={{ fontFamily: "'Inter',sans-serif", fontWeight: 300, fontSize: "clamp(1.9rem,3vw,3rem)", lineHeight: 1.04, color: "#ffffff", letterSpacing: "-0.025em", margin: 0 }}>{t.projects.heading}</h2>
             </div>
 
-            {/* Floating glass info panel — pinned bottom-left, syncs with the active card */}
+            {/* Floating glass info panel — pinned bottom-left, syncs with the active card.
+                Dark frosted glass (light tint on transparent + blur, not a solid fill) so
+                the dark map still reads through it softly, matching the map's own theme. */}
             <div style={{
               position: "absolute", left: "clamp(24px,4vw,64px)", bottom: "clamp(28px,5vh,56px)",
               width: "min(40%,420px)", zIndex: 4,
-              background: "rgba(255,255,255,0.72)",
-              backdropFilter: "blur(22px) saturate(150%)", WebkitBackdropFilter: "blur(22px) saturate(150%)",
-              border: "1px solid rgba(255,255,255,0.7)", borderRadius: "18px",
-              boxShadow: "0 24px 70px rgba(2,10,37,0.18)",
+              background: "rgba(255,255,255,0.07)",
+              backdropFilter: "blur(24px) saturate(160%)", WebkitBackdropFilter: "blur(24px) saturate(160%)",
+              border: "1px solid rgba(255,255,255,0.14)", borderRadius: "var(--radius)",
               padding: "clamp(20px,1.9vw,26px) clamp(22px,2.1vw,28px)", overflow: "hidden",
             }}>
               {/* Label + progress row */}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "clamp(12px,1.5vh,16px)" }}>
-                <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 600, fontSize: "clamp(0.58rem,0.7vw,0.64rem)", letterSpacing: "0.16em", textTransform: "uppercase", color: "rgba(2,10,37,0.42)", margin: 0 }}>{String(activeProject + 1).padStart(2, "0")} / {String(projects.length).padStart(2, "0")}</p>
+                <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 600, fontSize: "clamp(0.58rem,0.7vw,0.64rem)", letterSpacing: "0.16em", textTransform: "uppercase", color: "rgba(255,255,255,0.5)", margin: 0 }}>{String(activeProject + 1).padStart(2, "0")} / {String(projects.length).padStart(2, "0")}</p>
                 <div style={{ display: "flex", gap: "5px" }}>
                   {projects.map((_, i) => (
-                    <div key={i} style={{ height: "3px", width: i === activeProject ? "22px" : "6px", background: i === activeProject ? NAVY : "rgba(2,10,37,0.18)", borderRadius: "2px", transition: "all 0.5s cubic-bezier(0.37,0,0.63,1)" }} />
+                    <div key={i} style={{ height: "3px", width: i === activeProject ? "22px" : "6px", background: i === activeProject ? "#ffffff" : "rgba(255,255,255,0.22)", borderRadius: "2px", transition: "all 0.5s cubic-bezier(0.37,0,0.63,1)" }} />
                   ))}
                 </div>
               </div>
@@ -1103,31 +1111,30 @@ export default function LevelProPage() {
               {/* Fading dynamic content */}
               <div style={{ opacity: sidebarVisible ? 1 : 0, transform: sidebarVisible ? "translateY(0)" : "translateY(6px)", transition: "opacity 0.28s ease, transform 0.4s cubic-bezier(0.22,1,0.36,1)" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "clamp(8px,1.1vh,11px)" }}>
-                  <div style={{ width: "9px", height: "9px", borderRadius: "50%", background: ACCENT, flexShrink: 0 }} />
-                  <h3 style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 300, fontSize: "clamp(1.45rem,2vw,2rem)", lineHeight: 1.05, color: NAVY, letterSpacing: "-0.025em", margin: 0 }}>
+                  <div style={{ width: "9px", height: "9px", borderRadius: "50%", background: "#ffffff", flexShrink: 0 }} />
+                  <h3 style={{ fontFamily: "'Inter',sans-serif", fontWeight: 300, fontSize: "clamp(1.45rem,2vw,2rem)", lineHeight: 1.05, color: "#ffffff", letterSpacing: "-0.025em", margin: 0 }}>
                     {projects[displayProject].name}
                   </h3>
                 </div>
 
-                <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 400, fontSize: "clamp(0.82rem,0.92vw,0.9rem)", lineHeight: 1.6, color: "rgba(2,10,37,0.6)", margin: "0 0 clamp(16px,2vh,20px) 0" }}>
+                <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 400, fontSize: "var(--lp-body-fs)", lineHeight: "var(--lp-body-lh)", color: "rgba(255,255,255,0.65)", margin: "0 0 clamp(16px,2vh,20px) 0" }}>
                   {projects[displayProject].shortDesc}
                 </p>
 
-                <div style={{ height: "1px", background: "rgba(2,10,37,0.1)", margin: "0 0 clamp(14px,1.8vh,18px) 0" }} />
+                <div style={{ height: "1px", background: "rgba(255,255,255,0.14)", margin: "0 0 clamp(14px,1.8vh,18px) 0" }} />
 
                 {/* Meta + Maps button */}
                 <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", flexWrap: "wrap", gap: "14px" }}>
                   <div style={{ display: "flex", gap: "clamp(18px,2vw,26px)", flexWrap: "wrap" }}>
-                    <MetaChip label={t.projects.metaKeys.location} value={projects[displayProject].location} />
-                    <MetaChip label={t.projects.metaKeys.year} value={projects[displayProject].year} />
-                    {projects[displayProject].budget && <MetaChip label={t.projects.metaKeys.budget} value={projects[displayProject].budget!} />}
+                    <MetaChip label={t.projects.metaKeys.location} value={projects[displayProject].location} dark />
+                    <MetaChip label={t.projects.metaKeys.year} value={projects[displayProject].year} dark />
                   </div>
                   <a
                     href={projects[displayProject].mapsUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="proj-maps-btn"
-                    style={{ display: "inline-flex", alignItems: "center", gap: "7px", fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.6rem,0.72vw,0.66rem)", fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: NAVY, border: "1px solid rgba(2,10,37,0.25)", borderRadius: "100px", padding: "9px 16px", textDecoration: "none", transition: "background 0.22s ease, border-color 0.22s ease, color 0.22s ease", flexShrink: 0 }}
+                    className="proj-maps-btn btn-fill btn-fill-light"
+                    style={{ display: "inline-flex", alignItems: "center", gap: "7px", fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.6rem,0.72vw,0.66rem)", fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: "#ffffff", border: "1px solid rgba(255,255,255,0.3)", borderRadius: "var(--radius-sm)", padding: "9px 16px", textDecoration: "none", flexShrink: 0 }}
                   >
                     <svg width="11" height="11" viewBox="0 0 12 12" fill="none" style={{ flexShrink: 0 }}>
                       <path d="M6 1C4.07 1 2.5 2.57 2.5 4.5c0 2.78 3.5 6.5 3.5 6.5s3.5-3.72 3.5-6.5C9.5 2.57 7.93 1 6 1zm0 4.75a1.25 1.25 0 110-2.5 1.25 1.25 0 010 2.5z" fill="currentColor"/>
@@ -1147,7 +1154,7 @@ export default function LevelProPage() {
                 ref={(el: HTMLDivElement | null) => { cardRefs.current[i] = el; }}
                 style={{ marginBottom: i < projects.length - 1 ? "clamp(20px,3vh,28px)" : 0, pointerEvents: "auto" }}
               >
-                <ProjectCard proj={proj} metaKeys={t.projects.metaKeys} index={i} />
+                <ProjectCard proj={proj} metaKeys={t.projects.metaKeys} index={i} viewOnMapsLabel={t.projects.viewOnMaps} dark />
               </div>
             ))}
           </div>
@@ -1158,33 +1165,33 @@ export default function LevelProPage() {
       {/* ── Projects mobile ── */}
       <section className="projects-mobile" style={{ background: "#f0eeea", paddingTop: "clamp(48px,7vh,72px)", paddingBottom: "clamp(48px,7vh,72px)" }}>
         <div style={{ paddingLeft: "clamp(24px,5vw,48px)", paddingRight: "clamp(24px,5vw,48px)", marginBottom: "clamp(22px,3.5vh,32px)" }}>
-          <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 600, fontSize: "clamp(0.62rem,2.6vw,0.7rem)", letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(2,10,37,0.45)", margin: "0 0 clamp(8px,1.2vh,12px) 0" }}>{t.projects.label}</p>
-          <h2 style={{ fontFamily: "'Titillium Web',sans-serif", fontWeight: 300, fontSize: "clamp(1.9rem,6.5vw,3rem)", lineHeight: 1.05, color: NAVY, letterSpacing: "-0.025em", margin: 0 }}>{t.projects.heading}</h2>
+          <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 600, fontSize: "clamp(0.62rem,2.6vw,0.7rem)", letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--lp-text-meta)", margin: "0 0 clamp(8px,1.2vh,12px) 0" }}>{t.projects.label}</p>
+          <h2 style={{ fontFamily: "'Inter',sans-serif", fontWeight: 300, fontSize: "clamp(1.9rem,6.5vw,3rem)", lineHeight: 1.05, color: NAVY, letterSpacing: "-0.025em", margin: 0 }}>{t.projects.heading}</h2>
         </div>
         <div
           ref={mobileSliderRef}
           className="proj-mobile-slider"
-          style={{ display: "flex", overflowX: "auto", scrollSnapType: "x mandatory", gap: "clamp(12px,3vw,16px)", paddingLeft: "clamp(24px,5vw,48px)", paddingRight: "clamp(24px,5vw,48px)", paddingBottom: "4px", scrollbarWidth: "none" }}
+          style={{ display: "flex", overflowX: "auto", scrollSnapType: "x mandatory", scrollPaddingLeft: "clamp(24px,5vw,48px)", scrollPaddingRight: "clamp(24px,5vw,48px)", gap: "clamp(12px,3vw,16px)", paddingLeft: "clamp(24px,5vw,48px)", paddingRight: "clamp(24px,5vw,48px)", paddingBottom: "4px", scrollbarWidth: "none" }}
         >
           {projects.map((proj, i) => (
             <div key={proj.id} style={{ flex: "0 0 86vw", maxWidth: "420px", scrollSnapAlign: "start" }}>
-              <ProjectCard proj={proj} metaKeys={t.projects.metaKeys} index={i} />
+              <ProjectCard proj={proj} metaKeys={t.projects.metaKeys} index={i} viewOnMapsLabel={t.projects.viewOnMaps} />
             </div>
           ))}
         </div>
       </section>
 
       {/* ── Footer ── */}
-      <footer style={{ backgroundColor:NAVY, padding:"clamp(64px,10vh,120px) clamp(24px,5vw,72px) clamp(32px,4vh,56px)" }}>
+      <footer style={{ backgroundColor:SECTION_BG, padding:"clamp(64px,10vh,120px) clamp(24px,5vw,72px) clamp(32px,4vh,56px)" }}>
         <div style={{ borderTop:"1px solid rgba(255,255,255,0.08)", paddingTop:"clamp(48px,7vh,88px)", display:"flex", justifyContent:"space-between", alignItems:"flex-end", flexWrap:"wrap", gap:"clamp(24px,4vw,48px)", marginBottom:"clamp(56px,8vh,100px)" }}>
           <div>
             <p style={{ fontFamily:"'Inter',sans-serif", fontWeight:400, fontSize:"clamp(0.6rem,0.78vw,0.7rem)", letterSpacing:"0.18em", textTransform:"uppercase", color:"rgba(255,255,255,0.3)", margin:"0 0 clamp(14px,2vh,22px) 0" }}>{t.footer.ctaLabel}</p>
-            <h2 style={{ fontFamily:"'Titillium Web',sans-serif", fontWeight:200, fontSize:"clamp(2.2rem,5.5vw,5.5rem)", lineHeight:0.95, color:"#ffffff", margin:0, letterSpacing:"-0.03em", maxWidth:"clamp(280px,60vw,800px)" }}>{t.footer.ctaHeading}</h2>
+            <h2 style={{ fontFamily:"'Inter',sans-serif", fontWeight:200, fontSize:"clamp(2.2rem,5.5vw,5.5rem)", lineHeight:0.95, color:"#ffffff", margin:0, letterSpacing:"-0.03em", maxWidth:"clamp(280px,60vw,800px)" }}>{t.footer.ctaHeading}</h2>
           </div>
-          <Link href="/contact" className="footer-cta-btn btn-fill" style={{ textDecoration:"none" }}>{t.footer.ctaBtn} <span className="btn-fill-icon">→</span></Link>
+          <Link href="/contact" className="footer-cta-btn btn-fill btn-fill-light" style={{ textDecoration:"none" }}>{t.footer.ctaBtn} <span className="btn-fill-icon">→</span></Link>
         </div>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:"16px", borderTop:"1px solid rgba(255,255,255,0.06)", paddingTop:"clamp(20px,2.5vh,28px)" }}>
-          <Link href="/" style={{ fontFamily:"'Titillium Web',sans-serif", fontWeight:600, fontSize:"clamp(0.85rem,1.1vw,1rem)", letterSpacing:"0.12em", textTransform:"uppercase", color:"rgba(255,255,255,0.9)", textDecoration:"none" }}>Level Pro</Link>
+          <Link href="/" style={{ fontFamily:"'Inter',sans-serif", fontWeight:600, fontSize:"clamp(0.85rem,1.1vw,1rem)", letterSpacing:"0.12em", textTransform:"uppercase", color:"rgba(255,255,255,0.9)", textDecoration:"none" }}>Level Pro</Link>
           <div style={{ display:"flex", gap:"clamp(20px,3vw,36px)" }}>
             {t.footer.links.map((l,i)=><Link key={l} href={NAV_ROUTES[i]??"/"+l.toLowerCase().replace(/\s+/g,"-")} style={{ fontFamily:"'Inter',sans-serif", fontSize:"clamp(0.62rem,0.78vw,0.7rem)", fontWeight:400, color:"rgba(255,255,255,0.35)", letterSpacing:"0.04em", textDecoration:"none", transition:"color 0.2s ease" }}>{l}</Link>)}
           </div>

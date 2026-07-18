@@ -5,9 +5,9 @@
     "semantic_hash": "0d8f36318388320fdce98d14155911e5"
   },
   ".claude/settings.local.json": {
-    "mtime": 1782217658.78493,
-    "ast_hash": "57679a0fe9cc9801c13a4439cb3d241a",
-    "semantic_hash": "57679a0fe9cc9801c13a4439cb3d241a"
+    "mtime": 1782401890.3803349,
+    "ast_hash": "270f154d35203ebb27fedfcaeaf42424",
+    "semantic_hash": "270f154d35203ebb27fedfcaeaf42424"
   },
   "app/about/page.tsx": {
     "mtime": 1782154295.449154,
@@ -15,9 +15,9 @@
     "semantic_hash": "2b6215d455f46c04d9b06fc7fee8e756"
   },
   "app/components/shared.tsx": {
-    "mtime": 1782154273.7339497,
-    "ast_hash": "05f36eef5676612e0c2dbdcdbecc228e",
-    "semantic_hash": "05f36eef5676612e0c2dbdcdbecc228e"
+    "mtime": 1782402430.0342333,
+    "ast_hash": "64bcb5c23232135adccb3c1f03e784e7",
+    "semantic_hash": "64bcb5c23232135adccb3c1f03e784e7"
   },
   "app/contact/page.tsx": {
     "mtime": 1782154324.0132983,
@@ -25,24 +25,24 @@
     "semantic_hash": "70aa16f71409f21a664d22cc3d0c6f44"
   },
   "app/layout.tsx": {
-    "mtime": 1782155270.336391,
+    "mtime": 1782402435.9310663,
     "ast_hash": "6c1ce718f85e2e2fb19f3cf3e56b1b04",
     "semantic_hash": "6c1ce718f85e2e2fb19f3cf3e56b1b04"
   },
   "app/page.tsx": {
-    "mtime": 1782160011.7788484,
-    "ast_hash": "be3865edb222d32548d4fd86630c38af",
-    "semantic_hash": "be3865edb222d32548d4fd86630c38af"
+    "mtime": 1782402405.9722185,
+    "ast_hash": "e14a82213971a9b4d11754dd95f14e9f",
+    "semantic_hash": "e14a82213971a9b4d11754dd95f14e9f"
   },
   "app/services/page.tsx": {
-    "mtime": 1782154319.8298452,
-    "ast_hash": "50bc77231481dcb28e0443769b496434",
-    "semantic_hash": "50bc77231481dcb28e0443769b496434"
+    "mtime": 1782508080.6124003,
+    "ast_hash": "d48a880c311550c7602893ce92e19ba0",
+    "semantic_hash": "d48a880c311550c7602893ce92e19ba0"
   },
   "app/translations.ts": {
-    "mtime": 1781122088.6879714,
-    "ast_hash": "99caaba1451babf7abd7032409a85ada",
-    "semantic_hash": "99caaba1451babf7abd7032409a85ada"
+    "mtime": 1782507527.963955,
+    "ast_hash": "2a1cc52f3d9887ddad32d5e4373c5b0a",
+    "semantic_hash": "2a1cc52f3d9887ddad32d5e4373c5b0a"
   },
   "eslint.config.mjs": {
     "mtime": 1780599366.8405933,

@@ -1,14 +1,13 @@
 export type Locale = "en" | "de" | "es";
 
 export interface Translation {
-  nav: { links: string[]; cta: string };
+  nav: { home: string; links: string[]; cta: string };
   hero: {
     eyebrow: string; est: string;
     titleLine1: string; titleLine2: string; titleLine3: string;
     tagline: string;
     ctaPrimary: string; ctaSecondary: string;
     locations: string[];
-    watchLabel: string; watchDesc: string;
     statsLabels: { projects: string; years: string; mobilization: string };
     scroll: string;
   };
@@ -17,9 +16,9 @@ export interface Translation {
     label: string;
     headingLine1: string; headingLine2: string; headingLine3: string;
     tagline: string;
-    items: Array<{ name: string; detail: string; shortDesc: string; tagDescs: string[]; bullets: string[] }>;
-    tags: string[];
+    items: Array<{ name: string; detail: string; shortDesc: string; bullets: string[] }>;
   };
+  servicesCta: { heading: string; body: string; btn: string };
   stats: {
     label: string; heading: string; equipmentBtn: string;
     items: Array<{ label: string }>;
@@ -32,7 +31,7 @@ export interface Translation {
     label: string;
     heading: string;
     items: Array<{ type: string; shortDesc: string; fullDesc: string; tags: string[] }>;
-    metaKeys: { year: string; type: string; budget: string; location: string };
+    metaKeys: { year: string; type: string; budget: string; location: string; status: string };
     learnMore: string;
     viewOnMaps: string;
   };
@@ -46,12 +45,13 @@ export interface Translation {
       headingLine1: string; headingLine2: string; headingLine3: string;
       tagline: string; scrollLabel: string;
     };
+    tech: { label: string; heading: string; intro: string };
     detail: {
-      items: Array<{ name: string; shortDesc: string; body: string; tags: string[]; bullets: string[] }>;
-    };
-    sectors: {
-      label: string; heading: string;
-      items: Array<{ title: string; desc: string }>;
+      items: Array<{
+        name: string;
+        body: string;
+        bullets: string[];
+      }>;
     };
     process: {
       label: string; heading: string;
@@ -59,7 +59,6 @@ export interface Translation {
     };
     cta: { label: string; heading: string; btn: string };
     mission: { label: string; heading: string; body1: string; body2: string; btn: string };
-    tech: { label: string; heading: string };
     stats: { label: string; items: Array<{ label: string }> };
     locations: { label: string; heading: string; items: Array<{ name: string; desc: string }> };
   };
@@ -79,7 +78,7 @@ export interface Translation {
     };
     milestones: {
       label: string; heading: string;
-      items: Array<{ year: string; title: string; desc: string }>;
+      items: Array<{ title: string; desc: string }>;
     };
     cta: { label: string; heading: string; btn: string };
   };
@@ -105,27 +104,64 @@ export interface Translation {
       errors: { required: string; emailInvalid: string };
     };
   };
+  projectsPage: {
+    hero: {
+      label: string;
+      headingLine1: string; headingLine2: string; headingLine3: string;
+      tagline: string;
+    };
+    search: { placeholder: string; clear: string };
+    filters: {
+      title: string; clearAll: string; mobileOpen: string;
+      location: { label: string };
+      status: { label: string; all: string };
+      type: { label: string };
+      year: { label: string };
+    };
+    statusLabels: { finished: string; inProgress: string };
+    types: { hotel: string; residential: string; commercial: string; industrial: string };
+    results: {
+      template: string;
+      empty: { heading: string; body: string };
+    };
+    card: { seeMore: string };
+    modal: { close: string; scope: string };
+  };
+  equipmentPage: {
+    hero: {
+      label: string;
+      headingLine1: string; headingLine2: string; headingLine3: string;
+      tagline: string;
+    };
+    intro: { label: string; heading: string; tagline: string };
+    items: Array<{
+      category: string;
+      name: string;
+      desc: string;
+      specs: [{ label: string }, { label: string }, { label: string }, { label: string }];
+      bullets: string[];
+    }>;
+  };
 }
 
 export const TRANSLATIONS: Record<Locale, Translation> = {
   en: {
     nav: {
+      home: "Home",
       links: ["Services", "Projects", "Equipment", "About Us", "Contact"],
       cta: "Get a Quote",
     },
     hero: {
       eyebrow: "Concrete Solutions — Costa Blanca",
       est: "EST. 2016",
-      titleLine1: "We live",
-      titleLine2: "for a",
-      titleLine3: "challenge",
+      titleLine1: "Build Higher.",
+      titleLine2: "Build Better.",
+      titleLine3: "",
       tagline:
         "At Level Pro, we partner with our customers to bring their ambitions to life — delivering concrete projects that make a lasting difference for people and communities.",
       ctaPrimary: "Contact Us",
       ctaSecondary: "View Projects",
-      locations: ["Benidorm", "Ibiza", "Palma de Mallorca"],
-      watchLabel: "See in Action",
-      watchDesc: "Watch our crews and equipment at work across the Costa Blanca.",
+      locations: ["Palma de Mallorca", "Ibiza", "Benidorm"],
       statsLabels: { projects: "Projects", years: "Years", mobilization: "Mobilization" },
       scroll: "Scroll",
     },
@@ -145,12 +181,6 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
           name: "Concrete Pumping",
           detail: "High-pressure pumping systems delivering consistent material flow for multi-storey residential, hotel and commercial structures. Our boom pumps reach up to 50 metres, integrating seamlessly with your construction programme.",
           shortDesc: "High-reach boom pumps for residential, hotel and commercial pours — up to 50 metres reach.",
-          tagDescs: [
-            "Office blocks and retail centres up to 12 storeys — precise volume control and GPS-coordinated pour scheduling with minimal disruption to ongoing operations. Our boom pumps cover all structural levels in a single mobilisation.",
-            "Warehouse floors and plant pads at large footprint — line pumps handle high-volume continuous pours at consistent pressure, with full-fleet deployment for simultaneous multi-area coverage across a single site.",
-            "Towers and hotels above 8 storeys — high-pressure equipment and GPS scheduling keep every floor pour on programme. Boom reach up to 50 metres ensures uninterrupted placement across all structural levels.",
-            "Villas, townhouses and apartment blocks — flexible deployment on compact sites with full operator supervision and real-time pour coordination integrated with your site programme from start to finish.",
-          ],
           bullets: [
             "Boom pump reach up to 50 m for multi-storey structures",
             "Full fleet for simultaneous multi-site deployment",
@@ -162,12 +192,6 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
           name: "Material Placement",
           detail: "Precise distribution ensuring even depth and full coverage across slabs, walls and columns — minimising waste and achieving first-time quality results at any project scale.",
           shortDesc: "Precise slab coverage and even depth — first-time quality across every pour area.",
-          tagDescs: [
-            "Retail floors, office slabs and podium decks — uniform depth and smooth finish across large continuous pour areas, with real-time quality checks ensuring first-time results on every section.",
-            "Heavy-duty floor slabs engineered for forklift traffic, racking loads and chemical-resistant surface requirements — certified operators ensure consistent depth and full specification compliance on every pour.",
-            "Suspended slabs on high-rise frames — tight tolerances verified on every pour for consistent depth and coverage, with certified operators coordinating directly with your structural supervision team.",
-            "Ground floors, pool decks and terrace slabs — delivered with precision and care on residential sites of any size, with full cleanup and equipment removal included as standard on every job.",
-          ],
           bullets: [
             "Consistent slab depth and coverage across all pour areas",
             "Certified operators experienced with all structural mix types",
@@ -179,12 +203,6 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
           name: "Shotcrete Works",
           detail: "Pneumatically applied concrete for retaining walls, slope stabilisation and complex geometric forms — rapid, high-strength coverage with precise control over layer thickness and bond quality.",
           shortDesc: "Pneumatically applied concrete for retaining walls, slopes and complex geometric forms.",
-          tagDescs: [
-            "Basement retaining walls and underground car parks — rapid high-strength application with minimal formwork needed, reducing programme time while maintaining full structural specification compliance.",
-            "Slope stabilisation and tunnel lining for industrial and infrastructure projects — dry or wet mix selected to suit site conditions, with layer thickness verified at every application stage.",
-            "Lift shafts, stairwells and complex geometric elements — nozzle positioning adapted to confined interior spaces, delivering consistent bond quality and layer thickness on every vertical application.",
-            "Pool shells, retaining walls and landscape features — wet-mix process for a quality finish on visible surfaces, with supervisor sign-off at each layer stage to ensure durability and specification.",
-          ],
           bullets: [
             "Wet-mix and dry-mix processes to suit site conditions",
             "High early-strength mixes for retaining walls and tunnels",
@@ -196,12 +214,6 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
           name: "Foundation Works",
           detail: "Engineered solutions from strip footings to complex raft slabs — designed to the geotechnical conditions of each site and fully coordinated with your structural engineer throughout.",
           shortDesc: "Engineered footings and raft slabs designed to your site's geotechnical conditions.",
-          tagDescs: [
-            "Pad, strip and raft foundations for commercial builds — coordinated with structural engineers and geotechnical reports to ensure full compliance from design through to post-pour documentation.",
-            "Foundation systems for heavy equipment bases, crane rails and large-span structural frames at industrial scale — reinforced concrete solutions engineered to precise load and settlement requirements.",
-            "Deep raft slabs and pile caps for tower structures — engineered to precise load distribution and settlement requirements, with full coordination of your structural and geotechnical engineering teams.",
-            "Strip footings, pad foundations and reinforced raft slabs for villas and apartment buildings on any ground type — site assessment, design, placement and post-pour inspection all included.",
-          ],
           bullets: [
             "Geotechnical site assessment informing every design",
             "Reinforced concrete solutions for challenging ground conditions",
@@ -209,8 +221,23 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
             "Post-pour inspection and documentation included",
           ],
         },
+        {
+          name: "Slope Forming",
+          detail: "Precision-graded concrete surfaces engineered to fall accurately toward drains and outlets — critical for roof decks, terraces, ramps and yards where standing water isn't an option. Laser-guided screeding keeps every gradient consistent from high point to low point.",
+          shortDesc: "Laser-guided falls for roof decks, terraces and yards — precise gradients, zero standing water.",
+          bullets: [
+            "Laser-guided screeding for verified gradients",
+            "Engineered falls to drains and outlets",
+            "Suited to roof decks, terraces, yards and ramps",
+            "Level checks at every stage before handover",
+          ],
+        },
       ],
-      tags: ["Commercial", "Industrial", "High-rise", "Residential"],
+    },
+    servicesCta: {
+      heading: "Every project has its own conditions. We adapt to yours.",
+      body: "Tight urban sites, unusual access, tough schedules — whatever the constraints, we shape our approach around your project, not the other way round.",
+      btn: "Get in Touch",
     },
     stats: {
       label: "Operations & Resources",
@@ -243,24 +270,48 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
       items: [
         {
           type: "Hotel",
-          shortDesc: "Concrete pumping operations and surface finishing works for the renovation of Hotel Rosamar.",
-          fullDesc: "Our team supported the development and renovation of Hotel Rosamar in Benidorm through concrete pumping operations and surface finishing works. The project, completed in 2020, required precise coordination and reliable on-site execution.",
-          tags: ["Concrete Pumping", "Surface Finishing", "Material Placement"],
-        },
-        {
-          type: "Hotel",
-          shortDesc: "Concrete pumping and surface finishing for the Nomad Hotel renovation in Cala Finestrat.",
+          shortDesc: "A 22-room boutique hotel between Poniente Beach and Cala de Finestrat, reborn from a 1950s hostel with a retro Spanish-Riviera design.",
           fullDesc: "Our team was involved in the project through concrete pumping operations and surface finishing works, contributing to the efficient execution of key construction stages.",
           tags: ["Concrete Pumping", "Surface Finishing"],
         },
         {
           type: "Residential",
-          shortDesc: "High-pressure concrete pumping across multiple floors of a coastal residential development.",
-          fullDesc: "A multi-story residential complex in Altea requiring high-pressure concrete pumping across multiple floors. Our team delivered precise material placement throughout the 14-month construction period.",
-          tags: ["High-pressure Pumping", "Material Placement", "Foundation Works"],
+          shortDesc: "A 26-storey glass tower on Playa Poniente — 195 apartments beneath a heated sky pool and gym on the top floor.",
+          fullDesc: "We provided concrete pumping and foundation works for the Alibuilding residential development in Benidorm, coordinating closely with the site team to keep the pour schedule on track.",
+          tags: ["Concrete Pumping", "Foundation Works"],
+        },
+        {
+          type: "Residential",
+          shortDesc: "An exclusive residential tower on Avenida del Mediterráneo — 19 homes, one per floor, each facing the sea.",
+          fullDesc: "Our team delivered high-pressure concrete pumping across multiple floors for the Monver Tower in Benidorm, supporting material placement throughout the building's vertical construction.",
+          tags: ["High-pressure Pumping", "Material Placement"],
+        },
+        {
+          type: "Hotel",
+          shortDesc: "A 300-room hotel on the first line of Playa de Poniente, where every room opens onto its own sea-view terrace.",
+          fullDesc: "We supported the Poseidon Playas de Benidorm hotel project through concrete pumping and surface finishing works, contributing to the efficient execution of key construction stages.",
+          tags: ["Concrete Pumping", "Surface Finishing"],
+        },
+        {
+          type: "Hotel",
+          shortDesc: "An 18-storey beachfront hotel on Levante Beach, pairing its original Blue Tower with a new Sky Tower and a rooftop terrace on floor 19.",
+          fullDesc: "Our team carried out concrete pumping and material placement works for the Port Benidorm Hotel & Spa, ensuring precise coordination and reliable on-site execution throughout the build.",
+          tags: ["Concrete Pumping", "Material Placement"],
+        },
+        {
+          type: "Hotel",
+          shortDesc: "A 364-room family hotel by Levante Beach, built around a water park, slides and an all-inclusive pool scene.",
+          fullDesc: "Our team supported the development and renovation of Hotel Rosamar in Benidorm through concrete pumping operations and surface finishing works. The project, completed in 2020, required precise coordination and reliable on-site execution.",
+          tags: ["Concrete Pumping", "Surface Finishing", "Material Placement"],
+        },
+        {
+          type: "Hotel",
+          shortDesc: "A modern urban hotel near Valencia's Turia Gardens, with a rooftop pool and skyline bar just steps from the historic centre.",
+          fullDesc: "Our team carried out concrete pumping and material placement works for the Novotel Valencia Lavant, supporting the hotel's construction with precise, reliable execution on a tight urban site.",
+          tags: ["Concrete Pumping", "Material Placement"],
         },
       ],
-      metaKeys: { year: "Year", type: "Type", budget: "Budget", location: "Location" },
+      metaKeys: { year: "Year", type: "Type", budget: "Budget", location: "Location", status: "Status" },
       learnMore: "Learn more",
       viewOnMaps: "View on Maps",
     },
@@ -275,75 +326,68 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
       hero: {
         label: "Our Services",
         headingLine1: "Professional concrete",
-        headingLine2: "across the Costa Blanca",
-        headingLine3: "",
+        headingLine2: "across the",
+        headingLine3: "Costa Blanca",
         tagline: "Specialized concrete services for every scale — from residential foundations to large commercial structures across the Costa Blanca.",
         scrollLabel: "Scroll",
+      },
+      tech: {
+        label: "Capabilities",
+        heading: "Specialized concrete services",
+        intro: "Five core disciplines, one accountable crew. Scroll through each service for the full technical detail.",
       },
       detail: {
         items: [
           {
             name: "Concrete Pumping",
-            shortDesc: "High-pressure pumping systems for multi-story and large-scale construction sites.",
-            body: "Our concrete pumping service delivers high-pressure solutions for multi-story residential and commercial buildings. Our fleet of boom pumps can reach heights of up to 50 metres, ensuring consistent placement accuracy and significantly reducing manual labour on every pour.",
+            body: "High-pressure, high-volume pumping for sites of any scale. A modern boom and line pump fleet — with full operator supervision — keeps material flowing exactly where your programme needs it.",
             bullets: [
-              "Boom pump reach of up to 50 metres for multi-storey residential and commercial structures",
-              "Full-scale fleet available for simultaneous deployment across multiple active sites",
-              "GPS-tracked pour scheduling integrated seamlessly with your construction programme",
-              "On-site operator supervision from start to finish on every job",
-              "Significantly reduces manual handling, scaffold requirements and site labour costs",
+              "50m boom reach",
+              "Multi-site fleet deployment",
+              "GPS-tracked scheduling",
+              "24h rapid mobilisation",
             ],
-            tags: ["Residential", "Commercial", "High-rise"],
           },
           {
             name: "Material Placement",
-            shortDesc: "Precise concrete distribution ensuring consistent quality across every pour.",
-            body: "Precise material placement is critical to the structural integrity of every project. Our experienced operators ensure even distribution and consistent depth across slabs, walls and columns — minimising waste and achieving first-time results across all project scales.",
+            body: "Precise placement underpins the structural integrity and finish of every pour. Certified operators keep depth and distribution consistent across slabs, walls and columns — first time, minimal waste.",
             bullets: [
-              "Consistent slab depth and full coverage maintained across every pour area",
-              "Certified operators experienced in structural placement for all concrete mix types",
-              "Real-time coordination with site supervisors throughout each operation",
-              "Compatible with standard mixes and specialist admixtures including fibre-reinforced concrete",
-              "On-site cleanup and equipment removal included as standard on all placements",
+              "Consistent depth, every pour",
+              "Certified mix specialists",
+              "Real-time site coordination",
+              "Clean-up included",
             ],
-            tags: ["Slabs", "Walls", "Columns"],
           },
           {
             name: "Shotcrete Works",
-            shortDesc: "Pneumatic application for tunnels, retaining walls and complex geometries.",
-            body: "Shotcrete — sprayed concrete applied pneumatically — is the method of choice for retaining walls, slope stabilisation and complex geometric forms. Our equipment delivers rapid, high-strength coverage with precise control over layer thickness and bond quality.",
+            body: "Concrete sprayed pneumatically at high velocity — our method for retaining walls, slope stabilisation and complex forms. Rapid, high-strength coverage with tight control over thickness and bond, even on irregular surfaces.",
             bullets: [
-              "Wet-mix and dry-mix processes available to suit project specification and site requirements",
-              "High early-strength formulations for structurally critical retaining wall and tunnel applications",
-              "Rapid layer build-up for fast turnaround on slope stabilisation and emergency works",
-              "Nozzle positioning adapted for confined spaces and complex geometric surface areas",
-              "Layer thickness and uniformity verified by site supervisor at every stage of application",
+              "Wet-mix & dry-mix options",
+              "High early-strength mixes",
+              "Confined-space nozzle technique",
+              "Layer-by-layer supervisor checks",
             ],
-            tags: ["Retaining Walls", "Tunnels", "Slope Stabilisation"],
           },
           {
             name: "Foundation Works",
-            shortDesc: "Engineered foundation solutions for demanding ground conditions.",
-            body: "Reliable foundations are the bedrock of every successful structure. We design and execute engineered solutions adapted to the specific geotechnical conditions of each site — from strip footings and pad foundations to complex raft slabs for high-rise structures.",
+            body: "Reliable foundations are the bedrock of every structure. We design and place engineered solutions matched to each site's geotechnical conditions — from strip footings to complex raft slabs for towers.",
             bullets: [
-              "Geotechnical site assessments informing the design of every foundation solution",
-              "Reinforced concrete solutions engineered for challenging ground conditions and load requirements",
-              "Coordination with structural engineers throughout design and specification phases",
-              "Precise volumetric concrete batching for all critical foundation pours",
-              "Post-pour inspection protocols and documentation included on all engineered foundation works",
+              "Geotechnical site assessment",
+              "Reinforced for tough ground",
+              "Engineer-coordinated, every phase",
+              "Post-pour inspection included",
             ],
-            tags: ["Strip Footings", "Raft Slabs", "Pad Foundations"],
           },
-        ],
-      },
-      sectors: {
-        label: "Sectors",
-        heading: "Built for every sector",
-        items: [
-          { title: "Residential", desc: "From individual villas to multi-storey apartment complexes along the Costa Blanca coastline." },
-          { title: "Commercial", desc: "Hotels, retail developments and office buildings requiring precision and reliable on-site execution." },
-          { title: "Industrial", desc: "Factory floors, warehouses and infrastructure with demanding structural and finishing requirements." },
-          { title: "High-rise", desc: "Multi-storey structures where pump reach, mix quality and placement precision are all critical." },
+          {
+            name: "Slope Forming",
+            body: "Precision-graded concrete surfaces engineered to fall accurately toward drains and outlets. Laser-guided screeding keeps every gradient consistent, so roof decks, terraces and yards shed water exactly where it's designed to go.",
+            bullets: [
+              "Laser-guided screeding",
+              "Verified falls to every outlet",
+              "Suited to decks, terraces & yards",
+              "Gradient checks before handover",
+            ],
+          },
         ],
       },
       process: {
@@ -368,16 +412,11 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
         body2: "From residential foundations to large commercial pours, we bring precision, reliability and clear communication to every stage of the build.",
         btn: "Learn more",
       },
-      tech: {
-        label: "Capabilities",
-        heading: "Specialized concrete services",
-      },
       stats: {
         label: "By the numbers",
         items: [
           { label: "Projects completed" },
           { label: "Service locations" },
-          { label: "Years of experience" },
           { label: "Rapid site mobilization" },
         ],
       },
@@ -399,12 +438,12 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
         headingLine3: "and trust",
         tagline: "A dedicated team of concrete specialists delivering exceptional results across the Costa Blanca — from residential foundations to major commercial structures.",
         scrollLabel: "Scroll",
-        factLabels: ["Region", "Founded", "Projects completed"],
+        factLabels: ["Region", "Projects completed"],
       },
       mission: {
         label: "Our Story",
-        heading: "Concrete expertise, built since 2016",
-        body1: "Level Pro was founded in 2016 with a single ambition: to bring professional-grade concrete solutions to construction projects across the Costa Blanca. What began as a focused pumping operation has grown into a trusted partner for developers, contractors and architects throughout the region.",
+        heading: "Concrete expertise you can rely on",
+        body1: "Level Pro was founded with a single ambition: to bring professional-grade concrete solutions to construction projects across the Costa Blanca. What began as a focused pumping operation has grown into a trusted partner for developers, contractors and architects throughout the region.",
         body2: "Today we combine experienced on-site teams with a modern, well-maintained fleet — delivering precision at every stage of the concrete process. Our commitment to quality and reliability has built a reputation that speaks through the work we complete.",
       },
       values: {
@@ -419,12 +458,12 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
       },
       milestones: {
         label: "Our Journey",
-        heading: "Nine years of concrete excellence",
+        heading: "A track record of concrete excellence",
         items: [
-          { year: "2016", title: "Founded", desc: "Level Pro established on the Costa Blanca, focused on concrete pumping for residential and coastal developments." },
-          { year: "2018", title: "Fleet expansion", desc: "Added high-capacity boom pumps enabling multi-storey commercial and hotel projects across the region." },
-          { year: "2020", title: "Hotel sector", desc: "Completed major pumping and finishing works for Hotel Rosamar in Benidorm — a landmark commercial project." },
-          { year: "2024", title: "200+ projects", desc: "Passed 200 completed projects and expanded into shotcrete and engineered foundation works." },
+          { title: "Founded on the Costa Blanca", desc: "Level Pro established on the Costa Blanca, focused on concrete pumping for residential and coastal developments." },
+          { title: "Fleet expansion", desc: "Added high-capacity boom pumps enabling multi-storey commercial and hotel projects across the region." },
+          { title: "Hotel sector", desc: "Completed major pumping and finishing works for Hotel Rosamar in Benidorm — a landmark commercial project." },
+          { title: "200+ projects", desc: "Passed 200 completed projects and expanded into shotcrete and engineered foundation works." },
         ],
       },
       cta: {
@@ -445,7 +484,7 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
       info: {
         label: "Contact Information",
         heading: "Reach us directly",
-        phone: { label: "Phone", val: "+34 XXX XXX XXX" },
+        phone: { label: "Phone", val: "+34 624 86 88 61" },
         email: { label: "Email", val: "info@levelpro.es" },
         note: "We typically respond within one business day. For urgent project enquiries, please call us directly.",
       },
@@ -458,10 +497,76 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
         errors: { required: "This field is required", emailInvalid: "Please enter a valid email address" },
       },
     },
+    projectsPage: {
+      hero: {
+        label: "Our Work",
+        headingLine1: "Projects built",
+        headingLine2: "with precision",
+        headingLine3: "across the coast",
+        tagline: "Browse our completed and ongoing concrete works across the Costa Blanca — search by name or filter by location, status, type and year.",
+      },
+      search: { placeholder: "Search projects by name, location or keyword…", clear: "Clear search" },
+      filters: {
+        title: "Filters",
+        clearAll: "Clear all",
+        mobileOpen: "Filters",
+        location: { label: "Location" },
+        status: { label: "Status", all: "All" },
+        type: { label: "Type of Construction" },
+        year: { label: "Year of Construction" },
+      },
+      statusLabels: { finished: "Finished", inProgress: "In Progress" },
+      types: { hotel: "Hotel", residential: "Residential", commercial: "Commercial", industrial: "Industrial" },
+      results: {
+        template: "Showing {n} of {total} projects",
+        empty: { heading: "No projects match your filters", body: "Try adjusting or clearing your filters to see more results." },
+      },
+      card: { seeMore: "See more" },
+      modal: { close: "Close", scope: "Scope of Work" },
+    },
+    equipmentPage: {
+      hero: {
+        label: "Equipment",
+        headingLine1: "Equipment engineered",
+        headingLine2: "for precision",
+        headingLine3: "on every site",
+        tagline: "From high-pressure pumping to precision floor finishing — a modern, well-maintained fleet ready to mobilize across the Costa Blanca.",
+      },
+      intro: {
+        label: "Featured Machines",
+        heading: "Two machines, built for different stages of the pour",
+        tagline: "A closer look at the core equipment behind our pumping and finishing work.",
+      },
+      items: [
+        {
+          category: "Concrete Pumping",
+          name: "Putzmeister P 730",
+          desc: "A compact, high-pressure stationary pump built for shotcrete and precision line pumping — reaching areas larger boom pumps can't access, without sacrificing output.",
+          specs: [{ label: "Output range" }, { label: "Max pressure" }, { label: "Max aggregate size" }, { label: "Engine power" }],
+          bullets: [
+            "Piston pump engineered for continuous high-cycle operation",
+            "Trailer-mounted chassis for fast mobilization between sites",
+            "Diesel-powered with full on-site operator supervision",
+          ],
+        },
+        {
+          category: "Floor Finishing",
+          name: "Barikell MK8 Ride-On Power Trowel",
+          desc: "A twin-rotor ride-on power trowel that floats and finishes medium-to-large concrete slabs fast, with a smooth, consistent surface on every pass.",
+          specs: [{ label: "Rotor configuration" }, { label: "Engine power" }, { label: "Blade speed" }, { label: "Floor coverage" }],
+          bullets: [
+            "Two 750 mm rotors, 8 non-overlapping blades each, for an even finish",
+            "Compact enough to pass through a standard site doorway",
+            "Petrol engine with electric start for fast startup on site",
+          ],
+        },
+      ],
+    },
   },
 
   de: {
     nav: {
+      home: "Startseite",
       links: ["Dienstleistungen", "Projekte", "Ausrüstung", "Über uns", "Kontakt"],
       cta: "Angebot anfragen",
     },
@@ -475,9 +580,7 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
         "Bei Level Pro arbeiten wir mit unseren Kunden zusammen, um ihre Ambitionen zu verwirklichen — und liefern Betonprojekte, die einen bleibenden Unterschied für Menschen und Gemeinschaften machen.",
       ctaPrimary: "Kontaktieren Sie uns",
       ctaSecondary: "Projekte ansehen",
-      locations: ["Benidorm", "Ibiza", "Palma de Mallorca"],
-      watchLabel: "In Aktion sehen",
-      watchDesc: "Erleben Sie unsere Teams und Maschinen im Einsatz an der Costa Blanca.",
+      locations: ["Palma de Mallorca", "Ibiza", "Benidorm"],
       statsLabels: { projects: "Projekte", years: "Jahre", mobilization: "Mobilisierung" },
       scroll: "Scrollen",
     },
@@ -497,12 +600,6 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
           name: "Betonpumpen",
           detail: "Hochdruckpumpsysteme für gleichmäßigen Materialfluss bei mehrgeschossigen Wohn-, Hotel- und Gewerbeobjekten. Unsere Autobetonpumpen erreichen bis zu 50 Meter und fügen sich nahtlos in Ihren Bauablauf ein.",
           shortDesc: "Hochreichende Autobetonpumpen für Wohn-, Hotel- und Gewerbeobjekte — bis zu 50 Meter Reichweite.",
-          tagDescs: [
-            "Bürogebäude und Einzelhandelszentren bis 12 Stockwerke — präzise Mengenkontrolle und GPS-gestützte Gussplanung mit minimaler Beeinträchtigung des Betriebs. Unsere Pumpen decken alle Strukturebenen in einem Einsatz ab.",
-            "Hallenfußböden und Anlagenfundamente auf großer Fläche — Leitungspumpen für hochvolumige Dauerausschüttungen bei gleichmäßigem Druck, mit Vollflotteneinsatz für simultane Mehrbereicksabdeckung auf einer Baustelle.",
-            "Türme und Hotels über 8 Stockwerke — Hochdruckgeräte und GPS-Planung halten jeden Deckenguss im Zeitplan. Reichweite bis zu 50 Meter garantiert ununterbrochene Platzierung auf allen Strukturebenen.",
-            "Villen, Reihenhäuser und Wohnanlagen — flexibler Einsatz auf beengten Baustellen mit vollständiger Bedieneraufsicht und Echtzeit-Gusskoordination integriert in Ihr Baustellenprogramm von Anfang bis Ende.",
-          ],
           bullets: [
             "Reichweite bis zu 50 m für mehrgeschossige Bauten",
             "Vollständige Flotte für gleichzeitigen Einsatz auf mehreren Baustellen",
@@ -514,12 +611,6 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
           name: "Materialplatzierung",
           detail: "Präzise Verteilung für gleichmäßige Tiefe und vollständige Abdeckung bei Platten, Wänden und Stützen — minimaler Materialverlust und erstklassige Ergebnisse bei jedem Projektmaßstab.",
           shortDesc: "Präzise Plattenabdeckung und gleichmäßige Tiefe — erstklassige Ergebnisse bei jedem Betoniervorgang.",
-          tagDescs: [
-            "Handelsböden, Büroplatten und Podiumsdecks — gleichmäßige Tiefe und glatte Oberfläche bei großen Gussflächen, mit Echtzeit-Qualitätskontrollen für erstklassige Ergebnisse bei jedem Abschnitt.",
-            "Schwerlastböden für Gabelstapler, Regallasten und chemisch beständige Oberflächen — zertifizierte Bediener gewährleisten gleichmäßige Tiefe und Normenkonformität bei jedem Betoniervorgang.",
-            "Freitragende Platten im Hochhausbau — enge Toleranzen bei Tiefe und Abdeckung auf jeder Etage verifiziert, mit zertifizierten Bedienern in direkter Koordination mit Ihrer Bauleitung.",
-            "Erdgeschossplatten, Pooldecks und Terrassenplatten — präzise und sorgfältig auf Wohnbaustellen jeder Größe, mit vollständiger Reinigung und Gerätentfernung standardmäßig inbegriffen.",
-          ],
           bullets: [
             "Gleichmäßige Plattentiefe und Abdeckung bei allen Gussbereichen",
             "Zertifizierte Bediener für alle strukturellen Betonmischungstypen",
@@ -531,12 +622,6 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
           name: "Spritzbeton",
           detail: "Pneumatisch aufgebrachter Beton für Stützmauern, Böschungssicherung und komplexe Geometrien — schnelle, hochfeste Abdeckung mit präziser Kontrolle über Schichtdicke und Haftqualität.",
           shortDesc: "Pneumatisch aufgebrachter Beton für Stützmauern, Böschungen und komplexe Geometrien.",
-          tagDescs: [
-            "Kellerstahlbetonwände und Tiefgaragen — schnelle Hochfestigkeit mit minimalem Schalungsaufwand, was die Bauzeit verkürzt und gleichzeitig die vollständige Einhaltung der Tragwerksanforderungen sicherstellt.",
-            "Böschungssicherung und Tunnelauskleidung für Industrie- und Infrastrukturprojekte — Nass- oder Trockenverfahren je nach Standortbedingungen, mit Schichtdickenkontrolle in jeder Ausführungsphase.",
-            "Aufzugsschächte, Treppenhäuser und komplexe Betonelemente — Düsenpositionierung für beengte Innenräume angepasst, mit gleichmäßiger Haftqualität und Schichtdicke bei jeder vertikalen Anwendung.",
-            "Poolschalen, Stützmauern und Landschaftselemente — Nassverfahren für hochwertige Sichtbetonoberflächen, mit Abnahme durch Verantwortlichen nach jeder Schicht zur Gewährleistung von Dauerhaftigkeit und Norm.",
-          ],
           bullets: [
             "Nass- und Trockenspritzverfahren je nach Standortanforderungen",
             "Hochfrühfeste Mischungen für Stützmauern und Tunnel",
@@ -548,12 +633,6 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
           name: "Fundamentarbeiten",
           detail: "Konstruktive Lösungen von Streifenfundamenten bis zu komplexen Bodenplatten — auf die geotechnischen Bedingungen jedes Standorts abgestimmt und mit Ihrem Tragwerksplaner koordiniert.",
           shortDesc: "Konstruktive Fundamente und Bodenplatten, auf die geotechnischen Bedingungen jedes Standorts abgestimmt.",
-          tagDescs: [
-            "Einzel-, Streifen- und Plattenfundamente für Gewerbebau — koordiniert mit Tragwerksplanern und geotechnischen Gutachten für vollständige Normenkonformität von der Planung bis zur Nachgussdokumentation.",
-            "Fundamente für schwere Maschinenbasen, Kranschienen und weitspannende Tragwerke im Industriemaßstab — Stahlbetonlösungen nach präzisen Last- und Setzungsanforderungen konstruktiv ausgelegt.",
-            "Tiefe Bodenplatten und Pfahlkopfplatten für Hochhäuser — nach präzisen Last- und Setzungsanforderungen ausgelegt, mit vollständiger Koordination Ihres Tragwerk- und Geotechnikteams.",
-            "Streifenfundamente, Einzelfundamente und armierte Bodenplatten für Villen und Wohnanlagen auf jedem Baugrund — Standortbewertung, Planung, Ausführung und Nachgussprüfung alles inbegriffen.",
-          ],
           bullets: [
             "Geotechnische Standortbewertung als Grundlage jedes Entwurfs",
             "Stahlbetonlösungen für schwierige Bodenverhältnisse",
@@ -561,8 +640,23 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
             "Prüfprotokolle und Dokumentation nach dem Guss inbegriffen",
           ],
         },
+        {
+          name: "Gefälleausbildung",
+          detail: "Präzise ausgebildete Betonflächen mit exaktem Gefälle zu Abläufen und Einläufen — entscheidend bei Dachterrassen, Balkonen, Rampen und Höfen, wo stehendes Wasser keine Option ist. Lasergeführter Estricheinbau hält jedes Gefälle vom höchsten bis zum tiefsten Punkt konstant.",
+          shortDesc: "Lasergeführtes Gefälle für Dachterrassen, Balkone und Höfe — präzise Neigung, kein stehendes Wasser.",
+          bullets: [
+            "Lasergeführter Estricheinbau für geprüftes Gefälle",
+            "Exaktes Gefälle zu Abläufen und Einläufen",
+            "Geeignet für Dachterrassen, Balkone, Höfe und Rampen",
+            "Nivellierkontrollen in jeder Phase vor der Abnahme",
+          ],
+        },
       ],
-      tags: ["Gewerbe", "Industrie", "Hochbau", "Wohnbau"],
+    },
+    servicesCta: {
+      heading: "Jedes Projekt hat eigene Bedingungen. Wir passen uns an.",
+      body: "Beengte Stadtgrundstücke, ungewöhnlicher Zugang, enge Zeitpläne — welche Einschränkungen auch bestehen, wir richten unseren Ansatz nach Ihrem Projekt aus, nicht umgekehrt.",
+      btn: "Kontakt aufnehmen",
     },
     stats: {
       label: "Betrieb & Ressourcen",
@@ -595,24 +689,48 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
       items: [
         {
           type: "Hotel",
-          shortDesc: "Betonpumparbeiten und Oberflächenbehandlung für die Renovierung des Hotel Rosamar.",
-          fullDesc: "Unser Team unterstützte die Entwicklung und Renovierung des Hotel Rosamar in Benidorm durch Betonpumparbeiten und Oberflächenbehandlung. Das 2020 abgeschlossene Projekt erforderte präzise Koordination und zuverlässige Ausführung vor Ort.",
-          tags: ["Betonpumpen", "Oberflächenfinish", "Materialplatzierung"],
-        },
-        {
-          type: "Hotel",
-          shortDesc: "Betonpumpen und Oberflächenfinish für die Renovierung des Nomad Hotel in Cala Finestrat.",
+          shortDesc: "Ein Boutique-Hotel mit 22 Zimmern zwischen Playa Poniente und Cala de Finestrat, entstanden aus einem Hostel der 1950er im Retro-Design der spanischen Riviera.",
           fullDesc: "Unser Team war durch Betonpumparbeiten und Oberflächenbehandlung am Projekt beteiligt und trug zur effizienten Umsetzung wichtiger Bauphasen bei.",
           tags: ["Betonpumpen", "Oberflächenfinish"],
         },
         {
           type: "Wohnbau",
-          shortDesc: "Hochdruckbetonpumpen über mehrere Stockwerke eines Küstenwohnkomplexes.",
-          fullDesc: "Ein mehrgeschossiger Wohnkomplex in Altea, für den Hochdruckbetonpumpen über mehrere Etagen erforderlich war. Unser Team lieferte präzise Materialplatzierung während der 14-monatigen Bauzeit.",
-          tags: ["Hochdruckpumpen", "Materialplatzierung", "Fundamentarbeiten"],
+          shortDesc: "Ein 26-stöckiger Glasturm an der Playa Poniente — 195 Apartments unter einem beheizten Sky-Pool und Fitnessbereich im obersten Stockwerk.",
+          fullDesc: "Wir führten Betonpumparbeiten und Fundamentarbeiten für die Wohnanlage Alibuilding in Benidorm durch und koordinierten eng mit dem Baustellenteam, um den Betonierplan einzuhalten.",
+          tags: ["Betonpumpen", "Fundamentarbeiten"],
+        },
+        {
+          type: "Wohnbau",
+          shortDesc: "Ein exklusiver Wohnturm an der Avenida del Mediterráneo — 19 Wohnungen, eine pro Etage, jede mit Blick aufs Meer.",
+          fullDesc: "Unser Team lieferte Hochdruckbetonpumpen über mehrere Stockwerke für den Monver Tower in Benidorm und unterstützte die Materialplatzierung während des gesamten vertikalen Baus.",
+          tags: ["Hochdruckpumpen", "Materialplatzierung"],
+        },
+        {
+          type: "Hotel",
+          shortDesc: "Ein Hotel mit 300 Zimmern direkt an der Playa de Poniente, wo jedes Zimmer eine eigene Terrasse mit Meerblick hat.",
+          fullDesc: "Wir unterstützten das Projekt Poseidon Playas de Benidorm durch Betonpumparbeiten und Oberflächenbehandlung und trugen zur effizienten Umsetzung wichtiger Bauphasen bei.",
+          tags: ["Betonpumpen", "Oberflächenfinish"],
+        },
+        {
+          type: "Hotel",
+          shortDesc: "Ein 18-stöckiges Strandhotel an der Levante-Küste, das den ursprünglichen Blue Tower mit einem neuen Sky Tower verbindet — mit Dachterrasse im 19. Stock.",
+          fullDesc: "Unser Team führte Betonpumparbeiten und Materialplatzierung für das Port Benidorm Hotel & Spa durch und sorgte während des gesamten Baus für präzise Koordination und zuverlässige Ausführung vor Ort.",
+          tags: ["Betonpumpen", "Materialplatzierung"],
+        },
+        {
+          type: "Hotel",
+          shortDesc: "Ein Familienhotel mit 364 Zimmern nahe der Levante-Küste, aufgebaut rund um einen Wasserpark, Rutschen und ein All-inclusive-Poolareal.",
+          fullDesc: "Unser Team unterstützte die Entwicklung und Renovierung des Hotel Rosamar in Benidorm durch Betonpumparbeiten und Oberflächenbehandlung. Das 2020 abgeschlossene Projekt erforderte präzise Koordination und zuverlässige Ausführung vor Ort.",
+          tags: ["Betonpumpen", "Oberflächenfinish", "Materialplatzierung"],
+        },
+        {
+          type: "Hotel",
+          shortDesc: "Ein modernes Stadthotel nahe der Turia-Gärten in Valencia, mit Dachpool und Skyline-Bar nur wenige Schritte vom historischen Zentrum entfernt.",
+          fullDesc: "Unser Team führte Betonpumparbeiten und Materialplatzierung für das Novotel Valencia Lavant durch und unterstützte den Hotelbau mit präziser, zuverlässiger Ausführung auf einem beengten Stadtgrundstück.",
+          tags: ["Betonpumpen", "Materialplatzierung"],
         },
       ],
-      metaKeys: { year: "Jahr", type: "Typ", budget: "Budget", location: "Standort" },
+      metaKeys: { year: "Jahr", type: "Typ", budget: "Budget", location: "Standort", status: "Status" },
       learnMore: "Mehr erfahren",
       viewOnMaps: "Auf der Karte anzeigen",
     },
@@ -627,75 +745,68 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
       hero: {
         label: "Unsere Leistungen",
         headingLine1: "Professioneller Beton",
-        headingLine2: "an der Costa Blanca",
-        headingLine3: "",
+        headingLine2: "an der",
+        headingLine3: "Costa Blanca",
         tagline: "Spezialisierte Betondienstleistungen für jede Größenordnung — von Wohnfundamenten bis zu großen Gewerbeobjekten an der Costa Blanca.",
         scrollLabel: "Scrollen",
+      },
+      tech: {
+        label: "Leistungsspektrum",
+        heading: "Spezialisierte Betondienstleistungen",
+        intro: "Fünf zentrale Disziplinen, ein verantwortliches Team. Scrollen Sie durch jede Leistung für alle technischen Details.",
       },
       detail: {
         items: [
           {
             name: "Betonpumpen",
-            shortDesc: "Hochdruckpumpsysteme für mehrgeschossige und großflächige Baustellen.",
-            body: "Unser Betonpumpservice bietet Hochdrucklösungen für mehrgeschossige Wohn- und Gewerbegebäude. Unsere Autobetonpumpen erreichen Höhen von bis zu 50 Metern und gewährleisten präzise Materialplatzierung bei deutlich reduziertem manuellem Aufwand.",
+            body: "Unser Betonpumpservice bietet Hochdruck- und Hochvolumenlösungen für Baustellen jeder Größenordnung. Eine moderne Flotte aus Autobeton- und Anhängerpumpen — mit durchgehender Bedienerbetreuung — hält den Materialfluss exakt dort, wo Ihr Bauablauf es braucht.",
             bullets: [
-              "Reichweite der Autobetonpumpen bis zu 50 Meter für mehrgeschossige Wohn- und Gewerbebauten",
-              "Vollständige Flotte für gleichzeitigen Einsatz auf mehreren aktiven Baustellen verfügbar",
-              "GPS-gestützte Einsatzplanung für reibungslose Integration in Ihren Bauablauf",
-              "Bedienerbetreuung vor Ort von Beginn bis Ende jedes Einsatzes",
-              "Deutliche Reduzierung von Handarbeit, Gerüstbedarf und Arbeitskosten auf der Baustelle",
+              "50 m Pumpreichweite",
+              "Flotte für Mehrfacheinsatz",
+              "GPS-gestützte Planung",
+              "24-Std-Schnellmobilisierung",
             ],
-            tags: ["Wohnbau", "Gewerbe", "Hochbau"],
           },
           {
             name: "Materialplatzierung",
-            shortDesc: "Präzise Betonverteilung für gleichbleibende Qualität bei jedem Guss.",
-            body: "Präzise Materialplatzierung ist entscheidend für die strukturelle Integrität jedes Projekts. Unsere erfahrenen Bediener sorgen für gleichmäßige Verteilung und gleichbleibende Tiefe bei Platten, Wänden und Stützen — bei minimalem Materialverlust.",
+            body: "Präzise Materialplatzierung ist die Grundlage für Statik und Oberflächenqualität jedes Gusses. Zertifizierte Bediener halten Tiefe und Verteilung bei Platten, Wänden und Stützen konstant — erstklassig beim ersten Mal, minimaler Verlust.",
             bullets: [
-              "Gleichmäßige Plattentiefe und vollständige Abdeckung bei jedem Guss gewährleistet",
-              "Zertifizierte Bediener mit Erfahrung in struktureller Platzierung aller Betonmischungstypen",
-              "Echtzeit-Koordination mit Baustellenverantwortlichen während des gesamten Einsatzes",
-              "Kompatibel mit Standardmischungen und Sonderzusätzen einschließlich faserbewehrtem Beton",
-              "Baustellenreinigung und Gerätentfernung standardmäßig bei allen Platzierungen inbegriffen",
+              "Konstante Tiefe, jeder Guss",
+              "Zertifizierte Mischspezialisten",
+              "Echtzeit-Baustellenkoordination",
+              "Reinigung inbegriffen",
             ],
-            tags: ["Platten", "Wände", "Stützen"],
           },
           {
             name: "Spritzbeton",
-            shortDesc: "Pneumatische Aufbringung für Tunnel, Stützmauern und komplexe Geometrien.",
-            body: "Spritzbeton ist die bevorzugte Methode für Stützmauern, Böschungssicherung und komplexe geometrische Formen. Unsere pneumatischen Geräte ermöglichen eine schnelle, hochfeste Beschichtung mit präziser Kontrolle über Schichtdicke und Haftqualität.",
+            body: "Spritzbeton — pneumatisch mit hoher Geschwindigkeit aufgebracht — ist unsere Methode für Stützmauern, Böschungssicherung und komplexe Formen: schnelle, hochfeste Abdeckung mit präziser Kontrolle über Schichtdicke und Haftung, auch auf unregelmäßigen Flächen.",
             bullets: [
-              "Nass- und Trockenspritzverfahren für unterschiedliche Projektanforderungen und Standortbedingungen",
-              "Hochfrühfeste Formulierungen für strukturkritische Stützmauer- und Tunnelanwendungen",
-              "Schneller Schichtaufbau für rasche Böschungssicherung und Notarbeiten",
-              "Düsenführung für beengte Räume und komplexe geometrische Oberflächen angepasst",
-              "Schichtdicke und Gleichmäßigkeit in jeder Ausführungsphase vom Baustellenverantwortlichen geprüft",
+              "Nass- & Trockenspritzverfahren",
+              "Hochfrühfeste Mischungen",
+              "Angepasste Düsentechnik",
+              "Prüfung pro Schicht",
             ],
-            tags: ["Stützmauern", "Tunnel", "Böschungssicherung"],
           },
           {
             name: "Fundamentarbeiten",
-            shortDesc: "Konstruktive Fundamentlösungen für anspruchsvolle Bodenbedingungen.",
-            body: "Zuverlässige Fundamente sind das Fundament jedes erfolgreichen Bauwerks. Wir planen und realisieren konstruktive Lösungen, die auf die spezifischen geotechnischen Bedingungen jedes Standorts abgestimmt sind — von Streifenfundamenten bis zu komplexen Bodenplatten.",
+            body: "Zuverlässige Fundamente sind die Grundlage jedes Bauwerks. Wir planen und realisieren Lösungen nach den geotechnischen Bedingungen jedes Standorts — von Streifenfundamenten bis zu komplexen Bodenplatten für Hochhäuser.",
             bullets: [
-              "Geotechnische Standortbewertungen als Grundlage jedes Fundamententwurfs",
-              "Stahlbetonlösungen für schwierige Bodenverhältnisse und hohe Lastenanforderungen",
-              "Koordination mit Tragwerksplanern in Entwurfs- und Ausführungsphase",
-              "Präzise volumetrische Betonaufbereitung für alle kritischen Fundamentgüsse",
-              "Prüfprotokolle und Dokumentation nach dem Guss bei allen konstruktiven Fundamentarbeiten inbegriffen",
+              "Geotechnische Standortbewertung",
+              "Armiert für schwierigen Baugrund",
+              "Abgestimmt mit Tragwerksplanern",
+              "Prüfung nach Guss inbegriffen",
             ],
-            tags: ["Streifenfundamente", "Bodenplatten", "Einzelfundamente"],
           },
-        ],
-      },
-      sectors: {
-        label: "Einsatzbereiche",
-        heading: "Für jeden Sektor",
-        items: [
-          { title: "Wohnbau", desc: "Von Einzelvillen bis zu mehrgeschossigen Wohnanlagen entlang der Costa Blanca." },
-          { title: "Gewerbe", desc: "Hotels, Einzelhandelsobjekte und Bürogebäude mit hohen Anforderungen an Präzision und Tempo." },
-          { title: "Industrie", desc: "Fabrikböden, Lagerhallen und Infrastruktur mit hohen strukturellen Anforderungen." },
-          { title: "Hochbau", desc: "Mehrgeschossige Gebäude, bei denen Pumpenreichweite und Präzision entscheidend sind." },
+          {
+            name: "Gefälleausbildung",
+            body: "Präzise ausgebildete Betonflächen mit exaktem Gefälle zu Abläufen und Einläufen. Lasergeführter Estricheinbau hält jedes Gefälle konstant, damit Dachterrassen, Balkone und Höfe das Wasser genau dorthin leiten, wo es hin soll.",
+            bullets: [
+              "Lasergeführter Estricheinbau",
+              "Geprüftes Gefälle zu jedem Ablauf",
+              "Für Terrassen, Balkone & Höfe",
+              "Gefälleprüfung vor Abnahme",
+            ],
+          },
         ],
       },
       process: {
@@ -720,16 +831,11 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
         body2: "Von Wohnfundamenten bis zu großen Gewerbegüssen bringen wir Präzision, Zuverlässigkeit und klare Kommunikation in jede Bauphase.",
         btn: "Mehr erfahren",
       },
-      tech: {
-        label: "Leistungsspektrum",
-        heading: "Spezialisierte Betondienstleistungen",
-      },
       stats: {
         label: "In Zahlen",
         items: [
           { label: "Abgeschlossene Projekte" },
           { label: "Standorte" },
-          { label: "Jahre Erfahrung" },
           { label: "Schnelle Mobilisierung" },
         ],
       },
@@ -751,12 +857,12 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
         headingLine3: "und Vertrauen",
         tagline: "Ein engagiertes Team von Betonspezialisten, das außergewöhnliche Ergebnisse an der Costa Blanca liefert — von Wohnfundamenten bis zu großen Gewerbeobjekten.",
         scrollLabel: "Scrollen",
-        factLabels: ["Region", "Gegründet", "Abgeschlossene Projekte"],
+        factLabels: ["Region", "Abgeschlossene Projekte"],
       },
       mission: {
         label: "Unsere Geschichte",
-        heading: "Betonkompetenz seit 2016",
-        body1: "Level Pro wurde 2016 mit einem einzigen Ziel gegründet: professionelle Betonlösungen für Bauprojekte an der Costa Blanca zu realisieren. Was als fokussierter Pumpbetrieb begann, ist heute ein verlässlicher Partner für Bauträger, Auftragnehmer und Architekten in der gesamten Region.",
+        heading: "Betonkompetenz, auf die Sie sich verlassen können",
+        body1: "Level Pro wurde mit einem einzigen Ziel gegründet: professionelle Betonlösungen für Bauprojekte an der Costa Blanca zu realisieren. Was als fokussierter Pumpbetrieb begann, ist heute ein verlässlicher Partner für Bauträger, Auftragnehmer und Architekten in der gesamten Region.",
         body2: "Heute vereinen wir erfahrene Vor-Ort-Teams mit einer modernen, gepflegten Flotte — und liefern Präzision in jeder Phase des Betonprozesses. Unser Engagement für Qualität und Zuverlässigkeit hat einen Ruf aufgebaut, der durch unsere abgeschlossenen Projekte spricht.",
       },
       values: {
@@ -771,12 +877,12 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
       },
       milestones: {
         label: "Unser Weg",
-        heading: "Neun Jahre Betonexzellenz",
+        heading: "Eine Erfolgsbilanz in Betonexzellenz",
         items: [
-          { year: "2016", title: "Gründung", desc: "Level Pro wird an der Costa Blanca gegründet, mit Fokus auf Betonpumpen für Wohn- und Küstenprojekte." },
-          { year: "2018", title: "Flottenausbau", desc: "Anschaffung leistungsstarker Autobetonpumpen für mehrgeschossige Gewerbe- und Hotelprojekte in der Region." },
-          { year: "2020", title: "Hotelsektor", desc: "Abschluss wichtiger Pump- und Veredelungsarbeiten für das Hotel Rosamar in Benidorm — ein Meilenstein im Gewerbebereich." },
-          { year: "2024", title: "200+ Projekte", desc: "Überschreitung von 200 abgeschlossenen Projekten und Erweiterung in Spritzbeton und Fundamentarbeiten." },
+          { title: "Gründung an der Costa Blanca", desc: "Level Pro wird an der Costa Blanca gegründet, mit Fokus auf Betonpumpen für Wohn- und Küstenprojekte." },
+          { title: "Flottenausbau", desc: "Anschaffung leistungsstarker Autobetonpumpen für mehrgeschossige Gewerbe- und Hotelprojekte in der Region." },
+          { title: "Hotelsektor", desc: "Abschluss wichtiger Pump- und Veredelungsarbeiten für das Hotel Rosamar in Benidorm — ein Meilenstein im Gewerbebereich." },
+          { title: "200+ Projekte", desc: "Überschreitung von 200 abgeschlossenen Projekten und Erweiterung in Spritzbeton und Fundamentarbeiten." },
         ],
       },
       cta: {
@@ -797,7 +903,7 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
       info: {
         label: "Kontaktinformationen",
         heading: "Direkt erreichen",
-        phone: { label: "Telefon", val: "+34 XXX XXX XXX" },
+        phone: { label: "Telefon", val: "+34 624 86 88 61" },
         email: { label: "E-Mail", val: "info@levelpro.es" },
         note: "Wir antworten in der Regel innerhalb eines Werktages. Bei dringenden Projektanfragen rufen Sie uns bitte direkt an.",
       },
@@ -810,111 +916,166 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
         errors: { required: "Dieses Feld ist erforderlich", emailInvalid: "Bitte geben Sie eine gültige E-Mail-Adresse ein" },
       },
     },
+    projectsPage: {
+      hero: {
+        label: "Unsere Arbeit",
+        headingLine1: "Projekte gebaut",
+        headingLine2: "mit Präzision",
+        headingLine3: "entlang der Küste",
+        tagline: "Entdecken Sie unsere abgeschlossenen und laufenden Betonarbeiten an der Costa Blanca — suchen Sie nach Namen oder filtern Sie nach Standort, Status, Bauart und Jahr.",
+      },
+      search: { placeholder: "Projekte nach Name, Standort oder Stichwort suchen…", clear: "Suche löschen" },
+      filters: {
+        title: "Filter",
+        clearAll: "Alle zurücksetzen",
+        mobileOpen: "Filter",
+        location: { label: "Standort" },
+        status: { label: "Status", all: "Alle" },
+        type: { label: "Bauart" },
+        year: { label: "Baujahr" },
+      },
+      statusLabels: { finished: "Fertiggestellt", inProgress: "In Arbeit" },
+      types: { hotel: "Hotel", residential: "Wohnbau", commercial: "Gewerbe", industrial: "Industrie" },
+      results: {
+        template: "{n} von {total} Projekten werden angezeigt",
+        empty: { heading: "Keine Projekte entsprechen Ihren Filtern", body: "Passen Sie Ihre Filter an oder setzen Sie sie zurück, um mehr Ergebnisse zu sehen." },
+      },
+      card: { seeMore: "Mehr erfahren" },
+      modal: { close: "Schließen", scope: "Leistungsumfang" },
+    },
+    equipmentPage: {
+      hero: {
+        label: "Ausrüstung",
+        headingLine1: "Maschinen, gebaut",
+        headingLine2: "für höchste",
+        headingLine3: "Präzision",
+        tagline: "Von Hochdruckpumpen bis zur präzisen Bodenbearbeitung — eine moderne, gut gewartete Flotte, einsatzbereit an der gesamten Costa Blanca.",
+      },
+      intro: {
+        label: "Ausgewählte Maschinen",
+        heading: "Zwei Maschinen für unterschiedliche Phasen des Betoniervorgangs",
+        tagline: "Ein genauer Blick auf die zentrale Ausrüstung hinter unseren Pump- und Verarbeitungsarbeiten.",
+      },
+      items: [
+        {
+          category: "Betonpumpen",
+          name: "Putzmeister P 730",
+          desc: "Eine kompakte Hochdruck-Stationärpumpe für Spritzbeton und präzises Leitungspumpen — sie erreicht Bereiche, die größere Autobetonpumpen nicht bedienen können, ohne Leistungseinbußen.",
+          specs: [{ label: "Förderbereich" }, { label: "Max. Druck" }, { label: "Max. Korngröße" }, { label: "Motorleistung" }],
+          bullets: [
+            "Kolbenpumpe für durchgehenden Hochzyklusbetrieb ausgelegt",
+            "Anhängerfahrgestell für schnelle Mobilisierung zwischen Baustellen",
+            "Dieselbetrieben mit durchgehender Bedienerbetreuung vor Ort",
+          ],
+        },
+        {
+          category: "Bodenbearbeitung",
+          name: "Barikell MK8 Ride-On Power Trowel",
+          desc: "Ein Doppelrotor-Aufsitzglätter, der mittelgroße bis große Betonplatten schnell glättet und verdichtet — mit einer gleichmäßigen, konsistenten Oberfläche bei jedem Durchgang.",
+          specs: [{ label: "Rotorkonfiguration" }, { label: "Motorleistung" }, { label: "Flügeldrehzahl" }, { label: "Bodenabdeckung" }],
+          bullets: [
+            "Zwei Rotoren mit 750 mm Durchmesser, je 8 nicht überlappende Flügel, für ein gleichmäßiges Finish",
+            "Kompakt genug, um durch eine normale Baustellentür zu passen",
+            "Benzinmotor mit Elektrostart für einen schnellen Start vor Ort",
+          ],
+        },
+      ],
+    },
   },
 
   es: {
     nav: {
+      home: "Inicio",
       links: ["Servicios", "Proyectos", "Equipos", "Nosotros", "Contacto"],
       cta: "Solicitar presupuesto",
     },
     hero: {
       eyebrow: "Soluciones de hormigón — Costa Blanca",
       est: "EST. 2016",
-      titleLine1: "Vivimos",
-      titleLine2: "para el",
-      titleLine3: "reto",
+      titleLine1: "Más Alto",
+      titleLine2: "Mejor!",
+      titleLine3: "",
       tagline:
         "En Level Pro, colaboramos con nuestros clientes para hacer realidad sus ambiciones — entregando proyectos de hormigón que marcan una diferencia duradera para las personas y las comunidades.",
       ctaPrimary: "Contáctanos",
       ctaSecondary: "Ver proyectos",
-      locations: ["Benidorm", "Ibiza", "Palma de Mallorca"],
-      watchLabel: "Ver en acción",
-      watchDesc: "Mira a nuestros equipos y maquinaria trabajando por la Costa Blanca.",
+      locations: ["Palma de Mallorca", "Ibiza", "Benidorm"],
       statsLabels: { projects: "Proyectos", years: "Años", mobilization: "Movilización" },
       scroll: "Scroll",
     },
     about: {
       label: "Quiénes somos",
-      body: "Level Pro ofrece soluciones profesionales de hormigón, combinando equipos con experiencia y maquinaria especializada para garantizar una ejecución precisa y resultados fiables.",
+      body: "Level Pro ofrece soluciones profesionales para el bombeo y la aplicación de hormigón y morteros a nivel PRO.",
     },
     services: {
       label: "Nuestros Servicios",
-      headingLine1: "Servicios especializados",
+      headingLine1: "Profesionales",
       headingLine2: "de hormigón",
       headingLine3: "",
       tagline:
         "De los cimientos a las fachadas — bombeo de hormigón fiable y colocación precisa de material a cualquier escala.",
       items: [
         {
-          name: "Bombeo de Hormigón",
-          detail: "Sistemas de bombeo de alta presión para un flujo de material constante en edificios residenciales, hoteleros y comerciales de varios pisos. Nuestras bombas pluma alcanzan hasta 50 metros e integran su programa de obra.",
+          name: "Bombeos de Hormigón",
+          detail: "Bombas pluma de hasta 50 metros y bombas estacionarias, coordinadas con su programa de obra para un suministro continuo.",
           shortDesc: "Bombas pluma de largo alcance para obras residenciales, hoteleras y comerciales — hasta 50 metros.",
-          tagDescs: [
-            "Edificios de oficinas y centros comerciales hasta 12 plantas — control preciso de volumen y programación del vertido por GPS con mínima interferencia. Nuestras bombas cubren todos los niveles estructurales en una sola movilización.",
-            "Suelos de naves y bases de instalaciones de gran superficie — bombas de línea para vertidos continuos de gran volumen a presión constante, con flota completa para cobertura simultánea en múltiples zonas del mismo recinto.",
-            "Torres y hoteles de más de 8 plantas — equipos de alta presión y programación GPS mantienen cada vertido en plazo. Alcance hasta 50 metros garantiza la colocación continua en todos los niveles estructurales.",
-            "Villas, adosados y bloques de pisos — despliegue flexible en obras compactas con supervisión completa del operador y coordinación del vertido en tiempo real integrada en su programa de obra de principio a fin.",
-          ],
           bullets: [
-            "Alcance de bomba pluma hasta 50 m para estructuras de varios pisos",
-            "Flota completa para despliegue simultáneo en múltiples obras",
-            "Programación del vertido con GPS integrada en su plan de obra",
-            "Supervisión del operador en obra de principio a fin",
+            "Bombas pluma de hasta 50 m de alcance",
+            "Flota propia para obras de cualquier tamaño",
+            "Movilización rápida en menos de 24 horas",
+            "Supervisión de operador durante todo el vertido",
           ],
         },
         {
-          name: "Colocación de Material",
-          detail: "Distribución precisa para profundidad uniforme y cobertura completa en losas, muros y pilares — mínimo desperdicio y resultados de primera calidad en cualquier escala.",
-          shortDesc: "Cobertura de losa precisa y profundidad uniforme — calidad de primera en cada área de vertido.",
-          tagDescs: [
-            "Suelos comerciales, losas de oficinas y cubiertas — profundidad uniforme y acabado liso en grandes superficies de vertido, con controles de calidad en tiempo real para resultados de primera en cada sección.",
-            "Losas industriales resistentes para tráfico de carretillas, cargas de estanterías y superficies con tratamiento químico — operadores certificados garantizan profundidad uniforme y cumplimiento normativo en cada vertido.",
-            "Forjados en altura — tolerancias estrictas verificadas en cada vertido para profundidad y cobertura constantes, con operadores certificados coordinados directamente con su equipo de supervisión estructural.",
-            "Soleras, losas de piscina y terrazas — precisión y cuidado en obras residenciales de cualquier escala, con limpieza completa y retirada de equipos incluidas como estándar en cada trabajo.",
-          ],
+          name: "Morteros autonivelantes",
+          detail: "Soleras interiores perfectamente planas y niveladas, de fraguado rápido, ideales para suelo radiante, parqué o tarima.",
+          shortDesc: "Pavimentos interiores perfectamente planos mediante morteros autonivelantes de fraguado rápido.",
           bullets: [
-            "Profundidad uniforme de losa y cobertura en todas las zonas",
-            "Operadores certificados para todos los tipos de mezcla estructural",
-            "Coordinación en tiempo real con los responsables de obra",
-            "Limpieza en obra y retirada de equipos incluidas",
+            "Planimetría perfecta en interiores y suelo radiante",
+            "Fraguado rápido, obra lista en menos tiempo",
+            "Bombeo mecánico para grandes superficies",
+            "Acabado listo para cualquier pavimento final",
           ],
         },
         {
-          name: "Gunitado",
-          detail: "Hormigón proyectado neumáticamente para muros de contención, estabilización de taludes y formas geométricas complejas — cobertura rápida de alta resistencia con control preciso del espesor de capa.",
-          shortDesc: "Hormigón proyectado neumáticamente para muros de contención, taludes y formas geométricas complejas.",
-          tagDescs: [
-            "Muros de sótano y aparcamientos subterráneos — aplicación de alta resistencia rápida con necesidad mínima de encofrado, reduciendo el plazo de obra y manteniendo el pleno cumplimiento de la especificación estructural.",
-            "Estabilización de taludes y revestimiento de túneles en obras industriales e infraestructuras — mezcla húmeda o seca según las condiciones del sitio, con espesor de capa verificado en cada fase de aplicación.",
-            "Cajas de ascensores, núcleos y elementos de geometría compleja — boquilla adaptada para espacios interiores confinados, con calidad de adherencia y espesor de capa constantes en cada aplicación vertical.",
-            "Vasos de piscina, muros de contención y elementos de jardinería — proceso húmedo para acabados vistos de calidad, con visto bueno del responsable tras cada capa para garantizar durabilidad y especificación.",
-          ],
+          name: "Hormigón fratasado",
+          detail: "Soleras fratasadas mecánicamente con helicóptero, con una superficie densa y resistente al desgaste para naves y garajes.",
+          shortDesc: "Soleras de hormigón fratasado mecánicamente para naves, garajes e industria con acabado resistente.",
           bullets: [
-            "Procesos de mezcla húmeda y seca según las condiciones del sitio",
-            "Mezclas de alta resistencia temprana para muros y túneles",
-            "Posicionamiento de boquilla para espacios confinados o irregulares",
-            "Espesor de capa verificado por el responsable en cada fase",
+            "Fratasado mecánico con helicóptero",
+            "Superficie resistente al desgaste y al tránsito pesado",
+            "Apto para naves industriales y garajes",
+            "Tratamiento con endurecedor de cuarzo opcional",
           ],
         },
         {
-          name: "Cimentación",
-          detail: "Soluciones desde zapatas corridas hasta losas de cimentación complejas — diseñadas según las condiciones geotécnicas de cada emplazamiento y coordinadas con su ingeniero estructural.",
-          shortDesc: "Zapatas y losas armadas diseñadas según las condiciones geotécnicas de cada emplazamiento.",
-          tagDescs: [
-            "Zapatas, zanjas corridas y losas de cimentación para obras comerciales — coordinadas con ingenieros y estudios geotécnicos para pleno cumplimiento normativo desde el diseño hasta la documentación post-vertido.",
-            "Sistemas de cimentación para bases de maquinaria pesada, carriles de grúa y estructuras de gran vano industrial — soluciones de hormigón armado diseñadas según requisitos precisos de carga y asiento.",
-            "Losas profundas y encepados para torres — diseñados según requisitos precisos de distribución de cargas y asientos, con coordinación completa de su equipo de ingeniería estructural y geotécnica.",
-            "Zapatas corridas, zapatas aisladas y losas armadas para villas y edificios residenciales en cualquier terreno — evaluación del sitio, diseño, ejecución e inspección post-vertido todo incluido.",
-          ],
+          name: "Gunitados",
+          detail: "Hormigón proyectado por vía húmeda o seca sobre muros de contención y taludes, con mínimo encofrado y alta resistencia inicial.",
+          shortDesc: "Hormigón proyectado a alta presión para muros de contención, taludes y piscinas.",
           bullets: [
-            "Evaluación geotécnica del terreno para cada diseño",
-            "Hormigón armado para condiciones de terreno difíciles",
-            "Coordinación completa con ingenieros estructurales en todas las fases",
-            "Inspección y documentación post-vertido incluidas",
+            "Proyección por vía húmeda y seca",
+            "Ideal para muros de contención y taludes",
+            "Mínimo encofrado, menor plazo de ejecución",
+            "Control de espesor capa a capa",
+          ],
+        },
+        {
+          name: "Formación de pendientes",
+          detail: "Pendientes de hormigón guiadas por láser hacia sumideros y desagües, sin agua estancada en cubiertas, terrazas ni patios.",
+          shortDesc: "Pendientes precisas guiadas por láser para cubiertas, terrazas y patios sin agua estancada.",
+          bullets: [
+            "Regleado guiado por láser",
+            "Pendientes calculadas hacia sumideros y desagües",
+            "Apto para cubiertas, terrazas, rampas y patios",
+            "Verificación de nivel antes de la entrega",
           ],
         },
       ],
-      tags: ["Comercial", "Industrial", "Gran altura", "Residencial"],
+    },
+    servicesCta: {
+      heading: "Cada proyecto tiene sus propias condiciones. Nos adaptamos a las tuyas.",
+      body: "Solares urbanos reducidos, accesos poco habituales, plazos ajustados — sean cuales sean las limitaciones, adaptamos nuestro enfoque a tu proyecto, no al revés.",
+      btn: "Contáctenos",
     },
     stats: {
       label: "Operaciones y Recursos",
@@ -947,24 +1108,48 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
       items: [
         {
           type: "Hotel",
-          shortDesc: "Bombeo de hormigón y trabajos de acabado superficial para la renovación del Hotel Rosamar.",
-          fullDesc: "Nuestro equipo apoyó el desarrollo y la renovación del Hotel Rosamar en Benidorm mediante bombeo de hormigón y trabajos de acabado superficial. El proyecto, completado en 2020, requirió una coordinación precisa y una ejecución fiable en obra.",
-          tags: ["Bombeo de Hormigón", "Acabado Superficial", "Colocación de Material"],
-        },
-        {
-          type: "Hotel",
-          shortDesc: "Bombeo de hormigón y acabado superficial para la renovación del Nomad Hotel en Cala Finestrat.",
+          shortDesc: "Un hotel boutique de 22 habitaciones entre la Playa de Poniente y la Cala de Finestrat, renacido de un hostal de los años 50 con diseño retro de la Riviera española.",
           fullDesc: "Nuestro equipo participó en el proyecto a través de operaciones de bombeo de hormigón y trabajos de acabado superficial, contribuyendo a la ejecución eficiente de las etapas clave de la construcción.",
           tags: ["Bombeo de Hormigón", "Acabado Superficial"],
         },
         {
           type: "Residencial",
-          shortDesc: "Bombeo de hormigón de alta presión en múltiples plantas de un complejo residencial costero.",
-          fullDesc: "Un complejo residencial de varios pisos en Altea que requirió bombeo de hormigón de alta presión en múltiples plantas. Nuestro equipo realizó una colocación precisa del material durante los 14 meses de construcción.",
-          tags: ["Bombeo de Alta Presión", "Colocación de Material", "Cimentación"],
+          shortDesc: "Una torre acristalada de 26 plantas en la Playa de Poniente — 195 apartamentos bajo una piscina climatizada y gimnasio en la última planta.",
+          fullDesc: "Realizamos bombeo de hormigón y trabajos de cimentación para el desarrollo residencial Alibuilding en Benidorm, coordinando estrechamente con el equipo de obra para mantener el calendario de hormigonado.",
+          tags: ["Bombeo de Hormigón", "Cimentación"],
+        },
+        {
+          type: "Residencial",
+          shortDesc: "Una exclusiva torre residencial en la Avenida del Mediterráneo — 19 viviendas, una por planta, cada una orientada al mar.",
+          fullDesc: "Nuestro equipo realizó bombeo de hormigón de alta presión en múltiples plantas para el Monver Tower en Benidorm, apoyando la colocación de material durante toda la construcción vertical del edificio.",
+          tags: ["Bombeo de Alta Presión", "Colocación de Material"],
+        },
+        {
+          type: "Hotel",
+          shortDesc: "Un hotel de 300 habitaciones en primera línea de la Playa de Poniente, donde cada habitación se abre a su propia terraza con vistas al mar.",
+          fullDesc: "Apoyamos el proyecto del hotel Poseidon Playas de Benidorm mediante bombeo de hormigón y trabajos de acabado superficial, contribuyendo a la ejecución eficiente de las etapas clave de la construcción.",
+          tags: ["Bombeo de Hormigón", "Acabado Superficial"],
+        },
+        {
+          type: "Hotel",
+          shortDesc: "Un hotel de 18 plantas frente a la Playa de Levante, que une su Blue Tower original con una nueva Sky Tower — con terraza en la planta 19.",
+          fullDesc: "Nuestro equipo realizó bombeo de hormigón y colocación de material para el Port Benidorm Hotel & Spa, garantizando una coordinación precisa y una ejecución fiable en obra durante toda la construcción.",
+          tags: ["Bombeo de Hormigón", "Colocación de Material"],
+        },
+        {
+          type: "Hotel",
+          shortDesc: "Un hotel familiar de 364 habitaciones junto a la Playa de Levante, construido en torno a un parque acuático, toboganes y una piscina todo incluido.",
+          fullDesc: "Nuestro equipo apoyó el desarrollo y la renovación del Hotel Rosamar en Benidorm mediante bombeo de hormigón y trabajos de acabado superficial. El proyecto, completado en 2020, requirió una coordinación precisa y una ejecución fiable en obra.",
+          tags: ["Bombeo de Hormigón", "Acabado Superficial", "Colocación de Material"],
+        },
+        {
+          type: "Hotel",
+          shortDesc: "Un hotel urbano moderno junto a los Jardines del Turia en Valencia, con piscina y bar en la azotea a pocos pasos del centro histórico.",
+          fullDesc: "Nuestro equipo realizó bombeo de hormigón y colocación de material para el Novotel Valencia Lavant, apoyando la construcción del hotel con una ejecución precisa y fiable en un solar urbano de espacio reducido.",
+          tags: ["Bombeo de Hormigón", "Colocación de Material"],
         },
       ],
-      metaKeys: { year: "Año", type: "Tipo", budget: "Presupuesto", location: "Ubicación" },
+      metaKeys: { year: "Año", type: "Tipo", budget: "Presupuesto", location: "Ubicación", status: "Estado" },
       learnMore: "Saber más",
       viewOnMaps: "Ver en el mapa",
     },
@@ -979,75 +1164,68 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
       hero: {
         label: "Nuestros Servicios",
         headingLine1: "Hormigón profesional",
-        headingLine2: "en la Costa Blanca",
-        headingLine3: "",
+        headingLine2: "en la",
+        headingLine3: "Costa Blanca",
         tagline: "Servicios especializados de hormigón a cualquier escala — desde cimentaciones residenciales hasta grandes estructuras comerciales en la Costa Blanca.",
         scrollLabel: "Scroll",
+      },
+      tech: {
+        label: "Capacidades",
+        heading: "Servicios especializados de hormigón",
+        intro: "Cinco disciplinas principales, un mismo equipo responsable. Recorra cada servicio para ver el detalle técnico completo.",
       },
       detail: {
         items: [
           {
-            name: "Bombeo de Hormigón",
-            shortDesc: "Sistemas de bombeo de alta presión para obras multiplanta y a gran escala.",
-            body: "Nuestro servicio de bombeo de hormigón ofrece soluciones de alta presión para edificios residenciales y comerciales de varios pisos. Nuestra flota de bombas pluma puede alcanzar alturas de hasta 50 metros, garantizando una colocación precisa y reduciendo el trabajo manual.",
+            name: "Bombeos de Hormigón",
+            body: "Nuestro servicio de bombeo cubre desde bombas pluma de largo alcance hasta bombas estacionarias para trabajos de precisión, adaptándose a obra residencial, hotelera, comercial e industrial. Coordinamos cada vertido con su programa de obra para mantener un suministro continuo, sin cortes ni tiempos muertos.",
             bullets: [
-              "Alcance de la bomba pluma de hasta 50 metros para estructuras residenciales y comerciales de varios pisos",
-              "Flota completa disponible para despliegue simultáneo en múltiples obras activas",
-              "Programación del vertido con seguimiento GPS integrada en su plan de obra",
-              "Supervisión del operador en obra de principio a fin en cada trabajo",
-              "Reduce significativamente el manejo manual, los requisitos de andamiaje y los costes de mano de obra",
+              "Alcance de bomba pluma hasta 50 m",
+              "Bombas estacionarias para espacios reducidos",
+              "Programación de vertidos por fases",
+              "Movilización en menos de 24 horas",
             ],
-            tags: ["Residencial", "Comercial", "Gran altura"],
           },
           {
-            name: "Colocación de Material",
-            shortDesc: "Distribución precisa del hormigón para garantizar calidad uniforme en cada vertido.",
-            body: "La colocación precisa del material es fundamental para la integridad estructural de cada proyecto. Nuestros operadores garantizan una distribución uniforme y una profundidad constante en losas, muros y pilares, minimizando el desperdicio.",
+            name: "Morteros autonivelantes",
+            body: "Aplicamos morteros autonivelantes de base cemento para conseguir soleras perfectamente planas, lisas y niveladas, la base ideal para suelo radiante, tarima, parqué o pavimento cerámico. Su fraguado rápido acorta los plazos de obra sin renunciar a la resistencia ni a la planimetría exigida.",
             bullets: [
-              "Profundidad uniforme de losa y cobertura completa mantenidas en todas las zonas de vertido",
-              "Operadores certificados con experiencia en colocación estructural para todo tipo de mezclas",
-              "Coordinación en tiempo real con los responsables de obra durante cada operación",
-              "Compatible con mezclas estándar y especialidades, incluido el hormigón reforzado con fibras",
-              "Limpieza en obra y retirada de equipos incluidas como estándar en todas las colocaciones",
+              "Planimetría con tolerancia milimétrica",
+              "Fraguado rápido, tránsito en 24-48h",
+              "Bombeo mecánico para grandes superficies",
+              "Compatible con suelo radiante",
             ],
-            tags: ["Losas", "Muros", "Pilares"],
           },
           {
-            name: "Gunitado",
-            shortDesc: "Aplicación neumática para túneles, muros de contención y geometrías complejas.",
-            body: "El gunite — hormigón proyectado neumáticamente — es el método preferido para muros de contención, estabilización de taludes y formas geométricas complejas. Nuestros equipos ofrecen una cobertura rápida y de alta resistencia con control preciso del espesor de capa.",
+            name: "Hormigón fratasado",
+            body: "Ejecutamos soleras de hormigón fratasadas mecánicamente con helicóptero, logrando una superficie densa, cerrada y resistente al desgaste. Es la solución adecuada para naves industriales, garajes y zonas sometidas a tránsito pesado o rodado constante.",
             bullets: [
-              "Procesos de mezcla húmeda y seca disponibles según la especificación del proyecto y los requisitos del sitio",
-              "Formulaciones de alta resistencia temprana para aplicaciones estructuralmente críticas en muros y túneles",
-              "Rápida acumulación de capas para estabilización de taludes y trabajos de emergencia",
-              "Posicionamiento de la boquilla adaptado para espacios confinados y superficies geométricas complejas",
-              "Espesor y uniformidad de capa verificados por el responsable de obra en cada fase de aplicación",
+              "Fratasado mecánico con helicóptero",
+              "Superficie resistente al desgaste",
+              "Apto para tránsito de carretillas y vehículos",
+              "Endurecedor de cuarzo opcional",
             ],
-            tags: ["Muros de Contención", "Túneles", "Estabilización de Taludes"],
           },
           {
-            name: "Cimentación",
-            shortDesc: "Soluciones de cimentación diseñadas para condiciones de terreno exigentes.",
-            body: "Una cimentación fiable es la base de todo proyecto exitoso. Diseñamos y ejecutamos soluciones adaptadas a las condiciones geotécnicas específicas de cada emplazamiento — desde zapatas corridas hasta losas de cimentación complejas para estructuras de gran altura.",
+            name: "Gunitados",
+            body: "Proyectamos hormigón por vía húmeda o seca sobre muros de contención, taludes y elementos de geometría compleja, logrando alta resistencia inicial con un mínimo de encofrado. Trabajamos en espacios de difícil acceso manteniendo el control del espesor y la adherencia en cada capa aplicada.",
             bullets: [
-              "Evaluaciones geotécnicas del terreno que informan el diseño de cada solución de cimentación",
-              "Soluciones de hormigón armado diseñadas para condiciones de terreno difíciles y grandes cargas",
-              "Coordinación con ingenieros estructurales durante las fases de diseño y especificación",
-              "Dosificación volumétrica precisa del hormigón para todos los vertidos críticos de cimentación",
-              "Protocolos de inspección post-vertido y documentación incluidos en todas las obras de cimentación",
+              "Proyección por vía húmeda y seca",
+              "Mínimo encofrado necesario",
+              "Alta resistencia inicial",
+              "Control de espesor capa a capa",
             ],
-            tags: ["Zapatas Corridas", "Losas de Cimentación", "Cimentación por Pilotes"],
           },
-        ],
-      },
-      sectors: {
-        label: "Sectores",
-        heading: "Para todos los sectores",
-        items: [
-          { title: "Residencial", desc: "Desde villas individuales hasta complejos de apartamentos de varios pisos en la Costa Blanca." },
-          { title: "Comercial", desc: "Hoteles, desarrollos comerciales y edificios de oficinas que requieren precisión y rapidez en obra." },
-          { title: "Industrial", desc: "Suelos de fábrica, almacenes e infraestructura con exigentes requisitos estructurales y de acabado." },
-          { title: "Gran altura", desc: "Estructuras de varios pisos donde el alcance de la bomba y la colocación precisa son fundamentales." },
+          {
+            name: "Formación de pendientes",
+            body: "Formamos pendientes de hormigón guiadas por láser para dirigir el agua hacia sumideros y canalones, evitando encharcamientos en cubiertas, terrazas, rampas y patios. Cada pendiente se verifica con equipos de nivelación antes de la entrega, asegurando una evacuación de agua eficaz y duradera.",
+            bullets: [
+              "Regleado guiado por láser",
+              "Pendientes calculadas hacia sumideros",
+              "Apto para cubiertas, terrazas y rampas",
+              "Verificación de nivel antes de la entrega",
+            ],
+          },
         ],
       },
       process: {
@@ -1072,16 +1250,11 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
         body2: "Desde cimentaciones residenciales hasta grandes vertidos comerciales, aportamos precisión, fiabilidad y comunicación clara en cada etapa de la obra.",
         btn: "Saber más",
       },
-      tech: {
-        label: "Capacidades",
-        heading: "Servicios especializados de hormigón",
-      },
       stats: {
         label: "En cifras",
         items: [
           { label: "Proyectos completados" },
           { label: "Ubicaciones de servicio" },
-          { label: "Años de experiencia" },
           { label: "Movilización rápida" },
         ],
       },
@@ -1103,12 +1276,12 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
         headingLine3: "y confianza",
         tagline: "Un equipo dedicado de especialistas en hormigón comprometido con entregar resultados excepcionales en la Costa Blanca — desde cimentaciones residenciales hasta grandes estructuras comerciales.",
         scrollLabel: "Scroll",
-        factLabels: ["Región", "Fundación", "Proyectos completados"],
+        factLabels: ["Región", "Proyectos completados"],
       },
       mission: {
         label: "Nuestra historia",
-        heading: "Experiencia en hormigón desde 2016",
-        body1: "Level Pro se fundó en 2016 con una sola ambición: aportar soluciones profesionales de hormigón a los proyectos de construcción de la Costa Blanca. Lo que comenzó como una operación de bombeo especializada ha crecido hasta convertirse en un socio de confianza para promotores, contratistas y arquitectos de toda la región.",
+        heading: "Experiencia en hormigón en la que puede confiar",
+        body1: "Level Pro se fundó con una sola ambición: aportar soluciones profesionales de hormigón a los proyectos de construcción de la Costa Blanca. Lo que comenzó como una operación de bombeo especializada ha crecido hasta convertirse en un socio de confianza para promotores, contratistas y arquitectos de toda la región.",
         body2: "Hoy combinamos equipos experimentados en obra con una flota moderna y bien mantenida, ofreciendo precisión en cada etapa del proceso de hormigonado. Nuestro compromiso con la calidad y la fiabilidad ha construido una reputación que habla por sí sola.",
       },
       values: {
@@ -1123,12 +1296,12 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
       },
       milestones: {
         label: "Nuestro camino",
-        heading: "Nueve años de excelencia en hormigón",
+        heading: "Una trayectoria de excelencia en hormigón",
         items: [
-          { year: "2016", title: "Fundación", desc: "Level Pro se establece en la Costa Blanca, centrado en el bombeo de hormigón para desarrollos residenciales y costeros." },
-          { year: "2018", title: "Expansión de flota", desc: "Incorporación de bombas pluma de alta capacidad para proyectos comerciales y hoteleros de varios pisos en la región." },
-          { year: "2020", title: "Sector hotelero", desc: "Finalización de importantes trabajos de bombeo y acabado para el Hotel Rosamar en Benidorm — un hito comercial." },
-          { year: "2024", title: "200+ proyectos", desc: "Superamos los 200 proyectos completados y ampliamos en gunitado y trabajos de cimentación." },
+          { title: "Fundación en la Costa Blanca", desc: "Level Pro se establece en la Costa Blanca, centrado en el bombeo de hormigón para desarrollos residenciales y costeros." },
+          { title: "Expansión de flota", desc: "Incorporación de bombas pluma de alta capacidad para proyectos comerciales y hoteleros de varios pisos en la región." },
+          { title: "Sector hotelero", desc: "Finalización de importantes trabajos de bombeo y acabado para el Hotel Rosamar en Benidorm — un hito comercial." },
+          { title: "200+ proyectos", desc: "Superamos los 200 proyectos completados y ampliamos en gunitado y trabajos de cimentación." },
         ],
       },
       cta: {
@@ -1149,7 +1322,7 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
       info: {
         label: "Información de Contacto",
         heading: "Contáctenos directamente",
-        phone: { label: "Teléfono", val: "+34 XXX XXX XXX" },
+        phone: { label: "Teléfono", val: "+34 624 86 88 61" },
         email: { label: "Correo electrónico", val: "info@levelpro.es" },
         note: "Respondemos normalmente en un día hábil. Para consultas urgentes, llámenos directamente.",
       },
@@ -1161,6 +1334,71 @@ export const TRANSLATIONS: Record<Locale, Translation> = {
         success: { heading: "Mensaje recibido", body: "Gracias por ponerse en contacto con nosotros. Le responderemos en un día hábil." },
         errors: { required: "Este campo es obligatorio", emailInvalid: "Por favor, introduzca una dirección de correo electrónico válida" },
       },
+    },
+    projectsPage: {
+      hero: {
+        label: "Nuestro Trabajo",
+        headingLine1: "Proyectos construidos",
+        headingLine2: "con precisión",
+        headingLine3: "en toda la costa",
+        tagline: "Explore nuestras obras de hormigón finalizadas y en curso en la Costa Blanca — busque por nombre o filtre por ubicación, estado, tipo y año.",
+      },
+      search: { placeholder: "Buscar proyectos por nombre, ubicación o palabra clave…", clear: "Borrar búsqueda" },
+      filters: {
+        title: "Filtros",
+        clearAll: "Borrar todo",
+        mobileOpen: "Filtros",
+        location: { label: "Ubicación" },
+        status: { label: "Estado", all: "Todos" },
+        type: { label: "Tipo de Construcción" },
+        year: { label: "Año de Construcción" },
+      },
+      statusLabels: { finished: "Finalizado", inProgress: "En Curso" },
+      types: { hotel: "Hotel", residential: "Residencial", commercial: "Comercial", industrial: "Industrial" },
+      results: {
+        template: "Mostrando {n} de {total} proyectos",
+        empty: { heading: "Ningún proyecto coincide con sus filtros", body: "Ajuste o borre sus filtros para ver más resultados." },
+      },
+      card: { seeMore: "Ver más" },
+      modal: { close: "Cerrar", scope: "Alcance del Trabajo" },
+    },
+    equipmentPage: {
+      hero: {
+        label: "Equipos",
+        headingLine1: "Maquinaria pensada",
+        headingLine2: "para la",
+        headingLine3: "precisión",
+        tagline: "Del bombeo de alta presión al acabado preciso de superficies — una flota moderna y bien mantenida, lista para movilizarse por toda la Costa Blanca.",
+      },
+      intro: {
+        label: "Maquinaria Destacada",
+        heading: "Dos máquinas para las distintas fases del vertido",
+        tagline: "Un vistazo de cerca al equipo principal detrás de nuestro trabajo de bombeo y acabado.",
+      },
+      items: [
+        {
+          category: "Bombeo de Hormigón",
+          name: "Putzmeister P 730",
+          desc: "Una bomba estacionaria compacta de alta presión, diseñada para gunitado y bombeo de línea de precisión — alcanza zonas a las que las bombas pluma no llegan, sin perder rendimiento.",
+          specs: [{ label: "Rango de caudal" }, { label: "Presión máxima" }, { label: "Tamaño máx. de árido" }, { label: "Potencia del motor" }],
+          bullets: [
+            "Bomba de pistón diseñada para funcionamiento continuo de alto ciclo",
+            "Chasis remolcable para una movilización rápida entre obras",
+            "Alimentación diésel con supervisión completa del operador en obra",
+          ],
+        },
+        {
+          category: "Acabado de Suelos",
+          name: "Barikell MK8 Ride-On Power Trowel",
+          desc: "Una allanadora autopropulsada de doble rotor que talocha y acaba losas de hormigón medianas y grandes con rapidez, dejando una superficie uniforme en cada pasada.",
+          specs: [{ label: "Configuración de rotores" }, { label: "Potencia del motor" }, { label: "Velocidad de las palas" }, { label: "Superficie de trabajo" }],
+          bullets: [
+            "Dos rotores de 750 mm con 8 palas no solapadas cada uno, para un acabado uniforme",
+            "Suficientemente compacta para pasar por una puerta estándar de obra",
+            "Motor de gasolina con arranque eléctrico para una puesta en marcha rápida",
+          ],
+        },
+      ],
     },
   },
 };
