@@ -3,10 +3,8 @@
 import { useRef, useEffect, useState, useCallback, useSyncExternalStore, Fragment } from "react";
 import Link from "next/link";
 import Lenis from "lenis";
-import { Locale, TRANSLATIONS } from "./translations";
-import { useLocale, NavBar, StatNum } from "./components/shared";
-
-const NAV_ROUTES = ["/services", "/projects", "/equipment", "/about", "/contact"];
+import { Locale, TRANSLATIONS } from "../translations";
+import { useLocale, NavBar, Preloader, StatNum, navHref, NAV_PATHS } from "../components/shared";
 
 const NAVY = "#020A25";
 // Dark-mode background for the homepage's desktop Projects/map section only —
@@ -14,34 +12,65 @@ const NAVY = "#020A25";
 // dark gray as the dominant tone, per explicit request. Its mobile counterpart
 // (no map there) keeps its own separate light literal, untouched.
 const SECTION_BG = "#1a1a1a";
-const VIDEO_SRC =
-  "https://levelpro.venacydigital.com/wp-content/uploads/2026/04/333333benidorm-poniente-beach-aerial-flyover-mediterra-2026-02-24-23-51-33-utc.mp4";
-
 // One <video> per location, in the same order as t.hero.locations
-// (Palma de Mallorca / Ibiza / Benidorm).
+// (Benidorm / Palma de Mallorca / Ibiza).
 const LOCATION_VIDEOS = [
-  "https://ik.imagekit.io/xmubxlzch/palma%20de%20mallorca%20-%20optimizat.mp4",
-  "https://ik.imagekit.io/xmubxlzch/ibiza-optimizat.mp4",
-  "https://ik.imagekit.io/qcovrq0fx/benidorm-optimizat-final.mp4",
+  "https://media.levelpro.es/Video%20uri%20hero/Export/benidorm.mp4",
+  "https://media.levelpro.es/Video%20uri%20hero/Export/palma%20de%20mallorca.mp4",
+  "https://media.levelpro.es/Video%20uri%20hero/Export/ibiza.mp4",
 ];
 
 const DEADZONE = 0.03;
 // Each location's hero video plays for this long (ms) before auto-advancing.
 const LOC_DURATION = 10000;
 
-const PROJ_IMG = "https://levelpro.es/wp-content/uploads/2026/05/1-copy.avif";
-// Photo shown on the mobile service cards (desktop uses a looping video instead).
-// Same asset for every card, mirroring the single shared media on desktop.
-const SVC_IMG = "https://levelpro.es/wp-content/uploads/2026/05/1-copy.avif";
+const SERVICE_IMAGES_DESKTOP = [
+  "/images/services/concrete-pumping-desktop.avif",
+  "/images/services/self-levelling-mortars-desktop.avif",
+  "/images/services/power-floated-concrete-desktop.avif",
+  "/images/services/shotcrete-desktop.avif",
+  "/images/services/slope-forming-desktop.avif",
+] as const;
+
+const SERVICE_IMAGES_MOBILE = [
+  "/images/services/concrete-pumping-mobile.avif",
+  "/images/services/self-levelling-mortars-mobile.avif",
+  "/images/services/power-floated-concrete-mobile.avif",
+  "/images/services/shotcrete-mobile.avif",
+  "/images/services/slope-forming-mobile.avif",
+] as const;
+
+const SERVICE_ANCHORS = [
+  "concrete-pumping",
+  "self-levelling-mortars",
+  "power-floated-concrete",
+  "shotcrete",
+  "slope-forming",
+] as const;
+
+const projectYearRank = (year: string) => {
+  const matches = year.match(/\d{4}/g);
+  return matches ? Math.max(...matches.map(Number)) : -1;
+};
+
 const PROJECTS_STATIC = [
-  { id: 1, name: "Nomad Hotel Cala Finestrat", location: "Finestrat", year: "2020", img: PROJ_IMG, pin: { lat: 38.5261921, lng: -0.1635926 }, mapsUrl: "https://maps.app.goo.gl/J3FCKjeoeuHgYPeu7" },
-  { id: 2, name: "Alibuilding Benidorm", location: "Benidorm", year: "2026", img: "https://levelpro.es/wp-content/uploads/2026/07/ali-building-benidorm-2-scaled.avif", pin: { lat: 38.5328296, lng: -0.16296 }, mapsUrl: "https://maps.app.goo.gl/7fbSfX37m8nmgbzx6" },
-  { id: 3, name: "Monver Tower Benidorm", location: "Benidorm", year: "2026", img: "https://levelpro.es/wp-content/uploads/2026/07/monver-tower-benidorm-scaled.avif", pin: { lat: 38.5358366, lng: -0.1124111 }, mapsUrl: "https://maps.app.goo.gl/hmaXBsbMdroebJg88" },
-  { id: 4, name: "Poseidon Playas de Benidorm", location: "Benidorm", year: "2026", img: "https://levelpro.es/wp-content/uploads/2026/07/Poseidon-Playas-de-Benidorm-scaled.avif", pin: { lat: 38.5378413, lng: -0.1469662 }, mapsUrl: "https://maps.app.goo.gl/6WD3wDruLYYnpzCdA" },
-  { id: 5, name: "Port Benidorm Hotel", location: "Benidorm", year: "2026", img: "https://levelpro.es/wp-content/uploads/2026/07/Port-Benidorm-Hotel.avif", pin: { lat: 38.5340091, lng: -0.1065199 }, mapsUrl: "https://maps.app.goo.gl/kXVd6tVsLRSq2wqd7" },
-  { id: 6, name: "Hotel Rosamar", location: "Benidorm", year: "2020", img: "https://levelpro.es/wp-content/uploads/2026/07/Hotel-rosamar-scaled.avif", pin: { lat: 38.5378884, lng: -0.1106753 }, mapsUrl: "https://maps.app.goo.gl/BAsG6ERmK29fqD7F9" },
-  { id: 7, name: "Novotel Valencia Lavant", location: "Valencia", year: "2026", img: "https://levelpro.es/wp-content/uploads/2026/07/Novotel-Valencia-Lavant--scaled.avif", pin: { lat: 39.4798142, lng: -0.3911179 }, mapsUrl: "https://maps.app.goo.gl/Tyyy1P9s6FV6ARsH8" },
-];
+  { id: 8, contentIndex: 0, status: "finished", name: "Seaway Tower", location: "Calpe", year: "2025", img: "/images/projects/seaway-tower-calpe.avif", pin: { lat: 38.6415228, lng: 0.064426 }, mapsUrl: "https://www.google.com/maps/search/?api=1&query=38.6415228%2C0.0644260" },
+  { id: 1, contentIndex: 1, status: "finished", name: "Nomad Hotel Cala Finestrat", location: "Finestrat", year: "2025", img: "/images/projects/nomad-hotel-cala-finestrat.avif", pin: { lat: 38.5261921, lng: -0.1635926 }, mapsUrl: "https://maps.app.goo.gl/J3FCKjeoeuHgYPeu7" },
+  { id: 2, contentIndex: 2, status: "finished", name: "Alibuilding Benidorm", location: "Benidorm", year: "2025", img: "/images/projects/alibuilding-benidorm.avif", pin: { lat: 38.5328296, lng: -0.16296 }, mapsUrl: "https://maps.app.goo.gl/7fbSfX37m8nmgbzx6" },
+  { id: 3, contentIndex: 3, status: "finished", name: "Monver Tower Benidorm", location: "Benidorm", year: "2022", img: "/images/projects/monver-tower-benidorm.avif", pin: { lat: 38.5358366, lng: -0.1124111 }, mapsUrl: "https://maps.app.goo.gl/hmaXBsbMdroebJg88" },
+  { id: 4, contentIndex: 4, status: "inProgress", name: "Poseidon Playas de Benidorm", location: "Benidorm", year: "2026", img: "/images/projects/poseidon-playas-benidorm.avif", pin: { lat: 38.5378413, lng: -0.1469662 }, mapsUrl: "https://maps.app.goo.gl/6WD3wDruLYYnpzCdA" },
+  { id: 5, contentIndex: 5, status: "finished", name: "Port Benidorm Hotel", location: "Benidorm", year: "2025", img: "/images/projects/port-benidorm-hotel.avif", pin: { lat: 38.5340091, lng: -0.1065199 }, mapsUrl: "https://maps.app.goo.gl/kXVd6tVsLRSq2wqd7" },
+  { id: 6, contentIndex: 6, status: "finished", name: "Hotel Rosamar", location: "Benidorm", year: "2024", img: "/images/projects/hotel-rosamar.avif", pin: { lat: 38.5378884, lng: -0.1106753 }, mapsUrl: "https://maps.app.goo.gl/BAsG6ERmK29fqD7F9" },
+  { id: 7, contentIndex: 7, status: "finished", name: "Novotel Valencia Lavant", location: "Valencia", year: "2024", img: "/images/projects/novotel-valencia-lavant.avif", pin: { lat: 39.4798142, lng: -0.3911179 }, mapsUrl: "https://maps.app.goo.gl/Tyyy1P9s6FV6ARsH8" },
+  { id: 9, contentIndex: 8, status: "finished", name: "Villa España Hotel", location: "Benidorm", year: "2023", img: "/images/projects/villa-espana-hotel.avif", pin: { lat: 38.5387, lng: -0.1294 }, mapsUrl: "https://www.google.com/maps/search/?api=1&query=Villa%20Espa%C3%B1a%20Hotel%20Benidorm" },
+  { id: 10, contentIndex: 9, status: "finished", name: "Edificio La Jirafa", location: "Benidorm", year: "2025", img: "/images/projects/edificio-la-jirafa.avif", pin: { lat: 38.5381, lng: -0.1273 }, mapsUrl: "https://www.google.com/maps/search/?api=1&query=Edificio%20La%20Jirafa%20Benidorm" },
+].sort((a, b) => {
+  // Seaway Tower is intentionally featured first on the homepage.
+  if (a.id === 8) return -1;
+  if (b.id === 8) return 1;
+  const statusOrder = Number(a.status === "finished") - Number(b.status === "finished");
+  return statusOrder || projectYearRank(b.year) - projectYearRank(a.year);
+});
 
 const SERVICES_ICONS = [
   <svg key="pump" width="28" height="28" viewBox="0 0 28 28" fill="none">
@@ -78,6 +107,14 @@ const SERVICES_ICONS = [
   </svg>,
 ];
 
+const TAILORED_SERVICE_ICON = (
+  <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+    <path d="M3.5 10V5.5a2 2 0 0 1 2-2H10M18 3.5h4.5a2 2 0 0 1 2 2V10M24.5 18v4.5a2 2 0 0 1-2 2H18M10 24.5H5.5a2 2 0 0 1-2-2V18" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    <path d="M14 8.5v11M8.5 14h11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    <circle cx="14" cy="14" r="2.5" stroke="currentColor" strokeWidth="1.5" />
+  </svg>
+);
+
 const MAT_ICONS = [
   <svg key="m1" width="22" height="22" viewBox="0 0 22 22" fill="none">
     <rect x="1" y="9" width="12" height="5" rx="1" stroke="currentColor" strokeWidth="1.4"/>
@@ -91,57 +128,6 @@ const MAT_ICONS = [
     <circle cx="11" cy="17" r="1.5" fill="currentColor"/>
   </svg>,
 ];
-
-// ─── Preloader ────────────────────────────────────────────────────────────────
-function Preloader({ onComplete, onCovered, fast = false }: { onComplete: () => void; onCovered?: () => void; fast?: boolean }) {
-  const [progress, setProgress] = useState(0);
-  const [phase, setPhase] = useState<"counting"|"exiting">("counting");
-  const duration = fast ? 550 : 1500;
-
-  useEffect(() => {
-    const start = performance.now();
-    let raf: number;
-    let t1: ReturnType<typeof setTimeout>;
-    let t2: ReturnType<typeof setTimeout>;
-    const tick = (now: number) => {
-      const t = Math.min((now - start) / duration, 1);
-      const eased = t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2;
-      setProgress(Math.round(eased * 100));
-      if (t < 1) { raf = requestAnimationFrame(tick); }
-      else {
-        // Viewport fully covered — swap underlying content (locale) now, while
-        // hidden, so the reveal shows the translated state with no visible flip.
-        onCovered?.();
-        t1 = setTimeout(() => {
-          setPhase("exiting");
-          t2 = setTimeout(onComplete, fast ? 550 : 850);
-        }, fast ? 80 : 220);
-      }
-    };
-    raf = requestAnimationFrame(tick);
-    return () => { cancelAnimationFrame(raf); clearTimeout(t1); clearTimeout(t2); };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const exiting = phase === "exiting";
-  const exitDur = fast ? 0.55 : 0.85;
-
-  return (
-    <div style={{ position:"fixed", inset:0, zIndex:9999, pointerEvents: exiting ? "none" : "all" }}>
-      <div style={{ position:"absolute", left:0, right:0, top:0, height:"50%", backgroundColor:NAVY, transform: exiting ? "translateY(-100%)" : "translateY(0)", transition: exiting ? `transform ${exitDur}s cubic-bezier(0.76,0,0.24,1)` : "none", willChange:"transform" }} />
-      <div style={{ position:"absolute", left:0, right:0, bottom:0, height:"50%", backgroundColor:NAVY, transform: exiting ? "translateY(100%)" : "translateY(0)", transition: exiting ? `transform ${exitDur}s cubic-bezier(0.76,0,0.24,1)` : "none", willChange:"transform" }} />
-      <div style={{ position:"absolute", inset:0, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:"clamp(14px,2.2vh,24px)", opacity: exiting ? 0 : 1, transition: exiting ? "opacity 0.22s ease" : "none" }}>
-        <div style={{ fontFamily:"'Inter',sans-serif", fontWeight:600, fontSize:"clamp(0.88rem,1.15vw,1rem)", letterSpacing:"0.28em", textTransform:"uppercase", color:"#ffffff", animation:"preloaderFadeUp 0.55s cubic-bezier(0.4,0,0.2,1) both" }}>Level Pro</div>
-        <div style={{ width:"clamp(130px,18vw,200px)", height:"1px", background:"rgba(255,255,255,0.07)", position:"relative", overflow:"hidden", animation:"preloaderFadeUp 0.55s cubic-bezier(0.4,0,0.2,1) 0.08s both" }}>
-          <div style={{ position:"absolute", inset:0, width:`${progress}%`, background:"rgba(255,255,255,0.75)", transition:"width 0.07s linear" }} />
-        </div>
-        <div style={{ fontFamily:"'Inter',sans-serif", fontWeight:300, fontSize:"clamp(0.56rem,0.7vw,0.63rem)", letterSpacing:"0.14em", color:"rgba(255,255,255,0.28)", fontVariantNumeric:"tabular-nums", animation:"preloaderFadeUp 0.55s cubic-bezier(0.4,0,0.2,1) 0.14s both" }}>
-          {progress < 100 ? String(progress).padStart(2,"0") : "100"}
-        </div>
-      </div>
-    </div>
-  );
-}
 
 // ─── Word-reveal ──────────────────────────────────────────────────────────────
 function useWordReveal() {
@@ -187,8 +173,8 @@ function RevealText({ text, delayOffset=0, style, as: Tag="p" }: { text:string; 
 function MetaChip({ label, value, dark }: { label: string; value: string; dark?: boolean }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-      <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.6rem,0.72vw,0.66rem)", fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: dark ? "rgba(255,255,255,0.5)" : "var(--lp-text-meta)" }}>{label}</span>
-      <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.8rem,0.92vw,0.88rem)", fontWeight: 500, color: dark ? "#ffffff" : NAVY }}>{value}</span>
+      <span style={{ fontFamily: "var(--font-inter),sans-serif", fontSize: "clamp(0.6rem,0.72vw,0.66rem)", fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: dark ? "rgba(255,255,255,0.5)" : "var(--lp-text-meta)" }}>{label}</span>
+      <span style={{ fontFamily: "var(--font-inter),sans-serif", fontSize: "clamp(0.8rem,0.92vw,0.88rem)", fontWeight: 500, color: dark ? "#ffffff" : NAVY }}>{value}</span>
     </div>
   );
 }
@@ -208,7 +194,7 @@ function ProjectCard({ proj, metaKeys, index, viewOnMapsLabel, dark }: { proj: P
       WebkitBackdropFilter: dark ? "blur(24px) saturate(160%)" : "blur(20px) saturate(140%)",
       borderRadius: "var(--radius)", overflow: "hidden",
       border: dark ? "1px solid rgba(255,255,255,0.14)" : "1px solid rgba(255,255,255,0.7)",
-      boxShadow: dark ? "none" : "0 16px 50px rgba(2,10,37,0.12)",
+      boxShadow: "none",
     }}>
       {/* Thumbnail — wide / landscape aspect ratio */}
       <div style={{ position: "relative", aspectRatio: "3 / 2", overflow: "hidden" }}>
@@ -221,11 +207,11 @@ function ProjectCard({ proj, metaKeys, index, viewOnMapsLabel, dark }: { proj: P
       {/* Title — accent dot + heading, matching the Services card's Inter treatment */}
       <div style={{ padding: "clamp(14px,1.8vw,18px) clamp(18px,2.2vw,24px) clamp(4px,0.6vw,6px)", display: "flex", alignItems: "center", gap: "9px" }}>
         <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: dark ? "#ffffff" : NAVY, flexShrink: 0 }} />
-        <h3 style={{ fontFamily: "'Inter',sans-serif", fontWeight: 500, fontSize: "var(--lp-h3-fs)", lineHeight: 1.3, color: dark ? "#ffffff" : NAVY, margin: 0 }}>{proj.name}</h3>
+        <h3 style={{ fontFamily: "var(--font-inter),sans-serif", fontWeight: 500, fontSize: "var(--lp-h3-fs)", lineHeight: 1.3, color: dark ? "#ffffff" : NAVY, margin: 0 }}>{proj.name}</h3>
       </div>
       {/* Description — clamped to 2 lines for a condensed teaser */}
       <div style={{ padding: "0 clamp(18px,2.2vw,24px) clamp(10px,1.3vw,14px)" }}>
-        <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 400, fontSize: "var(--lp-proj-desc-fs)", lineHeight: "var(--lp-card-body-lh)", color: dark ? "rgba(255,255,255,0.65)" : "var(--lp-text-body)", margin: 0, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{proj.fullDesc}</p>
+        <p style={{ fontFamily: "var(--font-inter),sans-serif", fontWeight: 400, fontSize: "var(--lp-proj-desc-fs)", lineHeight: "var(--lp-card-body-lh)", color: dark ? "rgba(255,255,255,0.65)" : "var(--lp-text-body)", margin: 0, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{proj.fullDesc}</p>
       </div>
       {/* Metadata + Maps CTA footer */}
       <div style={{ borderTop: dark ? "1px solid rgba(255,255,255,0.12)" : "1px solid rgba(2,10,37,0.08)", padding: "clamp(12px,1.5vw,15px) clamp(18px,2.2vw,24px)", display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: "14px", flexWrap: "wrap" }}>
@@ -239,7 +225,7 @@ function ProjectCard({ proj, metaKeys, index, viewOnMapsLabel, dark }: { proj: P
           target="_blank"
           rel="noopener noreferrer"
           className={dark ? "proj-maps-btn btn-fill btn-fill-light" : "proj-maps-btn btn-fill"}
-          style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.58rem,0.68vw,0.63rem)", fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: dark ? "#ffffff" : NAVY, border: dark ? "1px solid rgba(255,255,255,0.3)" : "1px solid rgba(2,10,37,0.25)", borderRadius: "var(--radius-sm)", padding: "8px 14px", textDecoration: "none", flexShrink: 0 }}
+          style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontFamily: "var(--font-inter),sans-serif", fontSize: "clamp(0.58rem,0.68vw,0.63rem)", fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: dark ? "#ffffff" : NAVY, border: dark ? "1px solid rgba(255,255,255,0.3)" : "1px solid rgba(2,10,37,0.25)", borderRadius: "var(--radius-sm)", padding: "8px 14px", textDecoration: "none", flexShrink: 0 }}
         >
           <svg width="10" height="10" viewBox="0 0 12 12" fill="none" style={{ flexShrink: 0 }}>
             <path d="M6 1C4.07 1 2.5 2.57 2.5 4.5c0 2.78 3.5 6.5 3.5 6.5s3.5-3.72 3.5-6.5C9.5 2.57 7.93 1 6 1zm0 4.75a1.25 1.25 0 110-2.5 1.25 1.25 0 010 2.5z" fill="currentColor"/>
@@ -256,7 +242,17 @@ function ProjectCard({ proj, metaKeys, index, viewOnMapsLabel, dark }: { proj: P
 // with the responsive hamburger menu). Imported above.
 
 // ─── Service slide card ───────────────────────────────────────────────────────
-interface ServiceItem { name:string; detail:string; shortDesc:string; bullets:string[]; icon:React.ReactNode }
+interface ServiceItem {
+  name:string;
+  detail:string;
+  shortDesc:string;
+  bullets:string[];
+  icon:React.ReactNode;
+  image?:string;
+  mobileImage?:string;
+  detailsHref?:string;
+  moreLabel?:string;
+}
 function SvcSlideCard({ svc, isActive, onHover, onClick }: { svc:ServiceItem; isActive:boolean; onHover:()=>void; onClick:()=>void }) {
   return (
     <div
@@ -270,10 +266,11 @@ function SvcSlideCard({ svc, isActive, onHover, onClick }: { svc:ServiceItem; is
         overflow: "hidden",
         display: "flex",
         flexDirection: "column",
-        height: "clamp(220px,28vh,300px)",
+        height: "clamp(300px,37vh,340px)",
         background: isActive ? "#ffffff" : NAVY,
-        boxShadow: isActive ? "0 8px 40px rgba(2,10,37,0.16)" : "none",
-        transition: "flex 0.45s cubic-bezier(0.16,1,0.3,1), box-shadow 0.4s ease, background 0.35s ease",
+        border: isActive ? "1px solid rgba(2,10,37,0.12)" : "1px solid transparent",
+        boxShadow: "none",
+        transition: "flex 0.45s cubic-bezier(0.16,1,0.3,1), border-color 0.35s ease, background 0.35s ease",
       }}
     >
       <div style={{ flex:1, minHeight:0, position:"relative", display:"flex", flexDirection:"column" }}>
@@ -296,71 +293,64 @@ function SvcSlideCard({ svc, isActive, onHover, onClick }: { svc:ServiceItem; is
               in the strip becomes active/inactive, so text sized at width:100%
               here would visibly reflow/rewrap in real time during that 0.45s
               transition. Sizing it to the resting (inactive-share) width
-              instead means it never reflows — the outer card's own
-              overflow:hidden just clips it a little tighter on the rare
-              narrow-viewport case where this runs wider than the available
-              space mid-transition. */}
-          <div style={{ width:"clamp(90px,9vw,200px)", flexShrink:0, alignSelf:"flex-start" }}>
-            <p style={{ fontFamily:"'Inter',sans-serif", fontWeight:300, fontSize:"var(--lp-h3-fs)", color:"rgba(255,255,255,0.92)", margin:"0 0 6px 0", lineHeight:1.2 }}>{svc.name}</p>
-            <p style={{ fontFamily:"'Inter',sans-serif", fontWeight:400, fontSize:"clamp(0.75rem,0.86vw,0.82rem)", color:"rgba(255,255,255,0.58)", margin:0, lineHeight:1.55, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:3, WebkitBoxOrient:"vertical" }}>{svc.shortDesc}</p>
+              instead means it never reflows. overflowWrap+hyphens guard
+              against long unbroken words (e.g. "autonivelantes") clipping
+              instead of wrapping. */}
+          <div style={{ width:"clamp(64px,9vw,160px)", flexShrink:0, alignSelf:"flex-start" }}>
+            <p style={{ fontFamily:"var(--font-inter),sans-serif", fontWeight:300, fontSize:"var(--lp-h3-fs)", color:"rgba(255,255,255,0.92)", margin:"0 0 6px 0", lineHeight:1.2, overflowWrap:"break-word", WebkitHyphens:"auto", hyphens:"auto" }}>{svc.name}</p>
+            <p style={{ fontFamily:"var(--font-inter),sans-serif", fontWeight:400, fontSize:"clamp(0.75rem,0.86vw,0.82rem)", color:"rgba(255,255,255,0.58)", margin:0, lineHeight:1.55, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical", overflowWrap:"break-word" }}>{svc.shortDesc}</p>
           </div>
         </div>
 
-        {/* Active layer — the text column below has a FIXED width (not flex:1),
-            so it never reflows as the card's own width animates: growing the
-            card just reveals more of it through this layer's overflow:hidden,
-            like a curtain opening, rather than causing it to rewrap. That means
-            the whole layer reveals as one fluid, near-instant motion — no more
-            waiting on the resize — reusing the blur+rise language from
-            RevealText/fadeBlurReveal elsewhere on the site. */}
+        {/* Active layer — original split layout: copy on the left and the
+            portrait desktop image on the right. */}
         <div style={{
           flex: 1,
           minHeight: 0,
           overflow: "hidden",
-          paddingTop: "12px",
-          paddingRight: "12px",
-          paddingBottom: "12px",
-          paddingLeft: "clamp(22px,2.8vw,30px)",
+          padding: "clamp(10px,1vw,14px)",
           display: "flex",
           flexDirection: "row",
-          gap: "clamp(16px,2vw,24px)",
+          justifyContent: "space-between",
+          gap: "clamp(10px,1vw,14px)",
           opacity: isActive ? 1 : 0,
-          transform: isActive ? "translateY(0)" : "translateY(10px)",
+          transform: isActive ? "translateX(0)" : "translateX(10px)",
           filter: isActive ? "blur(0px)" : "blur(8px)",
           transition: isActive
             ? "opacity 0.36s cubic-bezier(0.16,1,0.3,1) 0.04s, transform 0.42s cubic-bezier(0.16,1,0.3,1) 0.04s, filter 0.36s cubic-bezier(0.16,1,0.3,1) 0.04s"
             : "opacity 0.14s ease, transform 0.14s ease, filter 0.14s ease",
           pointerEvents: isActive ? "auto" : "none",
         }}>
-          {/* Left: text content — fixed width, flexShrink:0, so it always lays
-              out at full size regardless of the card's current animated width */}
-          <div style={{ width:"clamp(220px,20vw,320px)", flexShrink:0, minHeight:0, display:"flex", flexDirection:"column", paddingTop:"calc(clamp(22px,2.8vw,30px) - 12px)", paddingBottom:"calc(clamp(22px,2.8vw,30px) - 12px)" }}>
-            <div style={{ color:"rgba(2,10,37,0.45)", marginBottom:"clamp(10px,1.4vh,14px)", flexShrink:0 }}>{svc.icon}</div>
-            <h3 style={{ fontFamily:"'Inter',sans-serif", fontWeight:500, fontSize:"var(--lp-h3-fs)", color:NAVY, margin:"0 0 clamp(5px,0.7vh,7px) 0", lineHeight:1.3, flexShrink:0 }}>
-              {svc.name}
-            </h3>
-            <p style={{ fontFamily:"'Inter',sans-serif", fontSize:"var(--lp-card-body-fs)", lineHeight:"var(--lp-card-body-lh)", color:"var(--lp-text-body)", margin:0, flex:1, minHeight:0, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical" }}>
-              {svc.detail}
-            </p>
+          <div className="svc-active-copy" style={{ minWidth:0, padding:"clamp(10px,1.15vw,16px)", display:"flex", flexDirection:"column" }}>
+            <div style={{ minWidth:0, marginTop:"auto", marginBottom:"auto", flexShrink:0 }}>
+              <h3 style={{ fontFamily:"var(--font-inter),sans-serif", fontWeight:500, fontSize:"var(--lp-h3-fs)", color:NAVY, margin:"0 0 clamp(5px,0.7vh,7px) 0", lineHeight:1.3, overflowWrap:"break-word", WebkitHyphens:"auto", hyphens:"auto" }}>
+                {svc.name}
+              </h3>
+              <p className="svc-active-desc">{svc.detail}</p>
+            </div>
+            {svc.detailsHref && svc.moreLabel && (
+              <Link
+                href={svc.detailsHref}
+                className="svc-more-link"
+                onClick={(event) => event.stopPropagation()}
+              >
+                {svc.moreLabel} <span aria-hidden="true">→</span>
+              </Link>
+            )}
           </div>
 
-          {/* Right: video — fills whatever width is left after the fixed-width
-              text column, instead of a fixed square, so it no longer leaves a
-              gap of empty card once the text column stopped growing with it. */}
-          <div style={{
-            flex: 1,
-            minWidth: 0,
-            alignSelf: "stretch",
+          <div className="svc-active-media" style={{
+            height: "100%",
             borderRadius: "var(--radius)",
             overflow: "hidden",
             background: "rgba(2,10,37,0.06)",
           }}>
-            <video
+            <img
+              src={svc.image ?? svc.mobileImage}
+              alt={svc.name}
+              loading="lazy"
               style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }}
-              autoPlay muted loop playsInline
-            >
-              <source src={VIDEO_SRC} type="video/mp4" />
-            </video>
+            />
           </div>
         </div>
       </div>
@@ -369,15 +359,36 @@ function SvcSlideCard({ svc, isActive, onHover, onClick }: { svc:ServiceItem; is
 }
 
 // ─── Service card — mobile/tablet (mirrors the desktop expanded card; photo, no video) ──
+// Cards have no hover state on touch, so the desktop strip's crossfade is
+// replaced with a one-time reveal as each card scrolls into view.
+function useRevealOnView<T extends HTMLElement = HTMLDivElement>() {
+  const ref = useRef<T>(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect(); } }, { threshold: 0.2, rootMargin: "0px 0px -8% 0px" });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+  return [ref, visible] as const;
+}
+
 function SvcMobileCard({ svc }: { svc:ServiceItem }) {
+  const [ref, visible] = useRevealOnView<HTMLDivElement>();
   return (
-    <div className="svc-m-card">
+    <div ref={ref} className={`svc-m-card${visible ? " is-visible" : ""}`}>
       <div className="svc-m-media">
-        <img src={SVC_IMG} alt={svc.name} loading="lazy" />
+        <img src={svc.mobileImage ?? svc.image} alt={svc.name} loading="lazy" />
       </div>
       <div className="svc-m-body">
         <h3 className="svc-m-name">{svc.name}</h3>
         <p className="svc-m-desc">{svc.detail}</p>
+        {svc.detailsHref && svc.moreLabel && (
+          <Link href={svc.detailsHref} className="svc-more-link">
+            {svc.moreLabel} <span aria-hidden="true">→</span>
+          </Link>
+        )}
       </div>
     </div>
   );
@@ -397,109 +408,127 @@ const mapPinHtml = (active: boolean) => `<div class="lp-map-pin-wrap"><div class
 
 function LeafletMap({ activeIdx }: { activeIdx:number }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const veilRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapRef = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const markersRef = useRef<any[]>([]);
-  const initializedRef = useRef(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const benidormBoundsRef = useRef<any>(null);
-  const regionRef = useRef<"benidorm"|"valencia">("benidorm");
-  const flyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const currentRegionRef = useRef<"costa-blanca"|"valencia">(
+    PROJECTS_STATIC[activeIdx].location === "Valencia" ? "valencia" : "costa-blanca"
+  );
+  const latestActiveIdxRef = useRef(activeIdx);
+  const initializedRef = useRef(false);
+  latestActiveIdxRef.current = activeIdx;
 
   useEffect(() => {
     if (initializedRef.current || !containerRef.current) return;
     initializedRef.current = true; let alive=true;
+    let removeResizeListener: (() => void) | undefined;
+    let removeInitialTileListener: (() => void) | undefined;
+    let initialRevealTimer: ReturnType<typeof setTimeout> | undefined;
     import("leaflet").then(L => {
-      if (!alive||!containerRef.current) return;
-      const map = L.map(containerRef.current,{ zoomControl:false,dragging:false,doubleClickZoom:false,scrollWheelZoom:false,touchZoom:false,keyboard:false,attributionControl:true });
-      L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",{ attribution:"&copy; <a href='https://carto.com' target='_blank'>CARTO</a>",subdomains:"abcd",maxZoom:20 }).addTo(map);
-      PROJECTS_STATIC.forEach((proj,i) => {
-        // Initial active/inactive state is baked straight into the icon HTML
-        // (rather than set via getElement() right after addTo()) — Leaflet
-        // hasn't necessarily finished attaching the icon to the DOM in the
-        // same tick, so a classList write here could silently no-op. Same
-        // reasoning for zIndexOffset below: several Benidorm-area pins sit
-        // only a few pixels apart at this zoom, so the active one needs to
-        // be guaranteed on top from the very first paint.
-        const icon = L.divIcon({ className:"", html:mapPinHtml(i===0), iconSize:[20,20], iconAnchor:[10,10] });
-        const marker = L.marker([proj.pin.lat,proj.pin.lng],{ icon, interactive:false, zIndexOffset: i===0 ? 1000 : 0 }).addTo(map);
-        markersRef.current.push(marker);
+      if (!alive || !containerRef.current) return;
+
+      const map = L.map(containerRef.current, {
+        zoomControl:false, dragging:false, doubleClickZoom:false,
+        scrollWheelZoom:false, touchZoom:false, keyboard:false,
+        attributionControl:true, zoomSnap:1, zoomDelta:1,
+        fadeAnimation:true, zoomAnimation:false,
       });
-      // Two fixed views: a close-up on the Benidorm/Finestrat cluster (every
-      // project but one) and a close-up on the lone Valencia project. The
-      // camera only ever moves between these two, and only when the active
-      // project actually crosses from one into the other — see the
-      // activeIdx effect below. fitBounds() reads the container's current
-      // pixel size to pick its zoom, which silently breaks if that size is
-      // still 0 at this exact tick (e.g. layout not settled yet) — retry on
-      // the next frame instead of risking that.
-      const benidormBounds = L.latLngBounds(
+      const tileLayer = L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+        attribution:"&copy; <a href='https://carto.com' target='_blank'>CARTO</a>",
+        subdomains:"abcd", maxZoom:20, keepBuffer:6,
+      }).addTo(map);
+      const initialIdx = latestActiveIdxRef.current;
+      markersRef.current = PROJECTS_STATIC.map((proj,i) => {
+        const isActive = i===initialIdx;
+        const icon = L.divIcon({ className:"", html:mapPinHtml(isActive), iconSize:[20,20], iconAnchor:[10,10] });
+        return L.marker([proj.pin.lat,proj.pin.lng], {
+          icon, interactive:false, zIndexOffset:isActive ? 1000 : 0,
+        }).addTo(map);
+      });
+      mapRef.current = map;
+
+      const costaBlancaBounds = L.latLngBounds(
         PROJECTS_STATIC.filter(p => p.location !== "Valencia").map(p => [p.pin.lat, p.pin.lng] as [number, number])
       );
-      benidormBoundsRef.current = benidormBounds;
+      const valenciaProject = PROJECTS_STATIC.find(p => p.location === "Valencia")!;
+      currentRegionRef.current = PROJECTS_STATIC[initialIdx].location === "Valencia" ? "valencia" : "costa-blanca";
+
+      // Every regional switch remounts this component (see the key at the
+      // render site below). Keep the fresh map covered until its own first
+      // tile set has loaded, then reveal it smoothly.
+      const revealInitialMap = () => {
+        if (!alive) return;
+        if (initialRevealTimer) clearTimeout(initialRevealTimer);
+        veilRef.current?.classList.remove("is-covering");
+      };
+      tileLayer.once("load",revealInitialMap);
+      removeInitialTileListener = () => tileLayer.off("load",revealInitialMap);
+      initialRevealTimer = setTimeout(revealInitialMap,1600);
+
       const settle = () => {
         if (!alive || !containerRef.current) return;
-        if (containerRef.current.offsetWidth === 0 || containerRef.current.offsetHeight === 0) {
+        const width = containerRef.current.offsetWidth;
+        const height = containerRef.current.offsetHeight;
+        if (width === 0 || height === 0) {
           requestAnimationFrame(settle);
           return;
         }
-        map.fitBounds(benidormBounds, { padding: [60, 60], animate: false });
+
+        map.invalidateSize({ animate:false });
+        if (currentRegionRef.current === "valencia") {
+          map.setView([valenciaProject.pin.lat, valenciaProject.pin.lng], 13, { animate:false });
+        } else {
+          const rightRail = Math.min(720, Math.max(360, width * 0.43));
+          map.fitBounds(costaBlancaBounds, {
+            paddingTopLeft:[Math.max(56, width * 0.04), Math.max(72, height * 0.08)],
+            paddingBottomRight:[rightRail, Math.max(300, height * 0.4)],
+            animate:false,
+          });
+          map.setZoom(Math.max(0, map.getZoom() - 1), { animate:false });
+        }
       };
       settle();
-      mapRef.current=map;
+
+      window.addEventListener("resize", settle);
+      removeResizeListener = () => window.removeEventListener("resize", settle);
     });
-    return ()=>{ alive=false; if(mapRef.current){mapRef.current.remove();mapRef.current=null;} markersRef.current=[]; initializedRef.current=false; };
+    return ()=>{
+      alive=false;
+      removeResizeListener?.();
+      removeInitialTileListener?.();
+      if (initialRevealTimer) clearTimeout(initialRevealTimer);
+      mapRef.current?.remove();
+      mapRef.current=null;
+      markersRef.current=[];
+      initializedRef.current=false;
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
 
   useEffect(() => {
-    const map = mapRef.current;
-    if (!map) return;
-    // The highlighted pin (and its z-index) always follows the active
-    // project — that part is instant, never debounced.
-    markersRef.current.forEach((m,i)=>{
+    markersRef.current.forEach((marker,i) => {
       const isActive = i===activeIdx;
-      m.getElement()?.querySelector(".lp-map-pin")?.classList.toggle("is-active", isActive);
-      m.setZIndexOffset(isActive ? 1000 : 0);
+      marker.getElement()?.querySelector(".lp-map-pin")?.classList.toggle("is-active", isActive);
+      marker.setZIndexOffset(isActive ? 1000 : 0);
     });
-
-    if (flyTimerRef.current) clearTimeout(flyTimerRef.current);
-    const newRegion = PROJECTS_STATIC[activeIdx].location === "Valencia" ? "valencia" : "benidorm";
-    // Staying within the same cluster (the common case — most scroll steps
-    // move between two Benidorm-area projects) leaves the camera exactly
-    // where it is, matching every other project switch.
-    if (newRegion === regionRef.current) return;
-    // Debounced so scrolling quickly back and forth across the Benidorm/
-    // Valencia boundary settles on one flight instead of stacking several.
-    flyTimerRef.current = setTimeout(() => {
-      // Guards against React re-invoking this effect for the same commit
-      // (dev-only, but cheap to guard regardless) — without it, two flyTo
-      // calls fired back to back can fight each other and net zero movement.
-      if (regionRef.current === newRegion) return;
-      regionRef.current = newRegion;
-      if (newRegion === "valencia") {
-        const { lat, lng } = PROJECTS_STATIC[activeIdx].pin;
-        const distMeters = map.distance(map.getCenter(), { lat, lng });
-        const duration = Math.min(2.3, Math.max(1, 0.75 + distMeters / 85000));
-        map.flyTo([lat, lng], 13, { animate: true, duration, easeLinearity: 0.15 });
-      } else if (benidormBoundsRef.current) {
-        const distMeters = map.distance(map.getCenter(), benidormBoundsRef.current.getCenter());
-        const duration = Math.min(2.3, Math.max(1, 0.75 + distMeters / 85000));
-        map.flyToBounds(benidormBoundsRef.current, { padding: [60, 60], animate: true, duration });
-      }
-    }, 150);
-    return () => { if (flyTimerRef.current) clearTimeout(flyTimerRef.current); };
   },[activeIdx]);
 
-  return <div ref={containerRef} className="lp-map-dark" style={{ width:"100%", height:"100%" }} />;
+  return (
+    <div className="lp-map-stack">
+      <div ref={containerRef} className="lp-map-dark lp-map-region" aria-hidden="true" />
+      <div ref={veilRef} className="lp-map-transition-veil is-covering" aria-hidden="true" />
+    </div>
+  );
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface ProjectData { id:number; name:string; type:string; location:string; year:string; budget?:string; shortDesc:string; fullDesc:string; tags:string[]; img:string; pin:{lat:number;lng:number}; mapsUrl:string; }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
-export default function LevelProPage() {
+export default function HomeClient({ locale: initialLocale }: { locale: Locale }) {
   const aboutRef = useRef<HTMLDivElement>(null);
   const lenisRef = useRef<Lenis|null>(null);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -507,6 +536,7 @@ export default function LevelProPage() {
   const heroOverlayRef = useRef<HTMLDivElement>(null);
   const heroLocTabsRef = useRef<HTMLDivElement>(null);
   const heroVideoWrapRef = useRef<HTMLDivElement>(null);
+  const heroVideoScrimRef = useRef<HTMLDivElement>(null);
   const heroLeftRef = useRef<HTMLDivElement>(null);
   // Location rotation — refs drive per-frame progress writes without React re-renders
   const activeLocationRef = useRef(0);
@@ -516,8 +546,9 @@ export default function LevelProPage() {
   const locAccRef = useRef(0);
   const locLastTsRef = useRef<number | null>(null);
   const locHoverRef = useRef(false);
+  const locErrorAttemptsRef = useRef<Record<number, number>>({});
 
-  const [locale, setLocale] = useLocale();
+  const [locale, setLocale] = useLocale(initialLocale);
   const t = TRANSLATIONS[locale];
   const locationNames = t.hero.locations;
   const locationCount = locationNames.length;
@@ -547,20 +578,26 @@ export default function LevelProPage() {
     setPreloaderKey(k => k + 1);
   }, [locale]);
 
-  const projects: ProjectData[] = PROJECTS_STATIC.map((p,i) => ({
+  const projects: ProjectData[] = PROJECTS_STATIC.map((p) => ({
     ...p,
-    type: t.projects.items[i].type,
-    shortDesc: t.projects.items[i].shortDesc,
-    fullDesc: t.projects.items[i].fullDesc,
-    tags: t.projects.items[i].tags,
+    type: t.projects.items[p.contentIndex].type,
+    shortDesc: t.projects.items[p.contentIndex].shortDesc,
+    fullDesc: t.projects.items[p.contentIndex].fullDesc,
+    tags: t.projects.items[p.contentIndex].tags,
   }));
 
   const services: ServiceItem[] = SERVICES_ICONS.map((icon,i) => ({
     icon,
     name: t.services.items[i].name,
+    // Homepage cards use the concise, self-contained summary. The complete
+    // technical copy remains available after following the service link.
     detail: t.services.items[i].detail,
     shortDesc: t.services.items[i].shortDesc,
     bullets: t.services.items[i].bullets,
+    image: SERVICE_IMAGES_DESKTOP[i],
+    mobileImage: SERVICE_IMAGES_MOBILE[i],
+    detailsHref: `${navHref(locale, "services")}#${SERVICE_ANCHORS[i]}`,
+    moreLabel: t.services.learnMore,
   }));
 
   const [logoFloating, setLogoFloating] = useState(true);
@@ -569,6 +606,7 @@ export default function LevelProPage() {
   const [sidebarVisible, setSidebarVisible] = useState(true);
   const [activeSvc, setActiveSvc] = useState(0);
   const [activeLocation, setActiveLocation] = useState(0);
+  const [videoPlaybackBlocked, setVideoPlaybackBlocked] = useState(false);
 
   // Only mount the Leaflet map on desktop — the mobile Projects section has no map,
   // and keeping it off mobile avoids loading Leaflet there and prevents flyTo() from
@@ -596,16 +634,106 @@ export default function LevelProPage() {
     () => false,
   );
 
-  // Switch the active location: resets the progress accumulator and (re)starts that
-  // location's video. Called both by auto-advance and by clicking a location item.
+  // Switch the active location and reset its progress. Playback starts in the
+  // effect below, after React has made that video visible; Safari can reject a
+  // play() call made while the element is still opacity:0.
   const goToLocation = useCallback((i: number) => {
     activeLocationRef.current = i;
     locAccRef.current = 0;
     locLastTsRef.current = null;
     setActiveLocation(i);
-    const v = locVideoRefs.current[i];
-    if (v) { const r = v.play(); if (r && typeof r.catch === "function") r.catch(() => {}); }
   }, []);
+
+  const playActiveLocationVideo = useCallback(async () => {
+    const video = locVideoRefs.current[activeLocationRef.current];
+    if (!video) return;
+
+    // Set both DOM properties and attributes before play(). This is deliberate:
+    // older WebKit versions inspect the initial muted/inline state very early.
+    video.muted = true;
+    video.defaultMuted = true;
+    video.playsInline = true;
+    video.setAttribute("muted", "");
+    video.setAttribute("playsinline", "");
+    video.setAttribute("webkit-playsinline", "");
+
+    try {
+      await video.play();
+      setVideoPlaybackBlocked(false);
+      locErrorAttemptsRef.current[activeLocationRef.current] = 0;
+    } catch {
+      // Safari allows users to block even muted autoplay. In that case the
+      // visible fallback control below provides the required user gesture.
+      setVideoPlaybackBlocked(true);
+    }
+  }, []);
+
+  // The CDN transcodes each clip on the fly on a cache miss (observed: this can
+  // occasionally 504 under cold-cache conditions), which fires a load error
+  // instead of `canplay`. Without handling it, the affected video never starts
+  // playing — and since the rotation timer below only accrues while a video is
+  // actually confirmed playing, that permanently freezes the hero on a blank
+  // frame instead of advancing to a location whose clip does load. Retry a
+  // couple of times first (the failure is usually transient), then give up on
+  // this clip for now and move on rather than stall forever.
+  const handleVideoError = useCallback((index: number) => {
+    if (index !== activeLocationRef.current) return;
+    const video = locVideoRefs.current[index];
+    if (!video) return;
+    const attempts = (locErrorAttemptsRef.current[index] ?? 0) + 1;
+    locErrorAttemptsRef.current[index] = attempts;
+
+    if (attempts <= 2) {
+      setTimeout(() => {
+        if (activeLocationRef.current !== index) return;
+        video.addEventListener("canplay", () => { void playActiveLocationVideo(); }, { once: true });
+        video.load();
+      }, 1500);
+    } else {
+      locErrorAttemptsRef.current[index] = 0;
+      goToLocation((index + 1) % locationCount);
+    }
+  }, [goToLocation, locationCount, playActiveLocationVideo]);
+
+  // Only the visible location video is allowed to play. Running all three
+  // autoplay elements at once works in Chromium but is unreliable in Safari,
+  // whose media policy is applied per element and pauses hidden video.
+  useEffect(() => {
+    const activeVideo = locVideoRefs.current[activeLocation];
+    if (!activeVideo) return;
+
+    let cancelled = false;
+    setVideoPlaybackBlocked(false);
+    locVideoRefs.current.forEach((video, index) => {
+      if (video && index !== activeLocation) video.pause();
+    });
+
+    const startWhenVisible = () => {
+      if (!cancelled) void playActiveLocationVideo();
+    };
+
+    if (activeVideo.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+      startWhenVisible();
+    } else {
+      activeVideo.addEventListener("canplay", startWhenVisible, { once: true });
+      activeVideo.load();
+    }
+
+    return () => {
+      cancelled = true;
+      activeVideo.removeEventListener("canplay", startWhenVisible);
+    };
+  }, [activeLocation, playActiveLocationVideo]);
+
+  // Safari pauses background media for power saving. Resume the active video
+  // when the tab becomes visible again instead of leaving a frozen hero.
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") void playActiveLocationVideo();
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [playActiveLocationVideo]);
 
   // Full-motion: rAF loop ties the bar fill + track-opacity ramp to *real* video
   // playback — time only accrues while the active video is actually playing (not
@@ -670,7 +798,9 @@ export default function LevelProPage() {
     }
 
     if (heroOverlayRef.current) heroOverlayRef.current.style.opacity = String(overlayOpacity);
-    if (heroVideoWrapRef.current) heroVideoWrapRef.current.style.filter = videoBrightness < 1 ? `brightness(${videoBrightness.toFixed(3)})` : "";
+    // Dimming is a plain opacity scrim over the video, not a `filter` on its
+    // ancestor — see the scrim div's own comment for why.
+    if (heroVideoScrimRef.current) heroVideoScrimRef.current.style.opacity = videoBrightness < 1 ? (1 - videoBrightness).toFixed(3) : "0";
     if (heroLocTabsRef.current) {
       heroLocTabsRef.current.style.opacity = String(exitOpacity);
       heroLocTabsRef.current.style.transform = contentTranslate ? `translateY(${(contentTranslate * 0.4).toFixed(1)}px)` : "";
@@ -746,14 +876,12 @@ export default function LevelProPage() {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html:`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&display=swap');
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
         html{scroll-behavior:auto;touch-action:manipulation;}
         html.lenis,html.lenis body{height:auto;}
         .lenis.lenis-smooth{scroll-behavior:auto!important;}
         .lenis.lenis-stopped{overflow:hidden;}
         body{background-color:${NAVY};color:#ffffff;overflow-x:hidden;overscroll-behavior:none;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;}
-        video::-webkit-media-controls{display:none!important;}
         ::-webkit-scrollbar{width:3px;}
         ::-webkit-scrollbar-track{background:${NAVY};}
         ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15);border-radius:2px;}
@@ -764,12 +892,12 @@ export default function LevelProPage() {
         @keyframes svcFadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
         /* ── Hero content ── */
         .hero-content{padding:clamp(94px,14vh,150px) clamp(24px,5vw,72px) clamp(104px,16vh,166px);}
-        .hero-title{font-family:'Inter',sans-serif;font-weight:200;font-size:clamp(3rem,7.4vw,7rem);line-height:0.96;color:#ffffff;margin:0;letter-spacing:-0.03em;}
+        .hero-title{font-family:var(--font-inter),sans-serif;font-weight:200;font-size:clamp(3rem,7.4vw,7rem);line-height:0.96;color:#ffffff;margin:0;letter-spacing:-0.03em;}
         .hero-main-row{display:flex;align-items:flex-end;justify-content:space-between;gap:clamp(28px,4.5vw,64px);}
         .hero-left{flex:1 1 auto;min-width:0;}
         /* ── Hero CTAs — static grey-glass buttons (no animation, no shadow) ── */
         .hero-cta-row{display:flex;flex-wrap:wrap;gap:clamp(10px,1.1vw,14px);margin-top:clamp(24px,3.4vh,40px);}
-        .hero-btn{font-family:'Inter',sans-serif;font-size:clamp(0.82rem,0.98vw,0.94rem);font-weight:500;letter-spacing:0.01em;border-radius:var(--radius);padding:clamp(14px,1.2vw,18px) clamp(26px,2.3vw,38px);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;white-space:nowrap;color:#ffffff;background:rgba(44,44,46,0.42);backdrop-filter:blur(16px) saturate(118%);-webkit-backdrop-filter:blur(16px) saturate(118%);}
+        .hero-btn{font-family:var(--font-inter),sans-serif;font-size:clamp(0.82rem,0.98vw,0.94rem);font-weight:500;letter-spacing:0.01em;border-radius:var(--radius);padding:clamp(14px,1.2vw,18px) clamp(26px,2.3vw,38px);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;white-space:nowrap;color:#ffffff;background:rgba(44,44,46,0.42);backdrop-filter:blur(16px) saturate(118%);-webkit-backdrop-filter:blur(16px) saturate(118%);}
         .hero-btn:hover{background:rgba(62,62,66,0.5);}
         /* ── Location switcher ── */
         .hero-loc{display:flex;gap:clamp(18px,3vw,48px);padding:0 clamp(24px,5vw,72px) clamp(22px,3.2vh,34px);}
@@ -777,15 +905,21 @@ export default function LevelProPage() {
         .hero-loc-trackwrap{position:relative;width:100%;height:2px;border-radius:2px;}
         .hero-loc-track{position:absolute;inset:0;background:#ffffff;opacity:0.16;border-radius:2px;}
         .hero-loc-fill{position:absolute;left:0;top:0;bottom:0;width:0;background:#ffffff;opacity:0.95;border-radius:2px;}
-        .hero-loc-name{font-family:'Inter',sans-serif;font-weight:300;font-size:clamp(0.9rem,1.25vw,1.15rem);letter-spacing:0.01em;color:#ffffff;}
+        .hero-loc-name{font-family:var(--font-inter),sans-serif;font-weight:300;font-size:clamp(0.9rem,1.25vw,1.15rem);letter-spacing:0.01em;color:#ffffff;}
         @media(max-width:900px){
           .hero-content{padding:clamp(82px,12vh,110px) clamp(24px,5vw,72px) clamp(96px,13vh,120px);justify-content:center!important;}
           .hero-main-row{flex-direction:column;align-items:stretch;gap:clamp(18px,3.5vw,26px);}
           .hero-title{font-size:clamp(2.5rem,9vw,3.4rem);}
         }
         @media(max-width:600px){
-          .hero-loc{gap:clamp(10px,3vw,18px);}
-          .hero-loc-name{font-size:clamp(0.72rem,3.3vw,0.92rem);}
+          .hero-loc{gap:clamp(10px,3vw,18px);bottom:15px!important;}
+          .hero-loc-item:first-child{flex-grow:0.95;}
+          .hero-loc-item:nth-child(2){flex-grow:1.35;}
+          .hero-loc-item:nth-child(3){flex-grow:0.82;}
+          .hero-loc-name{font-size:clamp(0.68rem,3vw,0.84rem);white-space:nowrap;}
+          .hero-scroll-shell{height:auto!important;}
+          .hero-about-band{position:relative!important;top:auto!important;height:auto!important;}
+          .hero-about-content{height:auto!important;padding-bottom:clamp(56px,7vh,80px)!important;}
         }
         /* Laptop band (1024-1600px) for the "who we are" teaser line under the hero:
            its max-width is normally clamp(320px,72vw,900px), which sits near its
@@ -805,43 +939,85 @@ export default function LevelProPage() {
         }
         .stat-block{flex:1;min-width:0;padding:clamp(32px,4.5vw,60px) clamp(20px,3vw,48px);border-left:1px solid rgba(2,10,37,0.08);position:relative;}
         .stat-block:first-child{border-left:none;padding-left:0;}
-        .stat-val{font-family:'Inter',sans-serif;font-weight:200;font-size:clamp(3rem,6vw,5.5rem);color:${NAVY};letter-spacing:-0.03em;line-height:1;margin:0 0 clamp(8px,1.2vh,14px) 0;}
-        .stat-label{font-family:'Inter',sans-serif;font-size:clamp(0.74rem,0.85vw,0.8rem);color:var(--lp-text-meta);letter-spacing:0.01em;line-height:1.5;}
+        .stat-val{font-family:var(--font-inter),sans-serif;font-weight:200;font-size:clamp(3rem,6vw,5.5rem);color:${NAVY};letter-spacing:-0.03em;line-height:1;margin:0 0 clamp(8px,1.2vh,14px) 0;}
+        .stat-label{font-family:var(--font-inter),sans-serif;font-size:clamp(0.96rem,1.1vw,1.04rem);color:var(--lp-text-meta);letter-spacing:0.01em;line-height:1.5;}
         .stat-rule{position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(to right,${NAVY},transparent);opacity:0;transition:opacity 0.5s ease;}
         .stat-block:hover .stat-rule{opacity:1;}
-        .mat-grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(12px,1.5vw,20px);margin-top:clamp(40px,5.5vh,64px);}
-        .mat-card{background:#f0eeeb;border-radius:var(--radius);padding:clamp(24px,3vw,40px);min-height:clamp(220px,28vh,300px);display:flex;flex-direction:column;justify-content:space-between;transition:background 0.35s ease;}
-        .mat-card:hover{background:#e8e6e2;}
-        .mat-icon-wrap{width:40px;height:40px;border-radius:var(--radius);background:rgba(2,10,37,0.07);display:flex;align-items:center;justify-content:center;color:rgba(2,10,37,0.5);}
-        .mat-card-title{font-family:'Inter',sans-serif;font-weight:400;font-size:var(--lp-h3-fs);color:${NAVY};margin:0 0 clamp(8px,1.2vh,12px) 0;line-height:1.3;}
-        .mat-card-desc{font-family:'Inter',sans-serif;font-size:var(--lp-card-body-fs);line-height:var(--lp-card-body-lh);color:var(--lp-text-body);margin:0;}
+        .mat-grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(16px,1.8vw,24px);margin-top:clamp(40px,5.5vh,64px);}
+        .mat-card{position:relative;overflow:hidden;background:#f3f2ef;border:1px solid rgba(2,10,37,0.09);border-radius:var(--radius);padding:clamp(24px,3vw,40px);min-height:clamp(280px,32vh,340px);display:flex;flex-direction:column;gap:clamp(34px,5vh,56px);}
+        .mat-card:nth-child(2){background:#f8f7f5;}
+        .mat-card-top{display:flex;align-items:center;gap:16px;}
+        .mat-icon-wrap{width:46px;height:46px;border-radius:50%;background:${NAVY};display:flex;align-items:center;justify-content:center;color:#ffffff;flex-shrink:0;}
+        .mat-card-copy{margin-top:auto;}
+        .mat-card-title{font-family:var(--font-inter),sans-serif;font-weight:500;font-size:var(--lp-h3-fs);color:${NAVY};margin:0 0 clamp(10px,1.4vh,14px) 0;line-height:1.25;letter-spacing:-0.012em;}
+        .mat-card-desc{font-family:var(--font-inter),sans-serif;font-size:var(--lp-card-body-fs);line-height:1.6;color:var(--lp-text-body);margin:0;max-width:62ch;}
         /* Projects */
-        .footer-cta-btn{font-family:'Inter',sans-serif;font-size:clamp(0.65rem,0.82vw,0.74rem);font-weight:500;letter-spacing:0.08em;color:${NAVY};background:#ffffff;border:1px solid rgba(2,10,37,0.12);border-radius:var(--radius);padding:12px 28px;cursor:pointer;}
+        .footer-cta-btn{font-family:var(--font-inter),sans-serif;font-size:clamp(0.65rem,0.82vw,0.74rem);font-weight:500;letter-spacing:0.08em;color:${NAVY};background:#ffffff;border:1px solid rgba(2,10,37,0.12);border-radius:var(--radius);padding:12px 28px;cursor:pointer;}
+        .home-footer{background-color:${SECTION_BG};}
+        @media(max-width:767px){.home-footer{background-color:${NAVY};}}
         @media(max-width:640px){
           .stat-block{padding:clamp(20px,5vw,32px) 0!important;border-left:none!important;border-top:1px solid rgba(2,10,37,0.08)!important;}
-          .stat-block:first-child{border-top:none!important;padding-top:0!important;}
+          .stat-block:first-child{border-top:none!important;padding-top:clamp(20px,5vw,32px)!important;}
           .stats-row{flex-direction:column!important;}
           .mat-grid{grid-template-columns:1fr!important;}
+          .mat-card{min-height:0;gap:28px;padding:24px;}
+          .mat-icon-wrap{width:44px;height:44px;}
         }
         /* Services — desktop strip vs mobile/tablet stack of desktop-style cards */
         .svc-strip{display:flex;}
         .svc-stack{display:none;}
         .svc-controls{display:flex;}
-        .svc-m-card{background:#ffffff;border:1px solid rgba(2,10,37,0.08);border-radius:var(--radius);overflow:hidden;box-shadow:0 6px 30px rgba(2,10,37,0.08);display:flex;flex-direction:column;}
-        .svc-m-media{width:100%;height:clamp(190px,52vw,260px);background:rgba(2,10,37,0.06);overflow:hidden;flex-shrink:0;}
-        .svc-m-media img{width:100%;height:100%;object-fit:cover;display:block;}
+        .svc-m-card{background:#ffffff;border:1px solid rgba(2,10,37,0.12);border-radius:var(--radius);overflow:hidden;box-shadow:none;display:flex;flex-direction:column;opacity:0;transform:translateY(30px);transition:opacity 0.7s cubic-bezier(0.16,1,0.3,1),transform 0.7s cubic-bezier(0.16,1,0.3,1);}
+        .svc-m-card.is-visible{opacity:1;transform:translateY(0);}
+        .svc-m-media{width:100%;height:auto;aspect-ratio:4/3;background:rgba(2,10,37,0.06);overflow:hidden;flex-shrink:0;}
+        .svc-m-media img{width:100%;height:100%;object-fit:cover;display:block;transform:scale(1.12);filter:blur(6px);transition:transform 1.1s cubic-bezier(0.16,1,0.3,1) 0.08s,filter 0.9s ease 0.08s;}
+        .svc-m-card.is-visible .svc-m-media img{transform:scale(1);filter:blur(0);}
         .svc-m-body{padding:clamp(22px,5.5vw,30px);display:flex;flex-direction:column;}
-        .svc-m-name{font-family:'Inter',sans-serif;font-weight:500;font-size:var(--lp-h3-fs);color:${NAVY};margin:0 0 clamp(8px,2vw,11px) 0;line-height:1.3;}
-        .svc-m-desc{font-family:'Inter',sans-serif;font-weight:400;font-size:var(--lp-card-body-fs);line-height:var(--lp-card-body-lh);color:var(--lp-text-body);margin:0;}
+        .svc-m-name{font-family:var(--font-inter),sans-serif;font-weight:500;font-size:var(--lp-h3-fs);color:${NAVY};margin:0 0 clamp(8px,2vw,11px) 0;line-height:1.3;}
+        .svc-m-desc{font-family:var(--font-inter),sans-serif;font-weight:400;font-size:var(--lp-card-body-fs);line-height:var(--lp-card-body-lh);color:var(--lp-text-body);margin:0;}
+        /* The card width animates on hover, but its copy keeps a stable fluid
+           width. This prevents the paragraph from re-wrapping on every frame
+           of the flex transition while the media can still slide smoothly. */
+        .svc-active-copy{width:clamp(150px,17vw,280px);flex:0 0 clamp(150px,17vw,280px);}
+        .svc-active-media{width:clamp(125px,14vw,240px);flex:0 0 clamp(125px,14vw,240px);}
+        @media(min-width:901px) and (max-width:1050px){
+          .svc-active-copy{width:145px;flex-basis:145px;}
+          .svc-active-media{width:120px;flex-basis:120px;}
+        }
+        .svc-active-desc{font-family:var(--font-inter),sans-serif;font-size:var(--lp-card-body-fs);line-height:var(--lp-card-body-lh);color:var(--lp-text-body);margin:0 0 clamp(14px,2vh,20px) 0;min-height:0;flex-shrink:0;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:5;overflow-wrap:break-word;-webkit-hyphens:auto;hyphens:auto;}
+        .svc-more-link{width:max-content;margin-top:auto;padding-bottom:4px;display:inline-flex;align-items:center;gap:18px;border-bottom:1px solid rgba(2,10,37,0.3);font-family:var(--font-inter),sans-serif;font-size:clamp(0.7rem,0.8vw,0.78rem);font-weight:500;letter-spacing:0.01em;color:${NAVY};text-decoration:none;transition:gap 0.3s ease,border-color 0.3s ease;flex-shrink:0;}
+        .svc-more-link:hover{gap:24px;border-color:${NAVY};}
+        .svc-m-body .svc-more-link{margin-top:clamp(16px,3.5vw,22px);align-self:flex-start;}
+        .svc-tailored-cta{width:max-content;margin-top:clamp(12px,1.7vh,16px);display:inline-flex;align-items:center;justify-content:space-between;gap:18px;padding:10px 16px;border:1px solid ${NAVY};border-radius:var(--radius-sm);background:${NAVY};font-family:var(--font-inter),sans-serif;font-size:clamp(0.62rem,0.72vw,0.7rem);font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:#ffffff;text-decoration:none;}
+        /* Tailored-services CTA lives in two places depending on how much
+           room the strip actually has: on laptop-width screens (the strip's
+           whole 901-1600px range) it's a banner below the row, since a 6th
+           card there is what caused the crowding fixed earlier; on wide
+           dedicated monitors (>1600px) there's enough room to put it back
+           in row with the real services, as it always was before that fix. */
+        .svc-tailored-row{display:none;}
+        .svc-tailored-banner{display:flex;}
+        @media(min-width:1601px){
+          .svc-tailored-row{display:flex;}
+          .svc-tailored-banner{display:none;}
+        }
         @media(max-width:900px){
           .svc-strip{display:none!important;}
           .svc-controls{display:none!important;}
-          .svc-stack{display:flex!important;flex-direction:column;gap:clamp(16px,3vw,22px);}
+          .svc-stack{display:flex!important;flex-direction:column;gap:clamp(16px,3vw,22px);margin-bottom:clamp(22px,5vw,32px);}
+          /* Tailored-services banner goes dark on mobile only — the same
+             banner also renders at laptop widths (901-1600px, see the
+             breakpoint comment above), which stays untouched. */
+          .svc-tailored-banner{background:${NAVY}!important;border-color:rgba(255,255,255,0.14)!important;}
+          .svc-tailored-icon{color:rgba(255,255,255,0.55)!important;}
+          .svc-tailored-heading{color:#ffffff!important;}
+          .svc-tailored-body{color:rgba(255,255,255,0.62)!important;}
+          .svc-tailored-cta-banner{background:#ffffff!important;border-color:#ffffff!important;color:${NAVY}!important;}
         }
         /* Wider tablets: media beside the text, like the desktop card */
         @media(min-width:620px) and (max-width:900px){
           .svc-m-card{flex-direction:row-reverse;}
-          .svc-m-media{width:42%;height:auto;align-self:stretch;}
+          .svc-m-media{width:42%;height:auto;aspect-ratio:4/3;align-self:center;}
           .svc-m-body{width:58%;justify-content:center;}
         }
         /* Map pin — a fixed 20x20 anchor box keeps Leaflet's iconAnchor math
@@ -850,11 +1026,15 @@ export default function LevelProPage() {
         .lp-map-pin-wrap{width:20px;height:20px;display:flex;align-items:center;justify-content:center;}
         .lp-map-pin{width:12px;height:12px;border-radius:50%;background:rgba(255,255,255,0.2);border:1.5px solid rgba(255,255,255,0.5);transition:width 0.4s cubic-bezier(0.4,0,0.2,1),height 0.4s cubic-bezier(0.4,0,0.2,1),background 0.4s cubic-bezier(0.4,0,0.2,1),border-width 0.4s cubic-bezier(0.4,0,0.2,1),border-color 0.4s cubic-bezier(0.4,0,0.2,1),box-shadow 0.4s cubic-bezier(0.4,0,0.2,1);}
         .lp-map-pin.is-active{width:20px;height:20px;background:#ffffff;border-width:3px;border-color:#ffffff;box-shadow:0 0 0 5px rgba(255,255,255,0.25),0 2px 10px rgba(0,0,0,0.5);}
-        /* Leaflet's own container background defaults to a light gray (#ddd),
-           which shows through as an ugly white flash whenever a tile hasn't
-           loaded yet. Override to the section's own dark tone so any gap
-           blends in instead of flashing. */
+        /* Each region gets a fresh map instance behind a short dark veil.
+           The veil lifts only after that instance's first tiles load, avoiding
+           both the staggered long flight and Chromium's stale-raster bug. */
+        .lp-map-stack{position:relative;width:100%;height:100%;background:${SECTION_BG};overflow:hidden;}
+        .lp-map-region{position:absolute!important;inset:0;width:100%;height:100%;pointer-events:none;}
+        .lp-map-transition-veil{position:absolute;inset:0;z-index:1000;background:${SECTION_BG};opacity:0;pointer-events:none;will-change:opacity;transition:opacity 0.65s cubic-bezier(0.22,1,0.36,1);}
+        .lp-map-transition-veil.is-covering{opacity:1;transition-duration:0.32s;}
         .lp-map-dark.leaflet-container{background:${SECTION_BG};}
+        @media(prefers-reduced-motion:reduce){.lp-map-transition-veil,.lp-map-transition-veil.is-covering{transition-duration:0.12s;}.svc-m-card,.svc-m-media img{transition:none!important;opacity:1!important;transform:none!important;filter:none!important;}}
         .projects-desktop{display:block;}
         .projects-mobile{display:none;}
         .proj-mobile-slider{-webkit-overflow-scrolling:touch;overscroll-behavior:none;}
@@ -869,25 +1049,67 @@ export default function LevelProPage() {
         <Preloader key={preloaderKey} onComplete={handlePreloaderComplete} onCovered={handlePreloaderCovered} fast={isFastLoader} />
       )}
 
-      <NavBar locale={locale} onLocaleChange={handleLocaleChange} logoFloating={logoFloating} />
+      {/* mobileDarkZone reuses logoFloating's own signal (rect.bottom > 0 for
+          the navy hero/sub-hero band in computeAnim above) — the mobile
+          Projects section is a light cream background, not dark, so it's
+          deliberately excluded from the dark-scrim zone. */}
+      <NavBar locale={locale} onLocaleChange={handleLocaleChange} logoFloating={logoFloating} mobileDarkZone={logoFloating} />
 
       {/* ── Hero ── */}
-      <div style={{ position:"relative", height:"145vh", backgroundColor:NAVY }}>
+      <div className="hero-scroll-shell" style={{ position:"relative", height:"145vh", backgroundColor:NAVY }}>
         <section style={{ position:"sticky", top:0, height:"100vh", zIndex:1, overflow:"hidden", backgroundColor:NAVY }}>
-          <div ref={heroVideoWrapRef} style={{ position:"absolute", inset:0, willChange:"filter" }}>
+          <div ref={heroVideoWrapRef} style={{ position:"absolute", inset:0 }}>
             {LOCATION_VIDEOS.map((src, i) => (
               <video
                 key={i}
-                ref={(el) => { locVideoRefs.current[i] = el; }}
-                autoPlay loop muted playsInline preload="auto"
+                ref={(el) => {
+                  locVideoRefs.current[i] = el;
+                  if (el) {
+                    // Set these properties as soon as React attaches the node.
+                    // WebKit evaluates autoplay eligibility earlier than Chromium.
+                    el.muted = true;
+                    el.defaultMuted = true;
+                    el.playsInline = true;
+                  }
+                }}
+                src={src}
+                loop muted playsInline
+                autoPlay={i === activeLocation}
+                preload={i === activeLocation ? "auto" : "metadata"}
+                aria-hidden={i !== activeLocation}
+                onError={() => handleVideoError(i)}
                 style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover", opacity: i === activeLocation ? 1 : 0, transition:"opacity 0.8s cubic-bezier(0.4,0,0.2,1)" }}
-              >
-                <source src={src} type="video/mp4" />
-              </video>
+              />
             ))}
           </div>
+          {/* Scroll-driven dimming as a plain opacity scrim, not a `filter` on the
+              video's ancestor: CSS `filter`/`will-change` on an element that
+              contains a <video> is a known WebKit compositing bug that can break
+              video rendering in Safari specifically — the same bug family as the
+              `::-webkit-media-controls` landmine already fixed in this hero. */}
+          <div ref={heroVideoScrimRef} style={{ position:"absolute", inset:0, backgroundColor:NAVY, opacity:0, pointerEvents:"none" }} />
           <div style={{ position:"absolute", inset:0, backgroundColor:"rgba(0,0,0,0.28)", pointerEvents:"none" }} />
           <div style={{ position:"absolute", inset:0, pointerEvents:"none", background:"linear-gradient(to bottom,rgba(0,0,0,0.32) 0%,transparent 30%,rgba(0,0,0,0.1) 70%,rgba(0,0,0,0.5) 100%)" }} />
+          {videoPlaybackBlocked && (
+            <button
+              type="button"
+              onClick={() => { void playActiveLocationVideo(); }}
+              aria-label={t.hero.playVideo}
+              style={{
+                position:"absolute", left:"50%", top:"50%", zIndex:20,
+                transform:"translate(-50%,-50%)", display:"inline-flex",
+                alignItems:"center", gap:"10px", padding:"12px 18px",
+                border:"1px solid rgba(255,255,255,0.45)", borderRadius:"999px",
+                background:"rgba(2,10,37,0.52)", backdropFilter:"blur(12px)",
+                WebkitBackdropFilter:"blur(12px)", color:"#ffffff", cursor:"pointer",
+                fontFamily:"var(--font-inter),sans-serif", fontSize:"clamp(0.68rem,0.82vw,0.76rem)",
+                fontWeight:500, letterSpacing:"0.05em",
+              }}
+            >
+              <span aria-hidden="true" style={{ fontSize:"0.85em" }}>▶</span>
+              {t.hero.playVideo}
+            </button>
+          )}
           {/* Navy scroll-out wash — sits ABOVE the hero content (z:30) so it fades the
               whole hero (video + title + cards + location bar) to navy uniformly. At
               rest it's opacity:0, so it never affects the cards' backdrop-filter. */}
@@ -905,8 +1127,8 @@ export default function LevelProPage() {
                   </h1>
                 </div>
                 <div className="hero-cta-row">
-                  <Link href="/projects" className="hero-btn">{t.hero.ctaSecondary}</Link>
-                  <Link href="/contact" className="hero-btn">{t.hero.ctaPrimary}</Link>
+                  <Link href={navHref(locale, "services")} className="hero-btn">{t.hero.ctaSecondary}</Link>
+                  <Link href={navHref(locale, "contact")} className="hero-btn">{t.hero.ctaPrimary}</Link>
                 </div>
               </div>
             </div>
@@ -934,26 +1156,29 @@ export default function LevelProPage() {
             })}
           </div>
         </section>
-        <div ref={aboutRef} style={{ position:"absolute", top:"100vh", left:0, right:0, height:"45vh", zIndex:2 }}>
+        <div ref={aboutRef} className="hero-about-band" style={{ position:"absolute", top:"100vh", left:0, right:0, height:"45vh", zIndex:2 }}>
           <div style={{ height:"14vh", background:`linear-gradient(to bottom,transparent,${NAVY})`, pointerEvents:"none" }} />
           <div className="hero-about-content" style={{ height:"31vh", backgroundColor:NAVY, display:"flex", flexDirection:"column", justifyContent:"flex-start", padding:"clamp(24px,3.5vh,40px) clamp(24px,5vw,72px) clamp(20px,3vh,36px)" }}>
-            <RevealText text={t.about.label} style={{ fontFamily:"'Inter',sans-serif", fontWeight:400, fontSize:"clamp(0.6rem,0.8vw,0.7rem)", letterSpacing:"0.2em", textTransform:"uppercase", color:"rgba(255,255,255,0.35)", margin:"0 0 clamp(16px,2.5vh,28px) 0" }} />
-            <RevealText text={t.about.body} delayOffset={3} style={{ fontFamily:"'Inter',sans-serif", fontWeight:200, fontSize:"clamp(1.5rem,3.2vw,3rem)", lineHeight:1.12, color:"rgba(255,255,255,0.9)", margin:0, maxWidth:"clamp(320px,72vw,900px)", letterSpacing:"-0.02em" }} />
+            <RevealText text={t.about.label} style={{ fontFamily:"var(--font-inter),sans-serif", fontWeight:400, fontSize:"clamp(0.6rem,0.8vw,0.7rem)", letterSpacing:"0.2em", textTransform:"uppercase", color:"rgba(255,255,255,0.35)", margin:"0 0 clamp(16px,2.5vh,28px) 0" }} />
+            <RevealText text={t.about.body} delayOffset={3} style={{ fontFamily:"var(--font-inter),sans-serif", fontWeight:200, fontSize:"clamp(1.5rem,3.2vw,3rem)", lineHeight:1.12, color:"rgba(255,255,255,0.9)", margin:0, maxWidth:"clamp(320px,72vw,900px)", letterSpacing:"-0.02em" }} />
           </div>
         </div>
       </div>
 
       {/* ── Services — slider ── */}
-      <section style={{ background:"#ffffff", padding:"clamp(56px,7vh,80px) clamp(24px,5vw,72px)", borderTop:"1px solid rgba(2,10,37,0.05)" }}>
+      <section className="home-services-section" style={{ background:"#ffffff", padding:"clamp(56px,7vh,80px) clamp(24px,5vw,72px)", borderTop:"1px solid rgba(2,10,37,0.05)" }}>
         {/* Heading */}
         <div style={{ marginBottom:"clamp(24px,3.2vh,38px)" }}>
-          <p style={{ fontFamily:"'Inter',sans-serif", fontWeight:600, fontSize:"var(--lp-label-fs)", letterSpacing:"var(--lp-label-ls)", textTransform:"uppercase", color:"var(--lp-text-meta)", margin:"0 0 clamp(12px,1.8vh,18px) 0" }}>{t.services.label}</p>
-          <h2 style={{ fontFamily:"'Inter',sans-serif", fontWeight:300, fontSize:"var(--lp-title-fs)", lineHeight:0.95, color:NAVY, margin:0, letterSpacing:"var(--lp-title-ls)" }}>
+          <p className="home-services-label" style={{ fontFamily:"var(--font-inter),sans-serif", fontWeight:600, fontSize:"var(--lp-label-fs)", letterSpacing:"var(--lp-label-ls)", textTransform:"uppercase", color:"var(--lp-text-meta)", margin:"0 0 clamp(12px,1.8vh,18px) 0" }}>{t.services.label}</p>
+          <h2 style={{ fontFamily:"var(--font-inter),sans-serif", fontWeight:300, fontSize:"var(--lp-title-fs)", lineHeight:0.95, color:NAVY, margin:0, letterSpacing:"var(--lp-title-ls)" }}>
             {t.services.headingLine1}<br />{t.services.headingLine2}
           </h2>
         </div>
 
-        {/* Card strip — desktop expand-on-hover */}
+        {/* Card strip — desktop expand-on-hover. The tailored-CTA card only
+            shows here on wide dedicated monitors (>1600px, see
+            .svc-tailored-row) — on laptop widths it's the banner below
+            instead, since a 6th card there is what caused the crowding. */}
         <div className="svc-strip" style={{ gap:"clamp(8px,1vw,12px)", alignItems:"stretch", marginBottom:"clamp(14px,2vh,22px)" }}>
           {services.map((svc, i) => (
             <SvcSlideCard
@@ -964,6 +1189,33 @@ export default function LevelProPage() {
               onClick={() => setActiveSvc(i)}
             />
           ))}
+          <div
+            className="svc-tailored-row"
+            style={{
+              flex: "1 1 0",
+              width: 0,
+              minWidth: 0,
+              height: "clamp(300px,37vh,340px)",
+              borderRadius: "var(--radius)",
+              border: "1px solid rgba(2,10,37,0.12)",
+              background: "#ffffff",
+              boxShadow: "none",
+              overflow: "hidden",
+              flexDirection: "column",
+            }}
+          >
+            <div style={{ flex:1, minWidth:0, minHeight:0, padding:"clamp(14px,1.5vw,22px)", display:"flex", flexDirection:"column", justifyContent:"space-between" }}>
+              <div style={{ color:"rgba(2,10,37,0.42)", flexShrink:0 }}>{TAILORED_SERVICE_ICON}</div>
+              <div style={{ minWidth:0 }}>
+                <p style={{ fontFamily:"var(--font-inter),sans-serif", fontWeight:300, fontSize:"var(--lp-h3-fs)", color:NAVY, margin:"0 0 6px 0", lineHeight:1.2, overflowWrap:"break-word", WebkitHyphens:"auto", hyphens:"auto" }}>{t.servicesCta.label}</p>
+                <p style={{ fontFamily:"var(--font-inter),sans-serif", fontWeight:400, fontSize:"clamp(0.72rem,0.82vw,0.8rem)", color:"var(--lp-text-body)", margin:0, lineHeight:1.45 }}>{t.servicesCta.body}</p>
+                <Link href={navHref(locale, "contact")} className="svc-tailored-cta">
+                  {t.servicesCta.btn}
+                  <span aria-hidden="true">→</span>
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Card stack — mobile / tablet: desktop-style cards, one below another, photo not video */}
@@ -971,6 +1223,34 @@ export default function LevelProPage() {
           {services.map((svc) => (
             <SvcMobileCard key={svc.name} svc={svc} />
           ))}
+        </div>
+
+        {/* Tailored-solutions CTA — banner form, above the dots/arrows. On
+            laptop widths this is the only place it appears (see
+            .svc-tailored-banner); on wide dedicated monitors it's hidden in
+            favour of the in-row card above, so the CTA never shows twice. */}
+        <div className="svc-tailored-banner" style={{
+          marginBottom: "clamp(20px,3vh,32px)",
+          borderRadius: "var(--radius)",
+          border: "1px solid rgba(2,10,37,0.12)",
+          background: "linear-gradient(120deg,rgba(2,10,37,0.025),#ffffff 60%)",
+          padding: "clamp(24px,3.2vw,36px)",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: "clamp(20px,3vw,32px)",
+        }}>
+          <div style={{ display:"flex", alignItems:"center", gap:"clamp(16px,2.2vw,24px)", minWidth:0 }}>
+            <div className="svc-tailored-icon" style={{ color:"rgba(2,10,37,0.42)", flexShrink:0 }}>{TAILORED_SERVICE_ICON}</div>
+            <div style={{ minWidth:0 }}>
+              <h3 className="svc-tailored-heading" style={{ fontFamily:"var(--font-inter),sans-serif", fontWeight:500, fontSize:"var(--lp-h3-fs)", color:NAVY, margin:"0 0 4px 0", lineHeight:1.3 }}>{t.servicesCta.label}</h3>
+              <p className="svc-tailored-body" style={{ fontFamily:"var(--font-inter),sans-serif", fontWeight:400, fontSize:"var(--lp-card-body-fs)", lineHeight:"var(--lp-card-body-lh)", color:"var(--lp-text-body)", margin:0, maxWidth:"58ch" }}>{t.servicesCta.body}</p>
+            </div>
+          </div>
+          <Link href={navHref(locale, "contact")} className="svc-tailored-cta svc-tailored-cta-banner" style={{ flexShrink:0, margin:0 }}>
+            {t.servicesCta.btn}
+            <span aria-hidden="true">→</span>
+          </Link>
         </div>
 
         {/* Dots + Arrows — desktop only */}
@@ -984,7 +1264,7 @@ export default function LevelProPage() {
             {(["prev","next"] as const).map(dir => {
               const disabled = dir==="prev" ? activeSvc===0 : activeSvc===services.length-1;
               return (
-                <button key={dir} onClick={() => setActiveSvc(p => dir==="prev" ? Math.max(0,p-1) : Math.min(services.length-1,p+1))} disabled={disabled}
+                <button key={dir} onClick={() => setActiveSvc(dir==="prev" ? Math.max(0,activeSvc-1) : Math.min(services.length-1,activeSvc+1))} disabled={disabled}
                   style={{ width:"46px", height:"46px", display:"flex", alignItems:"center", justifyContent:"center", background:disabled?"transparent":"rgba(2,10,37,0.06)", border:`1.5px solid ${disabled?"rgba(2,10,37,0.1)":"rgba(2,10,37,0.22)"}`, borderRadius:"var(--radius)", cursor:disabled?"default":"pointer", color:disabled?"rgba(2,10,37,0.2)":NAVY, flexShrink:0, opacity:disabled?0.35:1 }}>
                   <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
                     {dir==="prev"
@@ -996,41 +1276,18 @@ export default function LevelProPage() {
             })}
           </div>
         </div>
-      </section>
 
-      {/* ── Services CTA — a compact coda to Services, not a new section: same
-          white background as the block above with no border between them
-          (so it reads as a continuation), just an inner rule marking it off
-          before the button. The border-top on Stats below is what actually
-          separates this from what comes next. ── */}
-      <section style={{ background:"#ffffff", padding:"0 clamp(24px,5vw,72px) clamp(40px,5.5vh,64px)" }}>
-        <div style={{
-          display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:"clamp(20px,3vw,32px)",
-          borderTop:"1px solid rgba(2,10,37,0.08)", paddingTop:"clamp(28px,4vh,40px)",
-        }}>
-          <div style={{ maxWidth:"560px" }}>
-            <h3 style={{ fontFamily:"'Inter',sans-serif", fontWeight:300, fontSize:"clamp(1.3rem,2vw,1.7rem)", lineHeight:1.25, color:NAVY, margin:"0 0 8px 0", letterSpacing:"-0.01em" }}>
-              {t.servicesCta.heading}
-            </h3>
-            <p style={{ fontFamily:"'Inter',sans-serif", fontWeight:400, fontSize:"var(--lp-body-fs)", lineHeight:"var(--lp-body-lh)", color:"var(--lp-text-body)", margin:0 }}>
-              {t.servicesCta.body}
-            </p>
-          </div>
-          <Link href="/contact" className="btn-fill" style={{ fontFamily:"'Inter',sans-serif", fontSize:"clamp(0.65rem,0.82vw,0.74rem)", fontWeight:500, letterSpacing:"0.08em", textTransform:"uppercase", color:"#ffffff", background:NAVY, border:`1px solid ${NAVY}`, borderRadius:"var(--radius)", padding:"14px 28px", cursor:"pointer", display:"inline-flex", alignItems:"center", gap:"8px", flexShrink:0, textDecoration:"none" }}>
-            {t.servicesCta.btn} <span className="btn-fill-icon">→</span>
-          </Link>
-        </div>
       </section>
 
       {/* ── Stats ── */}
       <section style={{ backgroundColor:"#ffffff", padding:"clamp(56px,7vh,80px) clamp(24px,5vw,72px)", borderTop:"1px solid rgba(2,10,37,0.05)" }}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:"clamp(24px,4vw,48px)", flexWrap:"wrap", marginBottom:"clamp(40px,6vh,72px)" }}>
           <div style={{ flex:"0 0 auto" }}>
-            <p style={{ fontFamily:"'Inter',sans-serif", fontWeight:600, fontSize:"var(--lp-label-fs)", letterSpacing:"var(--lp-label-ls)", textTransform:"uppercase", color:"var(--lp-text-meta)", margin:"0 0 clamp(12px,1.8vh,18px) 0" }}>{t.stats.label}</p>
-            <RevealText as="h2" text={t.stats.heading} style={{ fontFamily:"'Inter',sans-serif", fontWeight:300, fontSize:"var(--lp-title-fs)", lineHeight:1.08, color:NAVY, letterSpacing:"var(--lp-title-ls)", maxWidth:"clamp(300px,48vw,600px)", margin:0 }} />
+            <p style={{ fontFamily:"var(--font-inter),sans-serif", fontWeight:600, fontSize:"var(--lp-label-fs)", letterSpacing:"var(--lp-label-ls)", textTransform:"uppercase", color:"var(--lp-text-meta)", margin:"0 0 clamp(12px,1.8vh,18px) 0" }}>{t.stats.label}</p>
+            <RevealText as="h2" text={t.stats.heading} style={{ fontFamily:"var(--font-inter),sans-serif", fontWeight:300, fontSize:"var(--lp-title-fs)", lineHeight:1.08, color:NAVY, letterSpacing:"var(--lp-title-ls)", maxWidth:"clamp(300px,48vw,600px)", margin:0 }} />
           </div>
           <div style={{ display:"flex", flexDirection:"column", justifyContent:"flex-end", gap:"clamp(10px,1.5vh,16px)", alignSelf:"flex-end" }}>
-            <Link href="/equipment" className="btn-fill" style={{ fontFamily:"'Inter',sans-serif", fontSize:"clamp(0.62rem,0.78vw,0.7rem)", fontWeight:500, letterSpacing:"0.06em", color:NAVY, background:"transparent", border:`1px solid ${NAVY}`, borderRadius:"var(--radius)", padding:"11px 24px", cursor:"pointer", display:"flex", alignItems:"center", gap:"8px", width:"fit-content" }}>
+            <Link href={navHref(locale, "projects")} className="btn-fill" style={{ fontFamily:"var(--font-inter),sans-serif", fontSize:"clamp(0.62rem,0.78vw,0.7rem)", fontWeight:500, letterSpacing:"0.06em", color:NAVY, background:"transparent", border:`1px solid ${NAVY}`, borderRadius:"var(--radius)", padding:"11px 24px", cursor:"pointer", display:"flex", alignItems:"center", gap:"8px", width:"fit-content" }}>
               {t.stats.equipmentBtn} <span className="btn-fill-icon">→</span>
             </Link>
           </div>
@@ -1039,7 +1296,7 @@ export default function LevelProPage() {
           {[{val:40,suffix:"–70",unit:"m³/h"},{val:1500,suffix:"+",unit:""},{val:24,suffix:"h",unit:""}].map((s,i)=>(
             <div key={i} className="stat-block">
               <div className="stat-rule" />
-              <div className="stat-val"><StatNum value={s.val} suffix={s.suffix} delay={i*100} />{s.unit&&<span style={{ fontFamily:"'Inter',sans-serif", fontSize:"clamp(0.6rem,0.8vw,0.72rem)", fontWeight:400, color:"rgba(2,10,37,0.3)", letterSpacing:"0.08em", marginLeft:"4px" }}>{s.unit}</span>}</div>
+              <div className="stat-val"><StatNum value={s.val} suffix={s.suffix} delay={i*100} />{s.unit&&<span style={{ fontFamily:"var(--font-inter),sans-serif", fontSize:"clamp(1.2rem,1.6vw,1.44rem)", fontWeight:400, color:"rgba(2,10,37,0.48)", letterSpacing:"0.08em", marginLeft:"4px" }}>{s.unit}</span>}</div>
               <p className="stat-label">{t.stats.items[i].label}</p>
             </div>
           ))}
@@ -1049,14 +1306,16 @@ export default function LevelProPage() {
       {/* ── Materials ── */}
       <section style={{ backgroundColor:"#ffffff", padding:"clamp(56px,7vh,80px) clamp(24px,5vw,72px)", borderTop:"1px solid rgba(2,10,37,0.05)" }}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", flexWrap:"wrap", gap:"clamp(16px,2.5vw,28px)" }}>
-          <RevealText as="h2" text={t.materials.heading} style={{ fontFamily:"'Inter',sans-serif", fontWeight:300, fontSize:"var(--lp-title-fs)", lineHeight:1.1, color:NAVY, letterSpacing:"var(--lp-title-ls)", maxWidth:"clamp(300px,52vw,620px)", margin:0 }} />
-          <p style={{ fontFamily:"'Inter',sans-serif", fontWeight:400, fontSize:"var(--lp-body-fs)", lineHeight:"var(--lp-body-lh)", color:"var(--lp-text-body)", maxWidth:"340px", alignSelf:"flex-end", margin:0 }}>{t.materials.tagline}</p>
+          <RevealText as="h2" text={t.materials.heading} style={{ fontFamily:"var(--font-inter),sans-serif", fontWeight:300, fontSize:"var(--lp-title-fs)", lineHeight:1.1, color:NAVY, letterSpacing:"var(--lp-title-ls)", maxWidth:"clamp(300px,52vw,620px)", margin:0 }} />
+          <p style={{ fontFamily:"var(--font-inter),sans-serif", fontWeight:400, fontSize:"var(--lp-body-fs)", lineHeight:"var(--lp-body-lh)", color:"var(--lp-text-body)", maxWidth:"340px", alignSelf:"flex-end", margin:0 }}>{t.materials.tagline}</p>
         </div>
         <div className="mat-grid">
           {t.materials.cards.map(({title,desc},i)=>(
             <div key={i} className="mat-card">
-              <div className="mat-icon-wrap">{MAT_ICONS[i]}</div>
-              <div><h3 className="mat-card-title">{title}</h3><p className="mat-card-desc">{desc}</p></div>
+              <div className="mat-card-top">
+                <div className="mat-icon-wrap">{MAT_ICONS[i]}</div>
+              </div>
+              <div className="mat-card-copy"><h3 className="mat-card-title">{title}</h3><p className="mat-card-desc">{desc}</p></div>
             </div>
           ))}
         </div>
@@ -1070,11 +1329,16 @@ export default function LevelProPage() {
           {/* ── Full-width sticky map layer ── */}
           <div style={{ gridColumn: 1, gridRow: 1, position: "sticky", top: 0, height: "100vh", overflow: "hidden", zIndex: 1 }}>
 
-            {/* Map — isolated stacking context so Leaflet's internal z-indexes (200/400/600) stay below the overlays.
-                grayscale(1) strips any residual color from the CARTO tiles themselves (e.g. water bodies rendering
-                with a faint blue cast) so the map stays strictly black/gray/white, matching the rest of the section. */}
-            <div style={{ position: "absolute", inset: 0, isolation: "isolate", filter: "grayscale(1)" }}>
-              {isDesktop && <LeafletMap activeIdx={activeProject} />}
+            {/* Map — isolated stacking context so Leaflet's internal z-indexes
+                (200/400/600) stay below the overlays. CARTO's dark tiles are
+                already monochrome, so no compositor filter is needed here. */}
+            <div style={{ position: "absolute", inset: 0, isolation: "isolate" }}>
+              {isDesktop && (
+                <LeafletMap
+                  key={PROJECTS_STATIC[activeProject].location === "Valencia" ? "valencia" : "costa-blanca"}
+                  activeIdx={activeProject}
+                />
+              )}
             </div>
 
             {/* Left + bottom scrims — keep the floating overlays legible over the dark map */}
@@ -1083,8 +1347,8 @@ export default function LevelProPage() {
 
             {/* Section heading — pinned top-left */}
             <div style={{ position: "absolute", top: "clamp(98px,13vh,150px)", left: "clamp(24px,4vw,64px)", maxWidth: "min(42%,460px)", zIndex: 4 }}>
-              <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 600, fontSize: "clamp(0.66rem,0.82vw,0.74rem)", letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.55)", margin: "0 0 clamp(12px,1.6vh,18px) 0" }}>{t.projects.label}</p>
-              <h2 style={{ fontFamily: "'Inter',sans-serif", fontWeight: 300, fontSize: "clamp(1.9rem,3vw,3rem)", lineHeight: 1.04, color: "#ffffff", letterSpacing: "-0.025em", margin: 0 }}>{t.projects.heading}</h2>
+              <p style={{ fontFamily: "var(--font-inter),sans-serif", fontWeight: 600, fontSize: "clamp(0.66rem,0.82vw,0.74rem)", letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.55)", margin: "0 0 clamp(12px,1.6vh,18px) 0" }}>{t.projects.label}</p>
+              <h2 style={{ fontFamily: "var(--font-inter),sans-serif", fontWeight: 300, fontSize: "clamp(1.9rem,3vw,3rem)", lineHeight: 1.04, color: "#ffffff", letterSpacing: "-0.025em", margin: 0 }}>{t.projects.heading}</h2>
             </div>
 
             {/* Floating glass info panel — pinned bottom-left, syncs with the active card.
@@ -1100,7 +1364,7 @@ export default function LevelProPage() {
             }}>
               {/* Label + progress row */}
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "clamp(12px,1.5vh,16px)" }}>
-                <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 600, fontSize: "clamp(0.58rem,0.7vw,0.64rem)", letterSpacing: "0.16em", textTransform: "uppercase", color: "rgba(255,255,255,0.5)", margin: 0 }}>{String(activeProject + 1).padStart(2, "0")} / {String(projects.length).padStart(2, "0")}</p>
+                <p style={{ fontFamily: "var(--font-inter),sans-serif", fontWeight: 600, fontSize: "clamp(0.58rem,0.7vw,0.64rem)", letterSpacing: "0.16em", textTransform: "uppercase", color: "rgba(255,255,255,0.5)", margin: 0 }}>{String(activeProject + 1).padStart(2, "0")} / {String(projects.length).padStart(2, "0")}</p>
                 <div style={{ display: "flex", gap: "5px" }}>
                   {projects.map((_, i) => (
                     <div key={i} style={{ height: "3px", width: i === activeProject ? "22px" : "6px", background: i === activeProject ? "#ffffff" : "rgba(255,255,255,0.22)", borderRadius: "2px", transition: "all 0.5s cubic-bezier(0.37,0,0.63,1)" }} />
@@ -1112,12 +1376,12 @@ export default function LevelProPage() {
               <div style={{ opacity: sidebarVisible ? 1 : 0, transform: sidebarVisible ? "translateY(0)" : "translateY(6px)", transition: "opacity 0.28s ease, transform 0.4s cubic-bezier(0.22,1,0.36,1)" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "clamp(8px,1.1vh,11px)" }}>
                   <div style={{ width: "9px", height: "9px", borderRadius: "50%", background: "#ffffff", flexShrink: 0 }} />
-                  <h3 style={{ fontFamily: "'Inter',sans-serif", fontWeight: 300, fontSize: "clamp(1.45rem,2vw,2rem)", lineHeight: 1.05, color: "#ffffff", letterSpacing: "-0.025em", margin: 0 }}>
+                  <h3 style={{ fontFamily: "var(--font-inter),sans-serif", fontWeight: 300, fontSize: "clamp(1.45rem,2vw,2rem)", lineHeight: 1.05, color: "#ffffff", letterSpacing: "-0.025em", margin: 0 }}>
                     {projects[displayProject].name}
                   </h3>
                 </div>
 
-                <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 400, fontSize: "var(--lp-body-fs)", lineHeight: "var(--lp-body-lh)", color: "rgba(255,255,255,0.65)", margin: "0 0 clamp(16px,2vh,20px) 0" }}>
+                <p style={{ fontFamily: "var(--font-inter),sans-serif", fontWeight: 400, fontSize: "var(--lp-body-fs)", lineHeight: "var(--lp-body-lh)", color: "rgba(255,255,255,0.65)", margin: "0 0 clamp(16px,2vh,20px) 0" }}>
                   {projects[displayProject].shortDesc}
                 </p>
 
@@ -1134,7 +1398,7 @@ export default function LevelProPage() {
                     target="_blank"
                     rel="noopener noreferrer"
                     className="proj-maps-btn btn-fill btn-fill-light"
-                    style={{ display: "inline-flex", alignItems: "center", gap: "7px", fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.6rem,0.72vw,0.66rem)", fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: "#ffffff", border: "1px solid rgba(255,255,255,0.3)", borderRadius: "var(--radius-sm)", padding: "9px 16px", textDecoration: "none", flexShrink: 0 }}
+                    style={{ display: "inline-flex", alignItems: "center", gap: "7px", fontFamily: "var(--font-inter),sans-serif", fontSize: "clamp(0.6rem,0.72vw,0.66rem)", fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: "#ffffff", border: "1px solid rgba(255,255,255,0.3)", borderRadius: "var(--radius-sm)", padding: "9px 16px", textDecoration: "none", flexShrink: 0 }}
                   >
                     <svg width="11" height="11" viewBox="0 0 12 12" fill="none" style={{ flexShrink: 0 }}>
                       <path d="M6 1C4.07 1 2.5 2.57 2.5 4.5c0 2.78 3.5 6.5 3.5 6.5s3.5-3.72 3.5-6.5C9.5 2.57 7.93 1 6 1zm0 4.75a1.25 1.25 0 110-2.5 1.25 1.25 0 010 2.5z" fill="currentColor"/>
@@ -1165,8 +1429,8 @@ export default function LevelProPage() {
       {/* ── Projects mobile ── */}
       <section className="projects-mobile" style={{ background: "#f0eeea", paddingTop: "clamp(48px,7vh,72px)", paddingBottom: "clamp(48px,7vh,72px)" }}>
         <div style={{ paddingLeft: "clamp(24px,5vw,48px)", paddingRight: "clamp(24px,5vw,48px)", marginBottom: "clamp(22px,3.5vh,32px)" }}>
-          <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 600, fontSize: "clamp(0.62rem,2.6vw,0.7rem)", letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--lp-text-meta)", margin: "0 0 clamp(8px,1.2vh,12px) 0" }}>{t.projects.label}</p>
-          <h2 style={{ fontFamily: "'Inter',sans-serif", fontWeight: 300, fontSize: "clamp(1.9rem,6.5vw,3rem)", lineHeight: 1.05, color: NAVY, letterSpacing: "-0.025em", margin: 0 }}>{t.projects.heading}</h2>
+          <p style={{ fontFamily: "var(--font-inter),sans-serif", fontWeight: 600, fontSize: "clamp(0.62rem,2.6vw,0.7rem)", letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--lp-text-meta)", margin: "0 0 clamp(8px,1.2vh,12px) 0" }}>{t.projects.label}</p>
+          <h2 style={{ fontFamily: "var(--font-inter),sans-serif", fontWeight: 300, fontSize: "clamp(1.9rem,6.5vw,3rem)", lineHeight: 1.05, color: NAVY, letterSpacing: "-0.025em", margin: 0 }}>{t.projects.heading}</h2>
         </div>
         <div
           ref={mobileSliderRef}
@@ -1182,20 +1446,20 @@ export default function LevelProPage() {
       </section>
 
       {/* ── Footer ── */}
-      <footer style={{ backgroundColor:SECTION_BG, padding:"clamp(64px,10vh,120px) clamp(24px,5vw,72px) clamp(32px,4vh,56px)" }}>
+      <footer className="home-footer" style={{ padding:"clamp(64px,10vh,120px) clamp(24px,5vw,72px) clamp(32px,4vh,56px)" }}>
         <div style={{ borderTop:"1px solid rgba(255,255,255,0.08)", paddingTop:"clamp(48px,7vh,88px)", display:"flex", justifyContent:"space-between", alignItems:"flex-end", flexWrap:"wrap", gap:"clamp(24px,4vw,48px)", marginBottom:"clamp(56px,8vh,100px)" }}>
           <div>
-            <p style={{ fontFamily:"'Inter',sans-serif", fontWeight:400, fontSize:"clamp(0.6rem,0.78vw,0.7rem)", letterSpacing:"0.18em", textTransform:"uppercase", color:"rgba(255,255,255,0.3)", margin:"0 0 clamp(14px,2vh,22px) 0" }}>{t.footer.ctaLabel}</p>
-            <h2 style={{ fontFamily:"'Inter',sans-serif", fontWeight:200, fontSize:"clamp(2.2rem,5.5vw,5.5rem)", lineHeight:0.95, color:"#ffffff", margin:0, letterSpacing:"-0.03em", maxWidth:"clamp(280px,60vw,800px)" }}>{t.footer.ctaHeading}</h2>
+            <p style={{ fontFamily:"var(--font-inter),sans-serif", fontWeight:400, fontSize:"clamp(0.6rem,0.78vw,0.7rem)", letterSpacing:"0.18em", textTransform:"uppercase", color:"rgba(255,255,255,0.3)", margin:"0 0 clamp(14px,2vh,22px) 0" }}>{t.footer.ctaLabel}</p>
+            <h2 style={{ fontFamily:"var(--font-inter),sans-serif", fontWeight:200, fontSize:"clamp(2.2rem,5.5vw,5.5rem)", lineHeight:0.95, color:"#ffffff", margin:0, letterSpacing:"-0.03em", maxWidth:"clamp(280px,60vw,800px)" }}>{t.footer.ctaHeading}</h2>
           </div>
-          <Link href="/contact" className="footer-cta-btn btn-fill btn-fill-light" style={{ textDecoration:"none" }}>{t.footer.ctaBtn} <span className="btn-fill-icon">→</span></Link>
+          <Link href={navHref(locale, "contact")} className="footer-cta-btn btn-fill btn-fill-light" style={{ textDecoration:"none" }}>{t.footer.ctaBtn} <span className="btn-fill-icon">→</span></Link>
         </div>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:"16px", borderTop:"1px solid rgba(255,255,255,0.06)", paddingTop:"clamp(20px,2.5vh,28px)" }}>
-          <Link href="/" style={{ fontFamily:"'Inter',sans-serif", fontWeight:600, fontSize:"clamp(0.85rem,1.1vw,1rem)", letterSpacing:"0.12em", textTransform:"uppercase", color:"rgba(255,255,255,0.9)", textDecoration:"none" }}>Level Pro</Link>
+          <Link href={navHref(locale, "")} style={{ fontFamily:"var(--font-inter),sans-serif", fontWeight:600, fontSize:"clamp(0.85rem,1.1vw,1rem)", letterSpacing:"0.12em", textTransform:"uppercase", color:"rgba(255,255,255,0.9)", textDecoration:"none" }}>Level Pro</Link>
           <div style={{ display:"flex", gap:"clamp(20px,3vw,36px)" }}>
-            {t.footer.links.map((l,i)=><Link key={l} href={NAV_ROUTES[i]??"/"+l.toLowerCase().replace(/\s+/g,"-")} style={{ fontFamily:"'Inter',sans-serif", fontSize:"clamp(0.62rem,0.78vw,0.7rem)", fontWeight:400, color:"rgba(255,255,255,0.35)", letterSpacing:"0.04em", textDecoration:"none", transition:"color 0.2s ease" }}>{l}</Link>)}
+            {t.footer.links.map((l,i)=><Link key={l} href={navHref(locale, NAV_PATHS[i] ?? l.toLowerCase().replace(/\s+/g,"-"))} style={{ fontFamily:"var(--font-inter),sans-serif", fontSize:"clamp(0.62rem,0.78vw,0.7rem)", fontWeight:400, color:"rgba(255,255,255,0.35)", letterSpacing:"0.04em", textDecoration:"none", transition:"color 0.2s ease" }}>{l}</Link>)}
           </div>
-          <span style={{ fontFamily:"'Inter',sans-serif", fontSize:"clamp(0.58rem,0.72vw,0.65rem)", color:"rgba(255,255,255,0.2)", letterSpacing:"0.04em" }}>{t.footer.copyright}</span>
+          <span style={{ fontFamily:"var(--font-inter),sans-serif", fontSize:"clamp(0.58rem,0.72vw,0.65rem)", color:"rgba(255,255,255,0.2)", letterSpacing:"0.04em" }}>{t.footer.copyright}</span>
         </div>
       </footer>
     </>

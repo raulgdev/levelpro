@@ -3,18 +3,15 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { createPortal } from "react-dom";
 import Lenis from "lenis";
-import { TRANSLATIONS, Translation } from "../translations";
-import { NAVY, useLocale, Preloader, NavBar, FooterCTA } from "../components/shared";
-
-// Placeholder photo for Nomad Hotel Cala Finestrat only — every other project
-// now has its own dedicated image (see PROJECTS_SEED below).
-const PROJ_IMG = "https://levelpro.es/wp-content/uploads/2026/05/1-copy.avif";
+import { Locale, TRANSLATIONS, Translation } from "../../translations";
+import { NAVY, useLocale, useLogoFloating, Preloader, NavBar, FooterCTA } from "../../components/shared";
 
 type ProjectStatus = "finished" | "inProgress";
 type ConstructionType = "hotel" | "residential" | "commercial" | "industrial";
 
 interface ProjectSeed {
   id: number;
+  contentIndex: number;
   name: string;
   location: string;
   year: string;
@@ -32,20 +29,30 @@ interface Project extends ProjectSeed {
   tags: string[];
 }
 
-// Real project data — same 7 projects (name/location/year/pin/mapsUrl) already
-// used on the homepage (app/page.tsx PROJECTS_STATIC). `status` and
-// `constructionType` are new fields this page needs; all 7 are real completed
-// projects, so all 7 are "finished" — "In Progress" legitimately returns no
-// results until an active project is added.
+const projectYearRank = (year: string) => {
+  const matches = year.match(/\d{4}/g);
+  return matches ? Math.max(...matches.map(Number)) : -1;
+};
+
+// Real project data shared with the homepage. Active projects stay first;
+// completed projects are ordered from the newest completion year to the oldest.
 const PROJECTS_SEED: ProjectSeed[] = [
-  { id: 1, name: "Nomad Hotel Cala Finestrat", location: "Finestrat", year: "2020", status: "finished", constructionType: "hotel", images: [PROJ_IMG], pin: { lat: 38.5261921, lng: -0.1635926 }, mapsUrl: "https://maps.app.goo.gl/J3FCKjeoeuHgYPeu7" },
-  { id: 2, name: "Novotel Valencia Lavant", location: "Valencia", year: "2026", status: "finished", constructionType: "hotel", images: ["https://levelpro.es/wp-content/uploads/2026/07/Novotel-Valencia-Lavant--scaled.avif"], pin: { lat: 39.4798142, lng: -0.3911179 }, mapsUrl: "https://maps.app.goo.gl/Tyyy1P9s6FV6ARsH8" },
-  { id: 3, name: "Alibuilding Benidorm", location: "Benidorm", year: "2026", status: "finished", constructionType: "residential", images: ["https://levelpro.es/wp-content/uploads/2026/07/ali-building-benidorm-2-scaled.avif"], pin: { lat: 38.5328296, lng: -0.16296 }, mapsUrl: "https://maps.app.goo.gl/7fbSfX37m8nmgbzx6" },
-  { id: 4, name: "Monver Tower Benidorm", location: "Benidorm", year: "2026", status: "finished", constructionType: "residential", images: ["https://levelpro.es/wp-content/uploads/2026/07/monver-tower-benidorm-scaled.avif"], pin: { lat: 38.5358366, lng: -0.1124111 }, mapsUrl: "https://maps.app.goo.gl/hmaXBsbMdroebJg88" },
-  { id: 5, name: "Poseidon Playas de Benidorm", location: "Benidorm", year: "2026", status: "finished", constructionType: "hotel", images: ["https://levelpro.es/wp-content/uploads/2026/07/Poseidon-Playas-de-Benidorm-scaled.avif"], pin: { lat: 38.5378413, lng: -0.1469662 }, mapsUrl: "https://maps.app.goo.gl/6WD3wDruLYYnpzCdA" },
-  { id: 6, name: "Port Benidorm Hotel", location: "Benidorm", year: "2026", status: "finished", constructionType: "hotel", images: ["https://levelpro.es/wp-content/uploads/2026/07/Port-Benidorm-Hotel.avif"], pin: { lat: 38.5340091, lng: -0.1065199 }, mapsUrl: "https://maps.app.goo.gl/kXVd6tVsLRSq2wqd7" },
-  { id: 7, name: "Hotel Rosamar", location: "Benidorm", year: "2020", status: "finished", constructionType: "hotel", images: ["https://levelpro.es/wp-content/uploads/2026/07/Hotel-rosamar-scaled.avif"], pin: { lat: 38.5378884, lng: -0.1106753 }, mapsUrl: "https://maps.app.goo.gl/BAsG6ERmK29fqD7F9" },
+  { id: 8, contentIndex: 0, name: "Seaway Tower", location: "Calpe", year: "2025", status: "finished", constructionType: "residential", images: ["/images/projects/seaway-tower-calpe.avif"], pin: { lat: 38.6415228, lng: 0.064426 }, mapsUrl: "https://www.google.com/maps/search/?api=1&query=38.6415228%2C0.0644260" },
+  { id: 1, contentIndex: 1, name: "Nomad Hotel Cala Finestrat", location: "Finestrat", year: "2025", status: "finished", constructionType: "hotel", images: ["/images/projects/nomad-hotel-cala-finestrat.avif"], pin: { lat: 38.5261921, lng: -0.1635926 }, mapsUrl: "https://maps.app.goo.gl/J3FCKjeoeuHgYPeu7" },
+  { id: 2, contentIndex: 2, name: "Alibuilding Benidorm", location: "Benidorm", year: "2025", status: "finished", constructionType: "residential", images: ["/images/projects/alibuilding-benidorm.avif"], pin: { lat: 38.5328296, lng: -0.16296 }, mapsUrl: "https://maps.app.goo.gl/7fbSfX37m8nmgbzx6" },
+  { id: 3, contentIndex: 3, name: "Monver Tower Benidorm", location: "Benidorm", year: "2022", status: "finished", constructionType: "residential", images: ["/images/projects/monver-tower-benidorm.avif"], pin: { lat: 38.5358366, lng: -0.1124111 }, mapsUrl: "https://maps.app.goo.gl/hmaXBsbMdroebJg88" },
+  { id: 4, contentIndex: 4, name: "Poseidon Playas de Benidorm", location: "Benidorm", year: "2026", status: "inProgress", constructionType: "hotel", images: ["/images/projects/poseidon-playas-benidorm.avif"], pin: { lat: 38.5378413, lng: -0.1469662 }, mapsUrl: "https://maps.app.goo.gl/6WD3wDruLYYnpzCdA" },
+  { id: 5, contentIndex: 5, name: "Port Benidorm Hotel", location: "Benidorm", year: "2025", status: "finished", constructionType: "hotel", images: ["/images/projects/port-benidorm-hotel.avif"], pin: { lat: 38.5340091, lng: -0.1065199 }, mapsUrl: "https://maps.app.goo.gl/kXVd6tVsLRSq2wqd7" },
+  { id: 6, contentIndex: 6, name: "Hotel Rosamar", location: "Benidorm", year: "2024", status: "finished", constructionType: "hotel", images: ["/images/projects/hotel-rosamar.avif"], pin: { lat: 38.5378884, lng: -0.1106753 }, mapsUrl: "https://maps.app.goo.gl/BAsG6ERmK29fqD7F9" },
+  { id: 7, contentIndex: 7, name: "Novotel Valencia Lavant", location: "Valencia", year: "2024", status: "finished", constructionType: "hotel", images: ["/images/projects/novotel-valencia-lavant.avif"], pin: { lat: 39.4798142, lng: -0.3911179 }, mapsUrl: "https://maps.app.goo.gl/Tyyy1P9s6FV6ARsH8" },
+  { id: 9, contentIndex: 8, name: "Villa España Hotel", location: "Benidorm", year: "2023", status: "finished", constructionType: "hotel", images: ["/images/projects/villa-espana-hotel.avif"], pin: { lat: 38.5387, lng: -0.1294 }, mapsUrl: "https://www.google.com/maps/search/?api=1&query=Villa%20Espa%C3%B1a%20Hotel%20Benidorm" },
+  { id: 10, contentIndex: 9, name: "Edificio La Jirafa", location: "Benidorm", year: "2025", status: "finished", constructionType: "residential", images: ["/images/projects/edificio-la-jirafa.avif"], pin: { lat: 38.5381, lng: -0.1273 }, mapsUrl: "https://www.google.com/maps/search/?api=1&query=Edificio%20La%20Jirafa%20Benidorm" },
 ];
+
+PROJECTS_SEED.sort((a, b) => {
+  const statusOrder = Number(a.status === "finished") - Number(b.status === "finished");
+  return statusOrder || projectYearRank(b.year) - projectYearRank(a.year);
+});
 
 const CONSTRUCTION_TYPES: ConstructionType[] = ["hotel", "residential", "commercial", "industrial"];
 
@@ -54,7 +61,7 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap: "10px" }}>
       <span style={{ width: "6px", height: "6px", background: NAVY, flexShrink: 0 }} />
-      <span style={{ fontFamily: "'Inter',sans-serif", fontWeight: 600, fontSize: "clamp(0.58rem,0.7vw,0.64rem)", letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--lp-text-meta)" }}>{children}</span>
+      <span style={{ fontFamily: "var(--font-inter),sans-serif", fontWeight: 600, fontSize: "clamp(0.58rem,0.7vw,0.64rem)", letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--lp-text-meta)" }}>{children}</span>
     </span>
   );
 }
@@ -62,8 +69,8 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
 function MetaChip({ label, value }: { label: string; value: string }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-      <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.58rem,0.68vw,0.63rem)", fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--lp-text-meta)" }}>{label}</span>
-      <span style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.78rem,0.9vw,0.86rem)", fontWeight: 500, color: NAVY }}>{value}</span>
+      <span style={{ fontFamily: "var(--font-inter),sans-serif", fontSize: "clamp(0.58rem,0.68vw,0.63rem)", fontWeight: 600, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--lp-text-meta)" }}>{label}</span>
+      <span style={{ fontFamily: "var(--font-inter),sans-serif", fontSize: "clamp(0.78rem,0.9vw,0.86rem)", fontWeight: 500, color: NAVY }}>{value}</span>
     </div>
   );
 }
@@ -307,15 +314,16 @@ function ProjectModal({ project, t, open, onClose }: { project: Project; t: Tran
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
-export default function ProjectsPage() {
-  const [locale, setLocale] = useLocale();
+export default function ProjectsClient({ locale: initialLocale }: { locale: Locale }) {
+  const [locale, setLocale] = useLocale(initialLocale);
   const t = TRANSLATIONS[locale];
   const pp = t.projectsPage;
+  const logoFloating = useLogoFloating();
 
   const [preloaderVisible, setPreloaderVisible] = useState(true);
   const [preloaderKey, setPreloaderKey] = useState(0);
   const [isFastLoader, setIsFastLoader] = useState(false);
-  const pendingLocaleRef = useRef<ReturnType<typeof useLocale>[0] | null>(null);
+  const pendingLocaleRef = useRef<Locale | null>(null);
 
   const handlePreloaderCovered = useCallback(() => {
     if (pendingLocaleRef.current) { setLocale(pendingLocaleRef.current); pendingLocaleRef.current = null; }
@@ -341,11 +349,11 @@ export default function ProjectsPage() {
     return () => { cancelAnimationFrame(id); lenis.destroy(); };
   }, []);
 
-  const projects: Project[] = useMemo(() => PROJECTS_SEED.map((p, i) => ({
+  const projects: Project[] = useMemo(() => PROJECTS_SEED.map((p) => ({
     ...p,
-    shortDesc: t.projects.items[i].shortDesc,
-    fullDesc: t.projects.items[i].fullDesc,
-    tags: t.projects.items[i].tags,
+    shortDesc: t.projects.items[p.contentIndex].shortDesc,
+    fullDesc: t.projects.items[p.contentIndex].fullDesc,
+    tags: t.projects.items[p.contentIndex].tags,
   })), [t]);
 
   // Filter state — canonical, locale-invariant values (place names, "hotel"/
@@ -363,7 +371,9 @@ export default function ProjectsPage() {
   }, [projects, t.hero.locations]);
 
   const yearOptions = useMemo(() => (
-    Array.from(new Set(projects.map(p => p.year))).sort((a, b) => Number(b) - Number(a))
+    Array.from(new Set(projects.map(p => p.year)))
+      .filter(year => projectYearRank(year) > 0)
+      .sort((a, b) => projectYearRank(b) - projectYearRank(a))
   ), [projects]);
 
   const toggleLocation = useCallback((v: string) => {
@@ -419,7 +429,6 @@ export default function ProjectsPage() {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: `
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&display=swap');
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
         html{scroll-behavior:auto;touch-action:manipulation;}
         html.lenis,html.lenis body{height:auto;}
@@ -438,14 +447,14 @@ export default function ProjectsPage() {
         /* ── Search ── */
         .proj-search{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid rgba(2,10,37,0.15);border-radius:var(--radius);padding:clamp(14px,1.6vw,18px) clamp(18px,2vw,22px);transition:border-color 0.2s ease,box-shadow 0.2s ease;}
         .proj-search:focus-within{border-color:${NAVY};box-shadow:0 0 0 3px rgba(2,10,37,0.08);}
-        .proj-search-input{flex:1;min-width:0;border:none;outline:none;background:none;font-family:'Inter',sans-serif;font-size:var(--lp-body-fs);font-weight:300;color:${NAVY};}
+        .proj-search-input{flex:1;min-width:0;border:none;outline:none;background:none;font-family:var(--font-inter),sans-serif;font-size:var(--lp-body-fs);font-weight:300;color:${NAVY};}
         .proj-search-input::placeholder{color:rgba(2,10,37,0.35);}
         .proj-search-clear{width:22px;height:22px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border:none;background:rgba(2,10,37,0.08);border-radius:50%;color:rgba(2,10,37,0.5);font-size:16px;line-height:1;cursor:pointer;}
 
         /* ── Layout: sidebar + grid ── */
         .proj-layout{display:grid;grid-template-columns:264px 1fr;gap:clamp(40px,4vw,56px);align-items:start;}
         .proj-sidebar-desktop{display:block;position:sticky;top:clamp(88px,10vh,120px);}
-        .proj-mobile-trigger{display:none;align-items:center;gap:8px;font-family:'Inter',sans-serif;font-size:clamp(0.72rem,0.85vw,0.8rem);font-weight:500;color:${NAVY};background:#fff;border:1px solid rgba(2,10,37,0.18);border-radius:var(--radius);padding:11px 18px;cursor:pointer;white-space:nowrap;}
+        .proj-mobile-trigger{display:none;align-items:center;gap:8px;font-family:var(--font-inter),sans-serif;font-size:clamp(0.72rem,0.85vw,0.8rem);font-weight:500;color:${NAVY};background:#fff;border:1px solid rgba(2,10,37,0.18);border-radius:var(--radius);padding:11px 18px;cursor:pointer;white-space:nowrap;}
         @media(max-width:1023px){
           .proj-layout{grid-template-columns:1fr!important;}
           .proj-sidebar-desktop{display:none!important;}
@@ -453,10 +462,10 @@ export default function ProjectsPage() {
         }
 
         /* ── Filter groups ── */
-        .proj-filter-heading{font-family:'Inter',sans-serif;font-weight:600;font-size:clamp(0.66rem,0.78vw,0.72rem);letter-spacing:0.14em;text-transform:uppercase;color:${NAVY};margin:0 0 clamp(16px,2.2vh,20px) 0;}
+        .proj-filter-heading{font-family:var(--font-inter),sans-serif;font-weight:600;font-size:clamp(0.66rem,0.78vw,0.72rem);letter-spacing:0.14em;text-transform:uppercase;color:${NAVY};margin:0 0 clamp(16px,2.2vh,20px) 0;}
         .proj-filter-group{padding:clamp(16px,2.2vh,22px) 0;border-top:1px solid rgba(2,10,37,0.1);}
         .proj-filter-group:first-child{border-top:none;padding-top:0;}
-        .proj-filter-title{font-family:'Inter',sans-serif;font-weight:600;font-size:clamp(0.6rem,0.72vw,0.66rem);letter-spacing:0.14em;text-transform:uppercase;color:var(--lp-text-meta);margin:0 0 clamp(12px,1.6vh,16px) 0;}
+        .proj-filter-title{font-family:var(--font-inter),sans-serif;font-weight:600;font-size:clamp(0.6rem,0.72vw,0.66rem);letter-spacing:0.14em;text-transform:uppercase;color:var(--lp-text-meta);margin:0 0 clamp(12px,1.6vh,16px) 0;}
         .proj-filter-check{position:relative;display:flex;align-items:center;gap:10px;cursor:pointer;padding:6px 0;min-height:34px;}
         .proj-filter-check input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer;}
         .proj-filter-box{width:16px;height:16px;border:1.5px solid rgba(2,10,37,0.25);border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:background 0.2s ease,border-color 0.2s ease;}
@@ -464,13 +473,13 @@ export default function ProjectsPage() {
         .proj-filter-check input:checked ~ .proj-filter-box{background:${NAVY};border-color:${NAVY};}
         .proj-filter-check input:checked ~ .proj-filter-box svg{opacity:1;transform:scale(1);}
         .proj-filter-check input:focus-visible ~ .proj-filter-box{outline:2px solid rgba(2,10,37,0.35);outline-offset:2px;}
-        .proj-filter-label{font-family:'Inter',sans-serif;font-size:clamp(0.76rem,0.88vw,0.84rem);color:rgba(2,10,37,0.65);}
-        .proj-chip{font-family:'Inter',sans-serif;font-size:clamp(0.7rem,0.8vw,0.76rem);font-weight:500;color:rgba(2,10,37,0.6);background:transparent;border:1px solid rgba(2,10,37,0.18);border-radius:var(--radius);padding:7px 14px;min-height:34px;cursor:pointer;transition:background 0.2s ease,color 0.2s ease,border-color 0.2s ease;}
+        .proj-filter-label{font-family:var(--font-inter),sans-serif;font-size:clamp(0.76rem,0.88vw,0.84rem);color:rgba(2,10,37,0.65);}
+        .proj-chip{font-family:var(--font-inter),sans-serif;font-size:clamp(0.7rem,0.8vw,0.76rem);font-weight:500;color:rgba(2,10,37,0.6);background:transparent;border:1px solid rgba(2,10,37,0.18);border-radius:var(--radius);padding:7px 14px;min-height:34px;cursor:pointer;transition:background 0.2s ease,color 0.2s ease,border-color 0.2s ease;}
         .proj-chip[data-active="true"]{background:${NAVY};border-color:${NAVY};color:#fff;}
         .proj-status-tabs{display:flex;flex-direction:column;gap:2px;}
-        .proj-status-tab{text-align:left;font-family:'Inter',sans-serif;font-size:clamp(0.76rem,0.88vw,0.84rem);font-weight:400;color:rgba(2,10,37,0.55);background:none;border:none;padding:7px 0;min-height:32px;cursor:pointer;transition:color 0.2s ease,font-weight 0.2s ease;}
+        .proj-status-tab{text-align:left;font-family:var(--font-inter),sans-serif;font-size:clamp(0.76rem,0.88vw,0.84rem);font-weight:400;color:rgba(2,10,37,0.55);background:none;border:none;padding:7px 0;min-height:32px;cursor:pointer;transition:color 0.2s ease,font-weight 0.2s ease;}
         .proj-status-tab[data-active="true"]{font-weight:700;color:${NAVY};}
-        .proj-clearall{font-family:'Inter',sans-serif;font-size:clamp(0.68rem,0.8vw,0.74rem);font-weight:500;color:rgba(2,10,37,0.5);background:none;border:none;padding:0;cursor:pointer;text-decoration:underline;text-underline-offset:3px;}
+        .proj-clearall{font-family:var(--font-inter),sans-serif;font-size:clamp(0.68rem,0.8vw,0.74rem);font-weight:500;color:rgba(2,10,37,0.5);background:none;border:none;padding:0;cursor:pointer;text-decoration:underline;text-underline-offset:3px;}
         .proj-clearall:hover{color:${NAVY};}
 
         /* ── Grid + card ── */
@@ -479,19 +488,19 @@ export default function ProjectsPage() {
         .proj-card:hover{border-color:rgba(2,10,37,0.2);}
         .proj-card-media{position:relative;aspect-ratio:3/2;overflow:hidden;background:rgba(2,10,37,0.05);}
         .proj-card-media img{width:100%;height:100%;object-fit:cover;object-position:center 30%;display:block;}
-        .proj-card-status{position:absolute;top:14px;left:14px;font-family:'Inter',sans-serif;font-weight:600;font-size:0.62rem;letter-spacing:0.08em;text-transform:uppercase;color:#fff;background:rgba(2,10,37,0.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:var(--radius);padding:5px 11px;}
+        .proj-card-status{position:absolute;top:14px;left:14px;font-family:var(--font-inter),sans-serif;font-weight:600;font-size:0.62rem;letter-spacing:0.08em;text-transform:uppercase;color:#fff;background:rgba(2,10,37,0.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:var(--radius);padding:5px 11px;}
         .proj-card-status[data-status="inProgress"]{background:rgba(163,100,10,0.8);}
         .proj-card-body{padding:clamp(16px,2vw,20px) clamp(18px,2.2vw,22px) 0;flex:1;}
-        .proj-card-title{font-family:'Inter',sans-serif;font-weight:500;font-size:var(--lp-h3-fs);color:${NAVY};margin:0;line-height:1.3;}
-        .proj-card-desc{font-family:'Inter',sans-serif;font-size:var(--lp-proj-desc-fs);line-height:var(--lp-card-body-lh);color:var(--lp-text-body);margin:0 0 12px 0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+        .proj-card-title{font-family:var(--font-inter),sans-serif;font-weight:500;font-size:var(--lp-h3-fs);color:${NAVY};margin:0;line-height:1.3;}
+        .proj-card-desc{font-family:var(--font-inter),sans-serif;font-size:var(--lp-proj-desc-fs);line-height:var(--lp-card-body-lh);color:var(--lp-text-body);margin:0 0 12px 0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
         .proj-card-footer{border-top:1px solid rgba(2,10,37,0.08);padding:clamp(12px,1.5vw,15px) clamp(18px,2.2vw,22px);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
         .proj-card-meta{display:flex;gap:16px;flex-wrap:wrap;}
-        .proj-card-cta{display:inline-flex;align-items:center;gap:6px;font-family:'Inter',sans-serif;font-size:clamp(0.66rem,0.76vw,0.72rem);font-weight:600;letter-spacing:0.04em;color:${NAVY};background:none;border:1px solid rgba(2,10,37,0.25);border-radius:var(--radius);padding:8px 14px;cursor:pointer;white-space:nowrap;}
+        .proj-card-cta{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-inter),sans-serif;font-size:clamp(0.66rem,0.76vw,0.72rem);font-weight:600;letter-spacing:0.04em;color:${NAVY};background:none;border:1px solid rgba(2,10,37,0.25);border-radius:var(--radius);padding:8px 14px;cursor:pointer;white-space:nowrap;}
 
         /* ── Empty state ── */
         .proj-empty{text-align:center;padding:clamp(56px,9vh,96px) 24px;border:1px dashed rgba(2,10,37,0.15);border-radius:var(--radius);}
-        .proj-empty-heading{font-family:'Inter',sans-serif;font-weight:300;font-size:clamp(1.2rem,2vw,1.6rem);color:${NAVY};margin:0 0 8px 0;}
-        .proj-empty-body{font-family:'Inter',sans-serif;font-size:var(--lp-body-fs);line-height:var(--lp-body-lh);color:var(--lp-text-body);margin:0;}
+        .proj-empty-heading{font-family:var(--font-inter),sans-serif;font-weight:300;font-size:clamp(1.2rem,2vw,1.6rem);color:${NAVY};margin:0 0 8px 0;}
+        .proj-empty-body{font-family:var(--font-inter),sans-serif;font-size:var(--lp-body-fs);line-height:var(--lp-body-lh);color:var(--lp-text-body);margin:0;}
 
         /* ── Mobile filter drawer — bottom sheet, same two-phase open/close + easing
            the rest of the site uses for overlays (NavBar mobile menu) ── */
@@ -517,14 +526,14 @@ export default function ProjectsPage() {
         .proj-modal-hero{position:relative;width:100%;aspect-ratio:16/9;border-radius:var(--radius);overflow:hidden;background:rgba(2,10,37,0.06);}
         .proj-modal-hero img{width:100%;height:100%;object-fit:cover;display:block;}
         .proj-modal-sidebar{display:flex;flex-direction:column;gap:clamp(20px,2.5vh,26px);border-left:1px solid rgba(2,10,37,0.1);padding-left:clamp(24px,2.5vw,32px);min-width:0;}
-        .proj-modal-pill{font-family:'Inter',sans-serif;font-weight:600;font-size:0.66rem;letter-spacing:0.08em;text-transform:uppercase;color:${NAVY};background:rgba(2,10,37,0.06);border-radius:var(--radius);padding:6px 12px;}
+        .proj-modal-pill{font-family:var(--font-inter),sans-serif;font-weight:600;font-size:0.66rem;letter-spacing:0.08em;text-transform:uppercase;color:${NAVY};background:rgba(2,10,37,0.06);border-radius:var(--radius);padding:6px 12px;}
         .proj-modal-pill[data-status="finished"]{background:rgba(30,140,80,0.12);color:rgb(20,110,64);}
         .proj-modal-pill[data-status="inProgress"]{background:rgba(163,100,10,0.14);color:rgb(150,92,8);}
-        .proj-modal-title{font-family:'Inter',sans-serif;font-weight:200;font-size:clamp(1.6rem,3vw,2.4rem);color:${NAVY};letter-spacing:-0.025em;margin:0 0 clamp(12px,1.8vh,16px) 0;line-height:1.05;}
-        .proj-modal-desc{font-family:'Inter',sans-serif;font-size:var(--lp-body-fs);line-height:var(--lp-body-lh);color:var(--lp-text-body);margin:0;}
-        .proj-modal-section-label{font-family:'Inter',sans-serif;font-weight:600;font-size:clamp(0.6rem,0.72vw,0.66rem);letter-spacing:0.14em;text-transform:uppercase;color:var(--lp-text-meta);margin:0 0 clamp(12px,1.6vh,16px) 0;}
+        .proj-modal-title{font-family:var(--font-inter),sans-serif;font-weight:200;font-size:clamp(1.6rem,3vw,2.4rem);color:${NAVY};letter-spacing:-0.025em;margin:0 0 clamp(12px,1.8vh,16px) 0;line-height:1.05;}
+        .proj-modal-desc{font-family:var(--font-inter),sans-serif;font-size:var(--lp-body-fs);line-height:var(--lp-body-lh);color:var(--lp-text-body);margin:0;}
+        .proj-modal-section-label{font-family:var(--font-inter),sans-serif;font-weight:600;font-size:clamp(0.6rem,0.72vw,0.66rem);letter-spacing:0.14em;text-transform:uppercase;color:var(--lp-text-meta);margin:0 0 clamp(12px,1.6vh,16px) 0;}
         .proj-modal-bullets{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px;}
-        .proj-modal-bullets li{display:flex;align-items:flex-start;gap:11px;font-family:'Inter',sans-serif;font-size:var(--lp-body-fs);color:var(--lp-text-body);line-height:1.6;}
+        .proj-modal-bullets li{display:flex;align-items:flex-start;gap:11px;font-family:var(--font-inter),sans-serif;font-size:var(--lp-body-fs);color:var(--lp-text-body);line-height:1.6;}
         .proj-modal-dot{width:5px;height:5px;background:rgba(2,10,37,0.35);flex-shrink:0;margin-top:7px;}
         .proj-modal-meta{display:flex;flex-wrap:wrap;gap:clamp(16px,2vw,24px);}
         .proj-modal-map-wrap{height:240px;border-radius:var(--radius);overflow:hidden;border:1px solid rgba(2,10,37,0.1);isolation:isolate;}
@@ -532,7 +541,7 @@ export default function ProjectsPage() {
           .proj-modal-layout{grid-template-columns:1fr;}
           .proj-modal-sidebar{border-left:none;padding-left:0;border-top:1px solid rgba(2,10,37,0.1);padding-top:clamp(20px,2.5vh,26px);}
         }
-        .proj-maps-btn-modal{display:inline-flex;align-items:center;justify-content:center;gap:7px;font-family:'Inter',sans-serif;font-size:clamp(0.66rem,0.76vw,0.72rem);font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:${NAVY};border:1px solid rgba(2,10,37,0.25);border-radius:var(--radius-sm);padding:11px 16px;text-decoration:none;width:100%;}
+        .proj-maps-btn-modal{display:inline-flex;align-items:center;justify-content:center;gap:7px;font-family:var(--font-inter),sans-serif;font-size:clamp(0.66rem,0.76vw,0.72rem);font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:${NAVY};border:1px solid rgba(2,10,37,0.25);border-radius:var(--radius-sm);padding:11px 16px;text-decoration:none;width:100%;}
 
         @media(max-width:640px){
           .proj-modal-scroll{max-height:92vh;}
@@ -540,7 +549,7 @@ export default function ProjectsPage() {
       ` }} />
 
       {preloaderVisible && <Preloader key={preloaderKey} onComplete={handlePreloaderComplete} onCovered={handlePreloaderCovered} fast={isFastLoader} />}
-      <NavBar locale={locale} onLocaleChange={handleLocaleChange} />
+      <NavBar locale={locale} onLocaleChange={handleLocaleChange} logoFloating={logoFloating} logoFloatingTone="light" logoFloatingDesktopOnly />
 
       {/* ─── HERO — heading + tagline + the search bar as the functional centerpiece ── */}
       <section style={{ position: "relative", overflow: "hidden", backgroundColor: "#ffffff", padding: "clamp(120px,15vh,168px) clamp(24px,5vw,72px) clamp(56px,8vh,84px)" }}>
@@ -550,12 +559,12 @@ export default function ProjectsPage() {
           <div style={{ marginBottom: "clamp(20px,2.8vh,28px)", animation: "fadeUp 0.7s ease 0.1s both" }}>
             <Eyebrow>{pp.hero.label}</Eyebrow>
           </div>
-          <h1 style={{ fontFamily: "'Inter',sans-serif", fontWeight: 200, fontSize: "clamp(2.4rem,5.4vw,5.4rem)", lineHeight: 1.02, color: NAVY, margin: "0 0 clamp(20px,2.8vh,28px) 0", letterSpacing: "-0.03em", maxWidth: "900px", animation: "fadeUp 0.8s ease 0.2s both" }}>
+          <h1 style={{ fontFamily: "var(--font-inter),sans-serif", fontWeight: 200, fontSize: "clamp(2.4rem,5.4vw,5.4rem)", lineHeight: 1.02, color: NAVY, margin: "0 0 clamp(20px,2.8vh,28px) 0", letterSpacing: "-0.03em", maxWidth: "900px", animation: "fadeUp 0.8s ease 0.2s both" }}>
             {pp.hero.headingLine1}<br />
             <span style={{ color: "rgba(2,10,37,0.35)" }}>{pp.hero.headingLine2}</span><br />
             {pp.hero.headingLine3}
           </h1>
-          <p style={{ fontFamily: "'Inter',sans-serif", fontWeight: 400, fontSize: "var(--lp-subtitle-fs)", lineHeight: 1.5, color: "var(--lp-text-body)", maxWidth: "560px", margin: "0 0 clamp(32px,4.5vh,44px) 0", animation: "fadeUp 0.8s ease 0.3s both" }}>
+          <p style={{ fontFamily: "var(--font-inter),sans-serif", fontWeight: 400, fontSize: "var(--lp-subtitle-fs)", lineHeight: 1.5, color: "var(--lp-text-body)", maxWidth: "560px", margin: "0 0 clamp(32px,4.5vh,44px) 0", animation: "fadeUp 0.8s ease 0.3s both" }}>
             {pp.hero.tagline}
           </p>
 
@@ -582,7 +591,7 @@ export default function ProjectsPage() {
 
           <div>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "14px", marginBottom: "clamp(20px,2.8vh,28px)" }}>
-              <p style={{ fontFamily: "'Inter',sans-serif", fontSize: "clamp(0.76rem,0.88vw,0.84rem)", color: "var(--lp-text-meta)", margin: 0 }}>{resultsText}</p>
+              <p style={{ fontFamily: "var(--font-inter),sans-serif", fontSize: "clamp(0.76rem,0.88vw,0.84rem)", color: "var(--lp-text-meta)", margin: 0 }}>{resultsText}</p>
               <button type="button" className="proj-mobile-trigger" onClick={drawerOverlay.show}>
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M1 2h12M3.5 7h7M6 12h2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
                 {pp.filters.mobileOpen}{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
